@@ -6,7 +6,9 @@ There is no Kafka broker dependency: Java uses the public TopologyTestDriver.
 The oracle is original test code, not a port of Kafka internals.
 
 Both programs receive identical ordered topic/timestamp/key/value TSV traces and
-compare exact output topic/key/value/timestamp rows. `~` represents null; empty
+compare exact output topic/key/value/timestamp rows. Go runs transaction batch
+sizes 1, 32 and 256 against the same Java output; batching must preserve every
+record update and event-time result. `~` represents null; empty
 fields represent non-null empty strings. The fixed boundary cases are followed
 by 300 generated rows with seed 73019 per scenario. Caching is disabled to make
 update traces observable. Scenarios cover filter, grouped count, table upserts

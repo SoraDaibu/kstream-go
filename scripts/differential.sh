@@ -12,10 +12,12 @@ python3 scripts/generate-traces.py "$work"
 go build -o "$work/trace" ./cmd/trace
 mvn -q -f integration/kafka-streams/pom.xml compile
 for scenario in filter count table join window; do
-  "$work/trace" "$scenario" "$work/$scenario.tsv" > "$work/$scenario.go.tsv"
   mvn -q -f integration/kafka-streams/pom.xml exec:java \
     -Dexec.mainClass=dev.kstream.Oracle \
     "-Dexec.args=$scenario $work/$scenario.tsv $work/$scenario.java.tsv"
-  diff -u "$work/$scenario.java.tsv" "$work/$scenario.go.tsv"
-  echo "PASS: $scenario (deterministic plus seed 73019)"
+  for batch in 1 32 256; do
+    KSTREAM_BATCH_SIZE=$batch "$work/trace" "$scenario" "$work/$scenario.tsv" > "$work/$scenario.go.tsv"
+    diff -u "$work/$scenario.java.tsv" "$work/$scenario.go.tsv"
+  done
+  echo "PASS: $scenario (seed 73019; transaction batches 1,32,256)"
 done

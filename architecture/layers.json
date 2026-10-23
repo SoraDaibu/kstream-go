@@ -1,0 +1,11 @@
+{
+  "record": [],
+  "serde": [],
+  "window": [],
+  "state": ["record"],
+  "processor": ["record"],
+  "topology": [],
+  "execution": ["record", "state"],
+  "stream": ["execution", "processor", "record", "serde", "topology", "window"],
+  "adapters/memory": ["execution", "record", "state"]
+}

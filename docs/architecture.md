@@ -15,13 +15,16 @@ flowchart LR
 ```
 
 The DSL builds typed ports and logical metadata. Build freezes the plan; NewTask
-compiles fresh closures and restores committed stores. Task.Process decodes an
+compiles fresh closures and restores committed stores. Task.Process/ProcessBatch decode an
 input once and calls operators synchronously. Output is serialized at the sink.
 No goroutine or channel exists per operator. Batches run on explicitly bounded
 workers or the benchmark comparison strategy. Only a task's current owner touches
 its stores. Backend synchronization protects shared infrastructure, not operators.
 
-A record transaction stages all mutations. Successful backend commit precedes
+A caller-bounded record batch stages all mutations. Reads observe preceding
+records in the batch; clocks advance per record. Repeated writes to a store key
+coalesce inside the transaction while all output updates retain their order.
+A small write set uses linear lookup, promoting to an index for larger batches. Successful backend commit precedes
 publishing the local overlay. Failure invalidates the incarnation; recovery opens
 a fenced generation and replays committed changelogs/offsets. The prototype uses
 one input partition number per task, with any number of copartitioned topics.
@@ -41,3 +44,15 @@ Task IDs and application IDs are stable caller-provided infrastructure identitie
    compatibility claims with a declared version and tested feature matrix.
 
 Until stages 2–4 pass, do not use this as a production Kafka Streams replacement.
+
+## Enforced package boundaries
+
+`architecture/layers.json` declares allowed immediate package dependencies.
+`scripts/check-layers.py` checks the actual Go import graph in CI. Infrastructure
+libraries belong behind adapters; the DSL, runtime and state layers cannot import
+adapters. Examples and commands are composition roots. Changing these boundaries
+requires an explicit design decision and a corresponding rule update.
+
+The [parity inventory](roadmap/parity.md) and [qualification target](roadmap/qualification.md)
+track the remaining feature and performance program. Existing tests are evidence
+for their covered cases, not a complete compatibility certification.

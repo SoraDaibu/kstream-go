@@ -80,6 +80,22 @@ func run() error {
 	}
 	defer file.Close()
 	scanner := bufio.NewScanner(file)
+	batchSize := 1
+	if raw := os.Getenv("KSTREAM_BATCH_SIZE"); raw != "" {
+		batchSize, err = strconv.Atoi(raw)
+		if err != nil || batchSize < 1 {
+			return fmt.Errorf("KSTREAM_BATCH_SIZE must be positive")
+		}
+	}
+	batch := make([]record.Bytes, 0, batchSize)
+	flush := func() error {
+		if len(batch) == 0 {
+			return nil
+		}
+		err := task.ProcessBatch(ctx, batch)
+		batch = batch[:0]
+		return err
+	}
 	offsets := make(map[string]int64)
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -94,13 +110,18 @@ func run() error {
 		if err != nil {
 			return err
 		}
-		err = task.Process(ctx, record.Bytes{Topic: f[0], Offset: offsets[f[0]], Timestamp: ts, Key: nullable(f[2]), Value: nullable(f[3])})
-		if err != nil {
-			return err
-		}
+		batch = append(batch, record.Bytes{Topic: f[0], Offset: offsets[f[0]], Timestamp: ts, Key: nullable(f[2]), Value: nullable(f[3])})
 		offsets[f[0]]++
+		if len(batch) == batchSize {
+			if err := flush(); err != nil {
+				return err
+			}
+		}
 	}
 	if err := scanner.Err(); err != nil {
+		return err
+	}
+	if err := flush(); err != nil {
 		return err
 	}
 	for _, r := range backend.Outputs(id) {

@@ -12,6 +12,7 @@ if [[ -n "$unformatted" ]]; then
   echo "$unformatted" >&2
   exit 1
 fi
+python3 scripts/check-layers.py
 go vet ./...
 go test -race -coverprofile=coverage.out ./...
 go run ./examples/wordcount

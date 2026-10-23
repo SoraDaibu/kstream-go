@@ -40,3 +40,16 @@ restore, real repartitioning and representative live scheduling are release gate
 
 All five ADRs preceded implementation. The architecture is a tested experimental
 core; production scheduling and additional feature compatibility remain open.
+
+## Transaction-batch and qualification cycle
+
+Commit `38f96e31a8b1e8364f06c5bc83e22e6972d0efe9` passed
+[Go/race/layer and differential CI](https://github.com/SoraDaibu/kstream-go/actions/runs/40000342803).
+The five oracle scenarios now compare transaction batch sizes 1, 32 and 256.
+Additional tests cover batch atomicity, replay, clock order, cross-topic staged
+state, ambiguous commits, cancellation and overlay scans/deletes.
+
+The [paired Kafka driver comparison](../benchmarks/results/2026-10-23-driver/README.md)
+and [staged-state evaluation](benchmarks/2026-10-23-batching/README.md) retain actual
+raw data and limits. Full feature parity and production performance remain
+unqualified; issue #3 tracks the complete program.

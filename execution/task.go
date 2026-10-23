@@ -39,17 +39,20 @@ type Backend interface {
 	Open(context.Context, Spec) (uint64, Snapshot, error)
 	Commit(context.Context, Spec, uint64, Transaction) error
 }
+type stateLocation struct{ store, key string }
+
 type Task struct {
-	spec       Spec
-	backend    Backend
-	generation uint64
-	image      state.Image
-	offsets    map[string]int64
-	streamTime int64
-	handlers   map[string]func(record.Bytes) error
-	pending    *Transaction
-	active     atomic.Bool
-	poisoned   bool
+	spec         Spec
+	backend      Backend
+	generation   uint64
+	image        state.Image
+	offsets      map[string]int64
+	streamTime   int64
+	handlers     map[string]func(record.Bytes) error
+	pending      *Transaction
+	pendingIndex map[stateLocation]int
+	active       atomic.Bool
+	poisoned     bool
 }
 
 func New(ctx context.Context, s Spec, b Backend) (*Task, error) {
@@ -84,7 +87,18 @@ func (t *Task) Register(topic string, h func(record.Bytes) error) error {
 	t.handlers[topic] = h
 	return nil
 }
-func (t *Task) Process(ctx context.Context, r record.Bytes) (err error) {
+
+// Process commits one input record. Use ProcessBatch to amortize transaction cost.
+func (t *Task) Process(ctx context.Context, r record.Bytes) error {
+	return t.ProcessBatch(ctx, []record.Bytes{r})
+}
+
+// ProcessBatch processes an ordered, caller-bounded slice atomically. Every
+// accepted record observes preceding staged state and the clock as of that
+// record. No output, store mutation or input offset is published before commit.
+// Already committed offsets and repeated offsets in this batch are skipped.
+// Callback or commit failure poisons the task; restore a fresh incarnation.
+func (t *Task) ProcessBatch(ctx context.Context, records []record.Bytes) (err error) {
 	if !t.active.CompareAndSwap(false, true) {
 		return ErrConcurrent
 	}
@@ -95,27 +109,24 @@ func (t *Task) Process(ctx context.Context, r record.Bytes) (err error) {
 	if err = ctx.Err(); err != nil {
 		return err
 	}
-	h := t.handlers[r.Topic]
-	if h == nil {
-		return fmt.Errorf("unknown source %q", r.Topic)
+	// Validate all routing/metadata before invoking callbacks. Validation errors
+	// therefore do not poison an otherwise healthy task.
+	for _, r := range records {
+		if t.handlers[r.Topic] == nil {
+			return fmt.Errorf("unknown source %q", r.Topic)
+		}
+		if r.Partition != t.spec.Partition {
+			return errors.New("input partition does not belong to task")
+		}
+		if r.Offset < 0 || r.Offset == math.MaxInt64 || r.Timestamp < 0 {
+			return errors.New("invalid offset or negative timestamp")
+		}
 	}
-	if r.Partition != t.spec.Partition {
-		return errors.New("input partition does not belong to task")
-	}
-	if r.Offset < 0 || r.Offset == math.MaxInt64 || r.Timestamp < 0 {
-		return errors.New("invalid offset or negative timestamp")
-	}
-	if r.Offset < t.offsets[r.Topic] {
-		return nil
-	}
-	streamTime := t.streamTime
-	if r.Timestamp > streamTime {
-		streamTime = r.Timestamp
-	}
-	tx := Transaction{NextOffsets: map[string]int64{r.Topic: r.Offset + 1}, StreamTime: streamTime}
+	tx := Transaction{StreamTime: t.streamTime}
 	t.pending = &tx
 	defer func() {
 		t.pending = nil
+		t.pendingIndex = nil
 		if p := recover(); p != nil {
 			t.poisoned = true
 			panic(p)
@@ -124,8 +135,30 @@ func (t *Task) Process(ctx context.Context, r record.Bytes) (err error) {
 			t.poisoned = true
 		}
 	}()
-	if err = h(r); err != nil {
-		return err
+	for _, r := range records {
+		if err = ctx.Err(); err != nil {
+			return err
+		}
+		next, ok := tx.NextOffsets[r.Topic]
+		if !ok {
+			next = t.offsets[r.Topic]
+		}
+		if r.Offset < next {
+			continue
+		}
+		if tx.NextOffsets == nil {
+			tx.NextOffsets = make(map[string]int64)
+		}
+		if r.Timestamp > tx.StreamTime {
+			tx.StreamTime = r.Timestamp
+		}
+		if err = t.handlers[r.Topic](r); err != nil {
+			return err
+		}
+		tx.NextOffsets[r.Topic] = r.Offset + 1
+	}
+	if len(tx.NextOffsets) == 0 {
+		return nil
 	}
 	if err = t.backend.Commit(ctx, t.spec, t.generation, tx); err != nil {
 		return err
@@ -133,8 +166,10 @@ func (t *Task) Process(ctx context.Context, r record.Bytes) (err error) {
 	for _, m := range tx.Mutations {
 		t.image.Apply(m)
 	}
-	t.offsets[r.Topic] = r.Offset + 1
-	t.streamTime = streamTime
+	for topic, offset := range tx.NextOffsets {
+		t.offsets[topic] = offset
+	}
+	t.streamTime = tx.StreamTime
 	return nil
 }
 func (t *Task) requirePending() {
@@ -148,13 +183,27 @@ func (t *Task) StreamTime() int64 {
 	}
 	return t.streamTime
 }
+
+// mutationIndex uses a short linear scan for small write sets and promotes to
+// a map for larger batches. Single-key aggregates need no per-transaction map.
+func (t *Task) mutationIndex(store, key string) (int, bool) {
+	if t.pendingIndex != nil {
+		i, ok := t.pendingIndex[stateLocation{store, key}]
+		return i, ok
+	}
+	for i := len(t.pending.Mutations) - 1; i >= 0; i-- {
+		m := t.pending.Mutations[i]
+		if m.Store == store && m.Key == key {
+			return i, true
+		}
+	}
+	return 0, false
+}
 func (t *Task) StoreGet(store, key string) ([]byte, bool) {
 	if t.pending != nil {
-		for i := len(t.pending.Mutations) - 1; i >= 0; i-- {
-			m := t.pending.Mutations[i]
-			if m.Store == store && m.Key == key {
-				return record.CloneBytes(m.Value), m.Value != nil
-			}
+		if i, ok := t.mutationIndex(store, key); ok {
+			value := t.pending.Mutations[i].Value
+			return record.CloneBytes(value), value != nil
 		}
 	}
 	v, ok := t.image[store][key]
@@ -162,6 +211,19 @@ func (t *Task) StoreGet(store, key string) ([]byte, bool) {
 }
 func (t *Task) StorePut(store, key string, value []byte) {
 	t.requirePending()
+	if i, ok := t.mutationIndex(store, key); ok {
+		t.pending.Mutations[i].Value = record.CloneBytes(value)
+		return
+	}
+	if t.pendingIndex == nil && len(t.pending.Mutations) >= 8 {
+		t.pendingIndex = make(map[stateLocation]int, 16)
+		for i, m := range t.pending.Mutations {
+			t.pendingIndex[stateLocation{m.Store, m.Key}] = i
+		}
+	}
+	if t.pendingIndex != nil {
+		t.pendingIndex[stateLocation{store, key}] = len(t.pending.Mutations)
+	}
 	t.pending.Mutations = append(t.pending.Mutations, state.Mutation{Store: store, Key: key, Value: record.CloneBytes(value)})
 }
 func (t *Task) StoreScan(store string, visit func(string, []byte)) {
