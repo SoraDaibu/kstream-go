@@ -39,17 +39,11 @@ jobs:
         with:
           go-version: '1.23.12'
           cache: false
-      - name: Resolve and export verified optional adapter dependencies
+      - name: Verify dependency locks
         run: |
-          go mod tidy
-          mkdir -p /tmp/kstream-module-export
-          cp go.mod go.sum /tmp/kstream-module-export/
-          tar -C "$(go env GOMODCACHE)" --exclude='*.zip' --exclude='*/testdata' -czf /tmp/kstream-module-export/module-cache.tar.gz .
-      - uses: actions/upload-artifact@v4
-        with:
-          name: kafka-module-cache
-          path: /tmp/kstream-module-export
-          compression-level: 0
+          go mod download
+          go mod verify
+          git diff --exit-code -- go.mod go.sum
       - name: Provision integration topics
         run: |
           docker exec '${{ job.services.kafka.id }}' /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic kstream-test-state --partitions 3 --replication-factor 1 --config cleanup.policy=compact --config retention.ms=-1

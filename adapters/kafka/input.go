@@ -40,6 +40,9 @@ func (i *Input) Next(ctx context.Context, maxRecords int) ([]record.Bytes, error
 		return nil, errors.New("max records must be positive")
 	}
 	fetches := i.client.PollRecords(ctx, maxRecords)
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	if errs := fetches.Errors(); len(errs) > 0 {
 		return nil, errs[0].Err
 	}

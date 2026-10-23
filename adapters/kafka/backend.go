@@ -40,6 +40,9 @@ type Backend struct {
 	next                   map[string]int64
 	barrier                []byte
 }
+
+var _ execution.Backend = (*Backend)(nil)
+
 type checkpoint struct {
 	NextOffsets map[string]int64 `json:"next_offsets"`
 	StreamTime  int64            `json:"stream_time"`
@@ -230,7 +233,7 @@ func (b *Backend) Commit(ctx context.Context, s execution.Spec, generation uint6
 		if r.Topic == b.config.ChangelogTopic {
 			return errors.New("user output cannot target the internal changelog")
 		}
-		rows = append(rows, &kgo.Record{Topic: r.Topic, Key: r.Key, Value: r.Value, Timestamp: time.UnixMilli(r.Timestamp)})
+		rows = append(rows, &kgo.Record{Topic: r.Topic, Partition: r.Partition, Key: r.Key, Value: r.Value, Timestamp: time.UnixMilli(r.Timestamp)})
 	}
 	rows = append(rows, &kgo.Record{Topic: b.config.ChangelogTopic, Partition: s.Partition, Key: encodeKey(metadataKind, s, "", ""), Value: meta, Timestamp: now})
 	if b.barrier != nil {

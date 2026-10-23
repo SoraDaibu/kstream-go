@@ -22,7 +22,7 @@ backend and input clients during task shutdown.
 `Backend.Input` consumes explicitly assigned source partitions from the committed
 checkpoint using read-committed isolation. Feed each returned bounded slice to
 `Task.ProcessBatch` before polling again. Recreate both input and task after a
-processing/commit error. The task ID and application ID must remain stable across
+input, processing or commit error. The task ID and application ID must remain stable across
 restarts, and source ownership must be externally controlled.
 
 ## Boundaries
