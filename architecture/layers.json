@@ -31,5 +31,10 @@
     "execution",
     "processor",
     "record"
+  ],
+  "adapters/kafka": [
+    "execution",
+    "record",
+    "state"
   ]
 }
