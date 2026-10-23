@@ -1,0 +1,26 @@
+name: Benchmarks
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  scheduling:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.x'
+          cache: false
+      - name: Capture environment and scheduling results
+        run: |
+          mkdir -p results
+          go version > results/environment.txt
+          lscpu >> results/environment.txt
+          for cpus in 1 4; do
+            GOMAXPROCS=$cpus go test ./execution -run '^$' -bench BenchmarkSchedule -benchmem -count 5 > "results/scheduling-cpu$cpus.txt"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: scheduling-results
+          path: results

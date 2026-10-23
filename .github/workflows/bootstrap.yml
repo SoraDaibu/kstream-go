@@ -1,0 +1,52 @@
+# Temporary validation path for authoring environments without a Go toolchain.
+# Remove this workflow after the formatted source has been committed and CI passes.
+name: Bootstrap validation
+on:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.x'
+          cache: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - name: Format source and export it for the authoring workspace
+        run: |
+          ./scripts/format.sh
+          python3 - <<'PY'
+          import base64, io, tarfile
+          from pathlib import Path
+          archive = io.BytesIO()
+          with tarfile.open(fileobj=archive, mode='w:gz') as tar:
+              for path in sorted(Path('.').rglob('*.go')):
+                  tar.add(path, arcname=str(path))
+          print('KSTREAM_FORMATTED_SOURCE_BEGIN')
+          print(base64.b64encode(archive.getvalue()).decode())
+          print('KSTREAM_FORMATTED_SOURCE_END')
+          PY
+      - run: ./scripts/validate.sh
+      - run: ./scripts/differential.sh
+      - name: Evaluate both scheduling strategies
+        run: |
+          mkdir -p results
+          go version > results/environment.txt
+          lscpu >> results/environment.txt
+          for cpus in 1 4; do
+            GOMAXPROCS=$cpus go test ./execution -run '^$' -bench BenchmarkSchedule -benchmem -benchtime=200ms -count 3 > "results/scheduling-cpu$cpus.txt"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bootstrap-results
+          path: results
+          if-no-files-found: ignore
