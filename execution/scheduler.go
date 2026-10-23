@@ -24,6 +24,15 @@ type Lane struct {
 // Run processes finite independent task lanes. Each task may appear only once.
 // A task's entire lane runs serially. Workers bounds active tasks in bounded mode.
 func Run(ctx context.Context, lanes []Lane, workers int, strategy Strategy) error {
+	return RunBatches(ctx, lanes, workers, strategy, 1)
+}
+
+// RunBatches preserves per-task record order and commits at most batchSize
+// records at a time. The caller bounds transaction memory through batchSize.
+func RunBatches(ctx context.Context, lanes []Lane, workers int, strategy Strategy, batchSize int) error {
+	if batchSize < 1 {
+		return errors.New("batch size must be positive")
+	}
 	if workers < 1 {
 		return errors.New("workers must be positive")
 	}
@@ -43,14 +52,19 @@ func Run(ctx context.Context, lanes []Lane, workers int, strategy Strategy) erro
 	var once sync.Once
 	var first error
 	run := func(l Lane) {
-		for _, r := range l.Records {
+		for start := 0; start < len(l.Records); {
+			end := start + batchSize
+			if end < start || end > len(l.Records) {
+				end = len(l.Records)
+			}
 			if err := ctx.Err(); err != nil {
 				return
 			}
-			if err := l.Task.Process(ctx, r); err != nil {
+			if err := l.Task.ProcessBatch(ctx, l.Records[start:end]); err != nil {
 				once.Do(func() { first = fmt.Errorf("task %s: %w", l.Task.spec.ID, err); cancel() })
 				return
 			}
+			start = end
 		}
 	}
 	if strategy == GoroutinePerTask {
