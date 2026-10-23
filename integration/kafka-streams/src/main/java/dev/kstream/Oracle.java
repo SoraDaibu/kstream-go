@@ -1,0 +1,86 @@
+package dev.kstream;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Properties;
+import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.common.serialization.StringSerializer;
+import org.apache.kafka.streams.KeyValue;
+import org.apache.kafka.streams.StreamsBuilder;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.TestInputTopic;
+import org.apache.kafka.streams.TopologyTestDriver;
+import org.apache.kafka.streams.kstream.Consumed;
+import org.apache.kafka.streams.kstream.Materialized;
+import org.apache.kafka.streams.kstream.Produced;
+import org.apache.kafka.streams.kstream.TimeWindows;
+
+/** Independent executable oracle using only Kafka Streams' public DSL. */
+public final class Oracle {
+    private static String nullable(String s) { return s.equals("~") ? null : s; }
+    private static String field(String s) { return s == null ? "~" : s; }
+    public static void main(String[] args) throws Exception {
+        if (args.length != 3) throw new IllegalArgumentException("scenario input.tsv output.tsv required");
+        String scenario = args[0];
+        StreamsBuilder b = new StreamsBuilder();
+        var strings = Consumed.with(Serdes.String(), Serdes.String());
+        var produced = Produced.with(Serdes.String(), Serdes.String());
+        // Declare the table before the stream to match the logical Go graph.
+        var table = scenario.equals("join") || scenario.equals("table")
+                ? b.table("table", strings, Materialized.as("lookup")) : null;
+        if (scenario.equals("table")) {
+            table.toStream().to("out", produced);
+        } else {
+            var source = b.stream("in", strings);
+            switch (scenario) {
+                case "filter" -> source.filter((k,v) -> v != null && !v.isEmpty()).to("out", produced);
+                case "count" -> source.groupByKey().count(Materialized.as("counts"))
+                        .toStream().mapValues(v -> v.toString()).to("out", produced);
+                case "join" -> source.join(table, (a,c) -> a + ":" + c).to("out", produced);
+                case "window" -> source.groupByKey()
+                        .windowedBy(TimeWindows.ofSizeAndGrace(Duration.ofMillis(10), Duration.ofMillis(5)))
+                        .count(Materialized.as("windows")).toStream()
+                        .map((k,v) -> KeyValue.pair(k.key() + "@" + k.window().start() + ":" + k.window().end(), v.toString()))
+                        .to("out", produced);
+                default -> throw new IllegalArgumentException("unknown scenario: " + scenario);
+            }
+        }
+        Properties props = new Properties();
+        props.put(StreamsConfig.APPLICATION_ID_CONFIG, "kstream-go-oracle");
+        props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "unused:9092");
+        props.put(StreamsConfig.STATESTORE_CACHE_MAX_BYTES_CONFIG, 0);
+        props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.StringSerde.class);
+        props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.StringSerde.class);
+        Path state = Files.createTempDirectory("kstream-java-state-");
+        props.put(StreamsConfig.STATE_DIR_CONFIG, state.toString());
+        try (var driver = new TopologyTestDriver(b.build(), props)) {
+            HashMap<String, TestInputTopic<String,String>> inputs = new HashMap<>();
+            for (String topic : scenario.equals("join") ? List.of("table", "in")
+                    : scenario.equals("table") ? List.of("table") : List.of("in")) {
+                inputs.put(topic, driver.createInputTopic(topic, new StringSerializer(), new StringSerializer()));
+            }
+            var output = driver.createOutputTopic("out", new StringDeserializer(), new StringDeserializer());
+            StringBuilder result = new StringBuilder();
+            for (String line : Files.readAllLines(Path.of(args[1]))) {
+                if (line.isEmpty() || line.startsWith("#")) continue;
+                String[] f = line.split("\t", -1);
+                if (f.length != 4) throw new IllegalArgumentException("invalid trace row");
+                inputs.get(f[0]).pipeInput(nullable(f[2]), nullable(f[3]), Long.parseLong(f[1]));
+                while (!output.isEmpty()) {
+                    var r = output.readRecord();
+                    result.append("out\t").append(field(r.key())).append('\t')
+                            .append(field(r.value())).append('\t').append(r.timestamp()).append('\n');
+                }
+            }
+            Files.writeString(Path.of(args[2]), result.toString());
+        } finally {
+            try (var paths = Files.walk(state)) {
+                for (Path p : paths.sorted(java.util.Comparator.reverseOrder()).toList()) Files.deleteIfExists(p);
+            }
+        }
+    }
+}

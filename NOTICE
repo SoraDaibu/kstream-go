@@ -1,0 +1,7 @@
+kstream-go
+Copyright 2026 kstream-go contributors
+
+Independent Go implementation inspired by the documented semantics of Apache
+Kafka Streams. No Apache Kafka implementation source is included.
+Apache Kafka and Kafka Streams are trademarks of The Apache Software Foundation.
+This project is not affiliated with or endorsed by The Apache Software Foundation.

@@ -1,0 +1,54 @@
+goos: linux
+goarch: amd64
+pkg: github.com/SoraDaibu/kstream-go/execution
+cpu: AMD EPYC 9V74 80-Core Processor                
+BenchmarkSchedule/tasks=8/records=1/work=0/workers=1/strategy=0         	   48705	      4904 ns/op	         8.000 records/op	    3008 B/op	      33 allocs/op
+BenchmarkSchedule/tasks=8/records=1/work=0/workers=1/strategy=0         	   45988	      4928 ns/op	         8.000 records/op	    3008 B/op	      33 allocs/op
+BenchmarkSchedule/tasks=8/records=1/work=0/workers=1/strategy=0         	   45345	      4913 ns/op	         8.000 records/op	    3008 B/op	      33 allocs/op
+BenchmarkSchedule/tasks=8/records=1/work=0/workers=1/strategy=1         	   26953	      8752 ns/op	         8.000 records/op	    3328 B/op	      46 allocs/op
+BenchmarkSchedule/tasks=8/records=1/work=0/workers=1/strategy=1         	   26929	      8756 ns/op	         8.000 records/op	    3328 B/op	      46 allocs/op
+BenchmarkSchedule/tasks=8/records=1/work=0/workers=1/strategy=1         	   26958	      8762 ns/op	         8.000 records/op	    3328 B/op	      46 allocs/op
+BenchmarkSchedule/tasks=8/records=1/work=128/workers=1/strategy=0       	   38539	      5932 ns/op	         8.000 records/op	    3008 B/op	      33 allocs/op
+BenchmarkSchedule/tasks=8/records=1/work=128/workers=1/strategy=0       	   38274	      5922 ns/op	         8.000 records/op	    3008 B/op	      33 allocs/op
+BenchmarkSchedule/tasks=8/records=1/work=128/workers=1/strategy=0       	   38344	      5920 ns/op	         8.000 records/op	    3008 B/op	      33 allocs/op
+BenchmarkSchedule/tasks=8/records=1/work=128/workers=1/strategy=1       	   24354	      9714 ns/op	         8.000 records/op	    3328 B/op	      46 allocs/op
+BenchmarkSchedule/tasks=8/records=1/work=128/workers=1/strategy=1       	   24421	      9727 ns/op	         8.000 records/op	    3328 B/op	      46 allocs/op
+BenchmarkSchedule/tasks=8/records=1/work=128/workers=1/strategy=1       	   24398	      9716 ns/op	         8.000 records/op	    3328 B/op	      46 allocs/op
+BenchmarkSchedule/tasks=8/records=256/work=0/workers=1/strategy=0       	     649	    359596 ns/op	      2048 records/op	  655810 B/op	    6153 allocs/op
+BenchmarkSchedule/tasks=8/records=256/work=0/workers=1/strategy=0       	     648	    361253 ns/op	      2048 records/op	  655810 B/op	    6153 allocs/op
+BenchmarkSchedule/tasks=8/records=256/work=0/workers=1/strategy=0       	     654	    359166 ns/op	      2048 records/op	  655810 B/op	    6153 allocs/op
+BenchmarkSchedule/tasks=8/records=256/work=0/workers=1/strategy=1       	     646	    367358 ns/op	      2048 records/op	  656130 B/op	    6166 allocs/op
+BenchmarkSchedule/tasks=8/records=256/work=0/workers=1/strategy=1       	     646	    370832 ns/op	      2048 records/op	  656130 B/op	    6166 allocs/op
+BenchmarkSchedule/tasks=8/records=256/work=0/workers=1/strategy=1       	     630	    371456 ns/op	      2048 records/op	  656130 B/op	    6166 allocs/op
+BenchmarkSchedule/tasks=8/records=256/work=128/workers=1/strategy=0     	     376	    625049 ns/op	      2048 records/op	  655812 B/op	    6153 allocs/op
+BenchmarkSchedule/tasks=8/records=256/work=128/workers=1/strategy=0     	     380	    626871 ns/op	      2048 records/op	  655812 B/op	    6153 allocs/op
+BenchmarkSchedule/tasks=8/records=256/work=128/workers=1/strategy=0     	     376	    626565 ns/op	      2048 records/op	  655812 B/op	    6153 allocs/op
+BenchmarkSchedule/tasks=8/records=256/work=128/workers=1/strategy=1     	     373	    630295 ns/op	      2048 records/op	  656132 B/op	    6166 allocs/op
+BenchmarkSchedule/tasks=8/records=256/work=128/workers=1/strategy=1     	     376	    628380 ns/op	      2048 records/op	  656132 B/op	    6166 allocs/op
+BenchmarkSchedule/tasks=8/records=256/work=128/workers=1/strategy=1     	     373	    629239 ns/op	      2048 records/op	  656132 B/op	    6166 allocs/op
+BenchmarkSchedule/tasks=256/records=1/work=0/workers=1/strategy=0       	    1801	    126521 ns/op	       256.0 records/op	   95363 B/op	     793 allocs/op
+BenchmarkSchedule/tasks=256/records=1/work=0/workers=1/strategy=0       	    1821	    126152 ns/op	       256.0 records/op	   95362 B/op	     793 allocs/op
+BenchmarkSchedule/tasks=256/records=1/work=0/workers=1/strategy=0       	    1743	    126521 ns/op	       256.0 records/op	   95375 B/op	     793 allocs/op
+BenchmarkSchedule/tasks=256/records=1/work=0/workers=1/strategy=1       	     781	    295345 ns/op	       256.0 records/op	  113588 B/op	    1302 allocs/op
+BenchmarkSchedule/tasks=256/records=1/work=0/workers=1/strategy=1       	     783	    301051 ns/op	       256.0 records/op	  113573 B/op	    1302 allocs/op
+BenchmarkSchedule/tasks=256/records=1/work=0/workers=1/strategy=1       	     777	    301204 ns/op	       256.0 records/op	  113586 B/op	    1302 allocs/op
+BenchmarkSchedule/tasks=256/records=1/work=128/workers=1/strategy=0     	    1419	    161340 ns/op	       256.0 records/op	   95373 B/op	     793 allocs/op
+BenchmarkSchedule/tasks=256/records=1/work=128/workers=1/strategy=0     	    1402	    161830 ns/op	       256.0 records/op	   95378 B/op	     793 allocs/op
+BenchmarkSchedule/tasks=256/records=1/work=128/workers=1/strategy=0     	    1386	    162248 ns/op	       256.0 records/op	   95392 B/op	     793 allocs/op
+BenchmarkSchedule/tasks=256/records=1/work=128/workers=1/strategy=1     	     718	    327235 ns/op	       256.0 records/op	  113589 B/op	    1302 allocs/op
+BenchmarkSchedule/tasks=256/records=1/work=128/workers=1/strategy=1     	     715	    328149 ns/op	       256.0 records/op	  113592 B/op	    1302 allocs/op
+BenchmarkSchedule/tasks=256/records=1/work=128/workers=1/strategy=1     	     715	    325248 ns/op	       256.0 records/op	  113594 B/op	    1302 allocs/op
+BenchmarkSchedule/tasks=256/records=256/work=0/workers=1/strategy=0     	      15	  15525675 ns/op	     65536 records/op	20988453 B/op	  196650 allocs/op
+BenchmarkSchedule/tasks=256/records=256/work=0/workers=1/strategy=0     	      15	  15354740 ns/op	     65536 records/op	20988466 B/op	  196650 allocs/op
+BenchmarkSchedule/tasks=256/records=256/work=0/workers=1/strategy=0     	      15	  15434890 ns/op	     65536 records/op	20988505 B/op	  196650 allocs/op
+BenchmarkSchedule/tasks=256/records=256/work=0/workers=1/strategy=1     	      15	  16234701 ns/op	     65536 records/op	21006751 B/op	  197160 allocs/op
+BenchmarkSchedule/tasks=256/records=256/work=0/workers=1/strategy=1     	      14	  16506916 ns/op	     65536 records/op	21006842 B/op	  197159 allocs/op
+BenchmarkSchedule/tasks=256/records=256/work=0/workers=1/strategy=1     	      14	  16076022 ns/op	     65536 records/op	21006952 B/op	  197161 allocs/op
+BenchmarkSchedule/tasks=256/records=256/work=128/workers=1/strategy=0   	       9	  23254376 ns/op	     65536 records/op	20990820 B/op	  196661 allocs/op
+BenchmarkSchedule/tasks=256/records=256/work=128/workers=1/strategy=0   	       9	  23695733 ns/op	     65536 records/op	20990863 B/op	  196661 allocs/op
+BenchmarkSchedule/tasks=256/records=256/work=128/workers=1/strategy=0   	       9	  23875370 ns/op	     65536 records/op	20990799 B/op	  196661 allocs/op
+BenchmarkSchedule/tasks=256/records=256/work=128/workers=1/strategy=1   	       9	  24195736 ns/op	     65536 records/op	21009103 B/op	  197171 allocs/op
+BenchmarkSchedule/tasks=256/records=256/work=128/workers=1/strategy=1   	       9	  24120263 ns/op	     65536 records/op	21009071 B/op	  197171 allocs/op
+BenchmarkSchedule/tasks=256/records=256/work=128/workers=1/strategy=1   	       9	  23607705 ns/op	     65536 records/op	21008964 B/op	  197170 allocs/op
+PASS
+ok  	github.com/SoraDaibu/kstream-go/execution	13.169s
