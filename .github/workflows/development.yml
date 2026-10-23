@@ -1,0 +1,52 @@
+name: Development cycle
+on:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  workspace-tools:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.12'
+          cache: false
+      - name: Export reproducible compiler and repository history
+        run: |
+          mkdir -p /tmp/kstream-tools
+          tar -C "$(go env GOROOT)" --exclude='./test' --exclude='./doc' --exclude='./misc' --exclude='./api' -czf /tmp/kstream-go-toolchain.tar.gz .
+          split -b 24M -d /tmp/kstream-go-toolchain.tar.gz /tmp/kstream-tools/go-part-
+          sha256sum /tmp/kstream-go-toolchain.tar.gz > /tmp/kstream-tools/toolchain.sha256
+          git fetch origin '+refs/heads/work/parity-throughput:refs/remotes/origin/work/parity-throughput'
+          git bundle create /tmp/kstream-tools/repository.bundle --all HEAD
+      - uses: actions/upload-artifact@v4
+        with:
+          name: go-part-00
+          path: /tmp/kstream-tools/go-part-00
+          compression-level: 0
+      - uses: actions/upload-artifact@v4
+        with:
+          name: go-part-01
+          path: /tmp/kstream-tools/go-part-01
+          compression-level: 0
+      - uses: actions/upload-artifact@v4
+        with:
+          name: go-part-02
+          path: /tmp/kstream-tools/go-part-02
+          compression-level: 0
+      - uses: actions/upload-artifact@v4
+        with:
+          name: go-part-03
+          path: /tmp/kstream-tools/go-part-03
+          compression-level: 0
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@v4
+        with:
+          name: workspace-history
+          path: |
+            /tmp/kstream-tools/repository.bundle
+            /tmp/kstream-tools/toolchain.sha256
