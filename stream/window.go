@@ -32,7 +32,7 @@ func WindowedCount[K, V any](s KStream[K, V], store string, w window.Tumbling) K
 	s.port.subscribers = append(s.port.subscribers, func(t *execution.Task) processor.Handler[K, V] {
 		next := p.compile(t)
 		return func(r record.Record[K, V]) error {
-			if r.NullKey || r.NullValue {
+			if r.NullKey {
 				return nil
 			}
 			start, end, err := w.Bounds(r.Timestamp)
@@ -96,7 +96,7 @@ func WindowedCount[K, V any](s KStream[K, V], store string, w window.Tumbling) K
 			count++
 			t.StorePut(store, string(key), encodeAggregate(count, timestamp))
 			return next(record.Record[window.Key[K], int64]{
-				Key: window.Key[K]{Key: r.Key, Start: start, End: end},
+				Key:   window.Key[K]{Key: r.Key, Start: start, End: end},
 				Value: count, Timestamp: timestamp,
 			})
 		}

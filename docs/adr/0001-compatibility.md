@@ -22,9 +22,11 @@ Go zero values are ordinary data. Streams preserve tombstones through stateless
 operators; tables ignore null keys and delete on tombstones. Stream-table inner
 joins are triggered only by stream input and consult the current table value.
 Tumbling windows are [start,end), use nonnegative Unix milliseconds, and reject
-records when operator stream-time >= window-end + grace. Count skips null keys and
-values. Window stores evict closed windows; count emits updates, without caching
-or suppression. Window stream-time advances on non-null input admitted to that
+records when operator stream-time >= window-end + grace. Unwindowed count skips null keys and
+values. Kafka Streams 3.9.1 windowed count skips null keys but counts null values
+with a present key; this difference is pinned by the oracle and regression test.
+Window stores evict closed windows; count emits updates, without caching
+or suppression. Window stream-time advances on input with a non-null key admitted to that
 operator, independently of unrelated sources and upstream filters. A separate
 task clock is available to custom processors. Both clocks survive recovery;
 the window clock is staged in the same transaction as its state.

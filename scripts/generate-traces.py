@@ -16,6 +16,9 @@ for scenario in ("filter", "count", "window", "table", "join"):
                 ("table", 2, "a", "~"), ("in", 3, "a", "missing"),
                 ("table", 4, "a", ""), ("in", 5, "a", "empty"),
                 ("table", 6, "~", "ignored"), ("in", 7, "~", "ignored")]
+    if scenario == "window":
+        # Regression: Kafka 3.9.1 counts a null value when the key is present.
+        rows = [("in", 1, "null-value", "~"), ("in", 2, "null-value", "x")] + rows
     rng = random.Random(73019)
     clock = 30
     for i in range(300):
