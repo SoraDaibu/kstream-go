@@ -39,3 +39,12 @@ Kill at each commit phase; inject timeout after successful broker commit; revoke
 ownership mid-batch; restore compacted changelogs; test fencing and offset replay;
 compare outputs against an independent Kafka Streams application. Model tests
 establish the transaction contract, not production exactly-once guarantees.
+
+## Bounded batch implementation
+
+ProcessBatch uses one atomic backend transaction for an explicit caller-bounded
+record slice. Every callback reads earlier staged writes and observes the clock
+at its own input position. Repeated writes to the same store key coalesce to the
+final changelog mutation while all output updates preserve their original order.
+Validation happens before callbacks; callback/commit errors poison the entire
+incarnation. Replay and ambiguous-commit tests cover multi-record batches.

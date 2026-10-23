@@ -1,2 +1,4 @@
 # Preserve benchmark output verbatim, including Go's padded CPU description.
 docs/benchmarks/*/*.txt -whitespace
+benchmarks/results/**/*.txt -whitespace
+benchmarks/results/**/*.csv -whitespace

@@ -1,0 +1,40 @@
+# trial 0
+goos: linux
+goarch: amd64
+pkg: github.com/SoraDaibu/kstream-go/execution
+cpu: AMD EPYC 9V74 80-Core Processor                
+BenchmarkTransactionBatch/stateful=true/batch=1         	     745	    737535 ns/op	      1024 records/op	  580368 B/op	   16063 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=1024      	    1596	    386716 ns/op	      1024 records/op	  396276 B/op	   10013 allocs/op
+PASS
+# trial 1
+goos: linux
+goarch: amd64
+pkg: github.com/SoraDaibu/kstream-go/execution
+cpu: AMD EPYC 9V74 80-Core Processor                
+BenchmarkTransactionBatch/stateful=true/batch=1         	     674	    750801 ns/op	      1024 records/op	  580370 B/op	   16063 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=1024      	    1590	    342715 ns/op	      1024 records/op	  396281 B/op	   10013 allocs/op
+PASS
+# trial 2
+goos: linux
+goarch: amd64
+pkg: github.com/SoraDaibu/kstream-go/execution
+cpu: AMD EPYC 9V74 80-Core Processor                
+BenchmarkTransactionBatch/stateful=true/batch=1         	     858	    755906 ns/op	      1024 records/op	  580367 B/op	   16063 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=1024      	    1646	    362924 ns/op	      1024 records/op	  396286 B/op	   10013 allocs/op
+PASS
+# trial 3
+goos: linux
+goarch: amd64
+pkg: github.com/SoraDaibu/kstream-go/execution
+cpu: AMD EPYC 9V74 80-Core Processor                
+BenchmarkTransactionBatch/stateful=true/batch=1         	     679	    797576 ns/op	      1024 records/op	  580371 B/op	   16063 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=1024      	    1640	    384226 ns/op	      1024 records/op	  396274 B/op	   10013 allocs/op
+PASS
+# trial 4
+goos: linux
+goarch: amd64
+pkg: github.com/SoraDaibu/kstream-go/execution
+cpu: AMD EPYC 9V74 80-Core Processor                
+BenchmarkTransactionBatch/stateful=true/batch=1         	     734	    777390 ns/op	      1024 records/op	  580369 B/op	   16063 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=1024      	    1690	    342683 ns/op	      1024 records/op	  396268 B/op	   10013 allocs/op
+PASS

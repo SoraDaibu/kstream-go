@@ -63,6 +63,14 @@ until a broker adapter can implement an actual exchange. This avoids silently
 producing incorrect distributed aggregates. Callbacks must be deterministic,
 respect record immutability, and use task stores for recoverable state.
 
+## Qualification program
+
+Full Kafka Streams parity and a 2.5x production-throughput target are tracked in
+[the feature inventory](docs/roadmap/parity.md), [qualification rules](docs/roadmap/qualification.md)
+and [issue #3](https://github.com/SoraDaibu/kstream-go/issues/3). These targets are
+not achieved by the initial prototype. Exploratory comparisons and all remaining
+gaps remain visible. Package-layer rules are checked automatically in CI.
+
 ## Design and validation
 
 Read the [architecture](docs/architecture.md) and the required ADRs:

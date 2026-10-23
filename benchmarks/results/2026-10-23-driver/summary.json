@@ -1,0 +1,24 @@
+{
+  "production_qualified": false,
+  "target_ratio": 2.5,
+  "scenarios": {
+    "filter": {
+      "median_paired_throughput_ratio": 12.756233731231672,
+      "exploratory_bootstrap_95pct": [
+        12.14600015290905,
+        12.804048884474147
+      ],
+      "go_median_rss_kib": 8568,
+      "kafka_median_rss_kib": 96780
+    },
+    "count": {
+      "median_paired_throughput_ratio": 9.122318278537865,
+      "exploratory_bootstrap_95pct": [
+        8.81011337815906,
+        9.456375071806601
+      ],
+      "go_median_rss_kib": 8568,
+      "kafka_median_rss_kib": 97992
+    }
+  }
+}

@@ -26,7 +26,7 @@ env = dict(os.environ, GOMAXPROCS='1', GOMEMLIMIT='512MiB')
 commands = {'go': [binary], 'kafka': ['java', '-XX:ActiveProcessorCount=1', '-Xms32m', '-Xmx512m', '-cp', classpath, 'dev.kstream.EngineBenchmark']}
 samples = []
 with (out / 'samples.csv').open('w') as f:
-    writer = csv.writer(f); writer.writerow(['engine','scenario','records','nanos','checksum','rss_kib','trial'])
+    writer = csv.writer(f, lineterminator="\n"); writer.writerow(['engine','scenario','records','nanos','checksum','rss_kib','trial'])
     for scenario in ['filter', 'count']:
         for trial in range(trials):
             checksums = []
