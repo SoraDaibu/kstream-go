@@ -35,3 +35,11 @@ but large assignments and blocking callbacks change memory/latency. Worker
 scheduling bounds active execution but introduces queueing and potential hot-task
 starvation. A global store mutex obscures ownership and is rejected. No final
 scheduling claim is made before representative broker-backed measurements.
+
+## Initial evidence
+
+The [2026-10-23 evaluation](../benchmarks/2026-10-23/README.md) measured both
+strategies on one and four CPUs. Bounded workers had lower overhead for small
+batches; per-task scheduling was faster for larger batches on that runner.
+Keep bounded mode as the initial default for its concurrency limit, while the
+production decision remains open pending live-stream and broker-backed evidence.

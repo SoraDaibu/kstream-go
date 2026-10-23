@@ -6,7 +6,8 @@ Streams as its conceptual and semantic reference. Apache-2.0 licensed.
 **This is an architecture and executable-core prototype, not a production Kafka
 Streams replacement.** A Kafka broker adapter, distributed repartitioning,
 consumer-group assignment and crash-safe persistent stores are not implemented.
-Compatibility remains subject to running the differential suite. See the
+The five implemented oracle scenarios pass differential testing against Kafka
+Streams 3.9.1; broader compatibility remains unproven. See the
 [compatibility matrix](docs/compatibility.md) and [validation status](docs/validation.md).
 
 The implementation keeps typed operators synchronous inside serial partition

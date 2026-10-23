@@ -1,7 +1,8 @@
 # Scheduling benchmarks
 
-ADR 0003 is provisional. There are no measured results yet; do not claim that
-bounded workers or goroutine-per-task scheduling is faster.
+ADR 0003 is provisional. The [initial measured evaluation](2026-10-23/README.md)
+includes raw output and environment details. Its results vary with batch size;
+no production scheduling winner is claimed.
 
 ```sh
 go version

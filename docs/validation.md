@@ -1,35 +1,42 @@
 # Validation status
 
-Initial workspace validation, 2026-10-23:
+Verified through GitHub Actions on 2026-10-23 at source commit
+`fd1761a61aec783393f06a6556f2088d9d434ee7`:
 
-- All five ADRs written before the core implementation; scheduling and production
-  compatibility deliberately remain provisional.
-- Source-level review completed for typed chaining, transactional staging,
-  fencing/recovery, null representation, aggregate timestamps, window clocks,
-  and explicit unsupported repartitioning.
-- Python trace generator executed for all five scenarios (308–310 rows each);
-  all shell scripts syntax-checked, Maven XML parsed, local documentation links
-  checked, and staged changes checked for whitespace errors.
-- Go build, gofmt, vet, tests, race detector, benchmarks, and Java differential
-  oracle have **not run** in the authoring environment. Its `/usr/bin/go` is the
-  Go board-game program, not the Go compiler; Maven is absent. Network requests
-  to install the toolchain could not complete.
-- GitHub connector identity resolved to SoraDaibu. It exposes no repository-create
-  operation here. CLI publishing is blocked by unavailable network access;
-  `gh auth status` also reports its configured token invalid. No public repository
-  creation or upload is claimed.
+- [Ordinary CI](https://github.com/SoraDaibu/kstream-go/actions/runs/39997157451):
+  gofmt check, `go vet ./...`, `go test -race -coverprofile=coverage.out ./...`,
+  and the word-count example passed.
+- [Bootstrap validation](https://github.com/SoraDaibu/kstream-go/actions/runs/39997157363):
+  the same Go checks, the independent Java oracle, and both scheduler benchmark
+  strategies passed. Environment: Go 1.23.12, Java 17, Linux/amd64.
+- The Kafka Streams **3.9.1** TopologyTestDriver oracle matched exact output
+  topic/key/value/timestamp traces for filter, unwindowed count, table updates
+  and tombstones, stream-table inner join, and tumbling windowed count. The five
+  scenarios contain 1,550 input records in total, including fixed boundaries,
+  nulls, out-of-order timestamps and generated rows using seed 73019.
+- The first oracle run found that windowed count in Kafka Streams 3.9.1 counts
+  null-valued records with present keys, unlike unwindowed count. The Go core was
+  corrected; both the trace generator and a focused Go regression test preserve
+  this finding. The full differential suite passed afterward.
+- [Scheduling measurements](benchmarks/2026-10-23/README.md) include raw output,
+  exact commands, environment and an evaluation of both strategies.
+- Shell scripts, workflow YAML and embedded shell, Maven XML, trace generation
+  and local Markdown links were also checked in the authoring workspace.
 
-The code is unverified until a real Go toolchain and the Java oracle run. CI is
-included to execute these gates after publication; a workflow file is not a test
-result. No benchmark winner or production EOS guarantee is claimed.
+The original authoring workspace could not install Go or Maven because shell
+network access was blocked. The connected GitHub account and Actions provided
+the validation path; the source was formatted by Go's actual gofmt tool. The
+temporary bootstrap workflow is removed after collecting these results. Ordinary
+CI remains required for subsequent changes.
 
-A temporary `bootstrap.yml` pull-request workflow can format the source and
-export it through a job log, run the Go/race/example suite, execute the Java
-oracle, and record both scheduling strategies. This provides a validation path
-when the authoring workspace cannot install tools. Remove that workflow after
-committing formatted source and obtaining passing ordinary CI checks. It has
-read-only repository permissions and exports only project Go source.
+## Remaining compatibility gates
 
-Before publication, use `scripts/format.sh` and `scripts/validate.sh`, run the
-independent Java suite and benchmark matrix, and update this status with actual
-results. `scripts/publish.sh` performs those checks before creating a public repo.
+The reference backend is an in-memory model. There is **no production Kafka
+adapter**, broker-backed changelog, consumer-group assignment, actual distributed
+repartition exchange or crash-safe local store yet. Consequently the project
+makes no broker-level exactly-once, rebalance-safety, production throughput, or
+full Kafka Streams compatibility claim. Broker failure injection, compaction
+restore, real repartitioning and representative live scheduling are release gates.
+
+All five ADRs preceded implementation. The architecture is a tested experimental
+core; production scheduling and additional feature compatibility remain open.

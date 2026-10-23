@@ -1,7 +1,8 @@
 # Compatibility matrix
 
 Reference: Apache Kafka Streams 3.9.1. No production compatibility certification.
-All changes to this table need executable evidence.
+All changes to this table need executable evidence. The [validation report](validation.md)
+links the passing Go/race suite and all five differential scenarios.
 
 | Concept | v0 behavior | Evidence / remaining work |
 |---|---|---|
@@ -9,7 +10,7 @@ All changes to this table need executable evidence.
 | KTable | Upsert, null-key skip, tombstone delete; ToStream emits input updates | Go tests; Java oracle table trace |
 | Grouped count | Null keys/values skipped, emits each count update | Go tests; Java oracle count trace |
 | Stream-table inner join | Stream-triggered current-value lookup, nulls skipped | Go tests; Java oracle join trace |
-| Event time | Operator-local max timestamp for windows; task clock for custom processors | Go boundary/isolation tests; oracle confirmation pending |
+| Event time | Operator-local max timestamp for windows; task clock for custom processors | Go boundary/isolation tests; Java oracle |
 | Tumbling count | [start,end), grace boundary, late drop, closed-window eviction; null values count when key is present | Go tests; Java oracle window trace |
 | Processor API | Factories instantiate per task; explicit key-change declaration | Go tests |
 | Partition tasks | Single partition number, task-local state | Isolation and race tests |
