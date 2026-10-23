@@ -6,7 +6,7 @@ links the passing Go/race suite and all five differential scenarios.
 
 | Concept | v0 behavior | Evidence / remaining work |
 |---|---|---|
-| KStream filter/map | Typed synchronous callbacks; preserves timestamps/null flags | Go tests; Java oracle filter trace |
+| KStream transforms/merge | Typed synchronous callbacks; null-aware value mapping, streaming flat maps, key selection and shared merge graph | Go tests; Java filter/filterNot/mapValues/flatMap/flatMapValues/merge traces |
 | KTable | Upsert, null-key skip, tombstone delete; ToStream emits input updates | Go tests; Java oracle table trace |
 | Grouped count | Null keys/values skipped, emits each count update | Go tests; Java oracle count trace |
 | Stream-table inner join | Stream-triggered current-value lookup, nulls skipped | Go tests; Java oracle join trace |

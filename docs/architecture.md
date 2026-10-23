@@ -6,7 +6,8 @@ This is an experimental vertical slice, with explicit production release gates.
 ```mermaid
 flowchart LR
   DSL[stream: typed DSL] --> Logical[topology: logical plan]
-  DSL --> Processor[processor: typed handlers]
+  DSL --> Graph[internal/graph: typed physical compiler]
+  Graph --> Processor[processor: typed handlers]
   Processor --> Task[execution: partition task]
   Task --> Store[state: task-owned overlay]
   Task --> Backend[transaction backend contract]

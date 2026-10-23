@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/SoraDaibu/kstream-go/execution"
+	"github.com/SoraDaibu/kstream-go/internal/graph"
 	"github.com/SoraDaibu/kstream-go/processor"
 	"github.com/SoraDaibu/kstream-go/record"
 	"github.com/SoraDaibu/kstream-go/serde"
@@ -16,7 +17,7 @@ import (
 
 type StreamsBuilder struct {
 	nodes   []topology.Node
-	sources []func(*execution.Task) error
+	sources []func(*graph.Context) error
 	topics  map[string]bool
 	sinks   map[string]int
 	err     error
@@ -40,7 +41,7 @@ func (b *StreamsBuilder) add(n topology.Node) { b.mutable(); b.nodes = append(b.
 
 type Topology struct {
 	plan    topology.Plan
-	sources []func(*execution.Task) error
+	sources []func(*graph.Context) error
 }
 
 func (b *StreamsBuilder) Build() (Topology, error) {
@@ -58,7 +59,7 @@ func (b *StreamsBuilder) Build() (Topology, error) {
 	if err != nil {
 		return Topology{}, err
 	}
-	return Topology{plan: p, sources: append([]func(*execution.Task) error(nil), b.sources...)}, nil
+	return Topology{plan: p, sources: append([]func(*graph.Context) error(nil), b.sources...)}, nil
 }
 func (t Topology) Describe() string    { return t.plan.Describe() }
 func (t Topology) Plan() topology.Plan { return t.plan }
@@ -67,36 +68,18 @@ func (t Topology) NewTask(ctx context.Context, s execution.Spec, backend executi
 	if err != nil {
 		return nil, err
 	}
+	compiled := graph.New(task)
 	for _, source := range t.sources {
-		if err := source(task); err != nil {
+		if err := source(compiled); err != nil {
 			return nil, err
 		}
 	}
 	return task, nil
 }
 
-type port[K, V any] struct {
-	subscribers []func(*execution.Task) processor.Handler[K, V]
-}
-
-func (p *port[K, V]) compile(t *execution.Task) processor.Handler[K, V] {
-	handlers := make([]processor.Handler[K, V], len(p.subscribers))
-	for i, f := range p.subscribers {
-		handlers[i] = f(t)
-	}
-	return func(r record.Record[K, V]) error {
-		for _, h := range handlers {
-			if err := h(r); err != nil {
-				return err
-			}
-		}
-		return nil
-	}
-}
-
 type KStream[K, V any] struct {
 	builder     *StreamsBuilder
-	port        *port[K, V]
+	port        *graph.Port[K, V]
 	name        string
 	key         serde.Codec[K]
 	value       serde.Codec[V]
@@ -112,12 +95,12 @@ func Stream[K, V any](b *StreamsBuilder, topic string, key serde.Codec[K], value
 	if !key.Valid() || !value.Valid() {
 		b.fail(errors.New("source requires valid codecs"))
 	}
-	p := &port[K, V]{}
+	p := &graph.Port[K, V]{}
 	s := KStream[K, V]{b, p, topic, key, value, true}
 	b.add(topology.Node{Name: topic, Kind: "source"})
-	b.sources = append(b.sources, func(t *execution.Task) error {
-		h := p.compile(t)
-		return t.Register(topic, func(in record.Bytes) error {
+	b.sources = append(b.sources, func(t *graph.Context) error {
+		h := p.Compile(t)
+		return t.Task.Register(topic, func(in record.Bytes) error {
 			r := record.Record[K, V]{Timestamp: in.Timestamp, NullKey: in.Key == nil, NullValue: in.Value == nil}
 			var err error
 			if !r.NullKey {
@@ -142,9 +125,11 @@ func (s KStream[K, V]) Process(name string, changesKeys bool, f processor.Factor
 	if f == nil {
 		s.builder.fail(errors.New("nil processor factory"))
 	}
-	p := &port[K, V]{}
+	p := &graph.Port[K, V]{}
 	s.builder.add(topology.Node{Name: name, Kind: "processor", Parents: []string{s.name}})
-	s.port.subscribers = append(s.port.subscribers, func(t *execution.Task) processor.Handler[K, V] { return f(t, processor.Forward[K, V](p.compile(t))) })
+	s.port.Subscribe(func(t *graph.Context) processor.Handler[K, V] {
+		return f(t.Task, processor.Forward[K, V](p.Compile(t)))
+	})
 	return KStream[K, V]{s.builder, p, name, s.key, s.value, s.partitioned && !changesKeys}
 }
 func (s KStream[K, V]) Filter(name string, predicate func(record.Record[K, V]) bool) KStream[K, V] {
@@ -170,10 +155,10 @@ func Map[K, V, K2, V2 any](s KStream[K, V], name string, key serde.Codec[K2], va
 	if fn == nil || !key.Valid() || !value.Valid() {
 		s.builder.fail(errors.New("map requires function and valid codecs"))
 	}
-	p := &port[K2, V2]{}
+	p := &graph.Port[K2, V2]{}
 	s.builder.add(topology.Node{Name: name, Kind: "map", Parents: []string{s.name}})
-	s.port.subscribers = append(s.port.subscribers, func(t *execution.Task) processor.Handler[K, V] {
-		next := p.compile(t)
+	s.port.Subscribe(func(t *graph.Context) processor.Handler[K, V] {
+		next := p.Compile(t)
 		return func(r record.Record[K, V]) error { return next(fn(r)) }
 	})
 	return KStream[K2, V2]{s.builder, p, name, key, value, false}
@@ -189,7 +174,8 @@ func (s KStream[K, V]) To(topic string) {
 	if topic == "" {
 		s.builder.fail(errors.New("sink topic required"))
 	}
-	s.port.subscribers = append(s.port.subscribers, func(t *execution.Task) processor.Handler[K, V] {
+	s.port.Subscribe(func(t *graph.Context) processor.Handler[K, V] {
+		task := t.Task
 		return func(r record.Record[K, V]) error {
 			out := record.Bytes{Topic: topic, Timestamp: r.Timestamp}
 			var err error
@@ -211,7 +197,7 @@ func (s KStream[K, V]) To(topic string) {
 					return errors.New("codec encoded non-null value as nil")
 				}
 			}
-			t.Emit(out)
+			task.Emit(out)
 			return nil
 		}
 	})

@@ -29,3 +29,13 @@ Go's compiler can inline some callbacks; no performance assumption is made about
 Java optimizations. Branch dispatch retains a small function-slice loop. The
 logical and physical plans may evolve independently. A fused/unfused differential
 mode is required before adding any semantics-changing optimizer.
+
+## Shared physical nodes
+
+The internal/graph package memoizes compiled typed ports per task. A merge or
+other shared downstream node must instantiate its processor factory exactly once,
+even when multiple source roots reach it. A regression tests this using a
+processor-local counter across two sources and independent task incarnations.
+Bindings use dynamic keys/values only during setup; record dispatch remains a
+synchronous typed handler chain with no per-record boxing or graph-map lookup.
+Logical topology validation remains independent of this physical compilation.

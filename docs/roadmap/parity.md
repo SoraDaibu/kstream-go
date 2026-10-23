@@ -7,7 +7,7 @@ needs independent semantics, recovery and integration coverage before completion
 | Layer/family | Current status | Required work and evidence |
 |---|---|---|
 | Source/sink codecs, nulls, timestamps | Partial | Headers/metadata, timestamp extractors, serde failure policies, custom partitioners |
-| KStream filter/map | Partial | filterNot, mapValues, flatMap, flatMapValues, selectKey, merge, split/branch, peek/foreach, print |
+| KStream filter/map | Partial: filter/filterNot, map/mapValues, flatMap/flatMapValues, selectKey, merge, peek/foreach | Split/branch, print, richer metadata/error policies; broader reference coverage |
 | KStream aggregation | Partial | groupBy/groupByKey exchange plans, aggregate, reduce, count and timestamp propagation |
 | KTable | Partial | filter/mapValues, table aggregations/retractions, toStream/selectKey, caching and suppression |
 | Stream-table joins | Partial | left joins, versioned table lookup, co-partitioning validation |
@@ -17,8 +17,8 @@ needs independent semantics, recovery and integration coverage before completion
 | GlobalKTable | Missing | replicated global state, stream joins, bootstrap and fault tolerance |
 | Windows | Partial | hopping, sliding, session, grace/retention, emit strategies, suppression and late records |
 | Processor API | Partial | cross-type processors, record metadata/headers, punctuation, schedules, lifecycle and stores |
-| Logical topology/compilation | Partial | exchange subtopologies, graph validation, naming, describe, safe optimizations |
-| Partition runtime | Partial | transaction batches, ordering, backpressure, fairness, pause/resume, idle partitions |
+| Logical topology/compilation | Partial | exchange subtopologies, exchange validation, safe rewrites and optimization evidence |
+| Partition runtime | Partial | backpressure, live fairness, pause/resume, idle partitions |
 | Kafka adapter | Missing | fetch/produce, groups, assignment, rebalance fencing, authentication and broker errors |
 | Repartition | Rejected explicitly | broker exchanges, key serde/partitioner agreement, partition counts and recovery |
 | Changelogs/restore | In-memory model | Kafka compaction, read-committed restore, checkpoints, restore callbacks and standby tasks |

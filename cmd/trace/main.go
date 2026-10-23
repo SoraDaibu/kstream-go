@@ -12,6 +12,7 @@ import (
 
 	"github.com/SoraDaibu/kstream-go/adapters/memory"
 	"github.com/SoraDaibu/kstream-go/execution"
+	"github.com/SoraDaibu/kstream-go/processor"
 	"github.com/SoraDaibu/kstream-go/record"
 	"github.com/SoraDaibu/kstream-go/serde"
 	"github.com/SoraDaibu/kstream-go/stream"
@@ -49,6 +50,38 @@ func run() error {
 		switch scenario {
 		case "filter":
 			s.Filter("nonempty", func(r record.Record[string, string]) bool { return !r.NullValue && r.Value != "" }).To("out")
+		case "filter-not":
+			s.FilterNot("not-nonempty", func(r record.Record[string, string]) bool { return !r.NullValue && r.Value != "" }).To("out")
+		case "mapvalues":
+			stream.MapValues(s, "values", serde.String, func(v string, null bool) (string, bool) {
+				if null {
+					return "null", false
+				}
+				return v + "!", false
+			}).To("out")
+		case "flatmapvalues":
+			stream.FlatMapValues(s, "values", serde.String, func(v string, null bool, yield func(string, bool) error) error {
+				if err := yield(v, null); err != nil {
+					return err
+				}
+				if null {
+					return yield("", true)
+				}
+				return yield(v+"2", false)
+			}).To("out")
+		case "flatmap":
+			stream.FlatMap(s, "twice", serde.String, serde.String, func(r record.Record[string, string], next processor.Forward[string, string]) error {
+				if err := next(r); err != nil {
+					return err
+				}
+				if !r.NullKey {
+					r.Key += "2"
+				}
+				return next(r)
+			}).To("out")
+		case "merge":
+			right := stream.Stream(b, "right", serde.String, serde.String)
+			stream.Merge(s, right, "merged").To("out")
 		case "count":
 			stream.Map(stream.Count(s, "counts").ToStream(), "format", serde.String, serde.String, func(r record.Record[string, int64]) record.Record[string, string] {
 				return record.Record[string, string]{Key: r.Key, Value: strconv.FormatInt(r.Value, 10), Timestamp: r.Timestamp}

@@ -38,3 +38,13 @@ The public surface is intentionally small. Name sources, sinks and stores for
 stable topology descriptions and changelog identities. Builders are single-owner
 objects; Build freezes a snapshot and future mutations fail. Tasks instantiate
 independent handlers and stores. API examples compile in the ordinary Go suite.
+
+## Null-aware value mappers and streaming flat maps
+
+MapValues takes `func(V, bool) (O, bool)`: the booleans represent Kafka nulls.
+This can revive a tombstone or create one without treating a Go zero as null.
+FlatMap and FlatMapValues use synchronous forward/yield callbacks instead of
+requiring an intermediate result slice. FlatMapValues preserves the input key,
+timestamp and partitioning; key-changing operators still require repartitioning.
+Forward/yield must not be retained or called concurrently. Observer side effects
+are explicitly outside transaction rollback, as in the reference model.

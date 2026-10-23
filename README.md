@@ -6,12 +6,12 @@ Streams as its conceptual and semantic reference. Apache-2.0 licensed.
 **This is an architecture and executable-core prototype, not a production Kafka
 Streams replacement.** A Kafka broker adapter, distributed repartitioning,
 consumer-group assignment and crash-safe persistent stores are not implemented.
-The five implemented oracle scenarios pass differential testing against Kafka
+The implemented oracle scenarios pass differential testing against Kafka
 Streams 3.9.1; broader compatibility remains unproven. See the
 [compatibility matrix](docs/compatibility.md) and [validation status](docs/validation.md).
 
 The implementation keeps typed operators synchronous inside serial partition
-tasks. It separates the public DSL, Processor API, logical plan, execution,
+tasks. It separates the public DSL, typed graph compiler, Processor API, logical plan, execution,
 state and infrastructure adapters. No Java source or class hierarchy is ported.
 
 ```go
@@ -45,7 +45,8 @@ this core directly to Kafka.
 
 ## Included behavior
 
-- `KStream`: filter, type-changing map, typed custom processors and sinks.
+- `KStream`: filter/filterNot, map/mapValues, flatMap/flatMapValues, selectKey,
+  merge, observers, typed custom processors and sinks.
 - `KTable`: source upserts, tombstone deletes, grouped counts and stream-triggered
   inner joins against current table state.
 - Event-time tumbling counts with half-open windows, grace, aggregate timestamps,

@@ -4,6 +4,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import org.apache.kafka.common.serialization.Serdes;
@@ -38,6 +39,11 @@ public final class Oracle {
             var source = b.stream("in", strings);
             switch (scenario) {
                 case "filter" -> source.filter((k,v) -> v != null && !v.isEmpty()).to("out", produced);
+                case "filter-not" -> source.filterNot((k,v) -> v != null && !v.isEmpty()).to("out", produced);
+                case "mapvalues" -> source.mapValues(v -> v == null ? "null" : v + "!").to("out", produced);
+                case "flatmapvalues" -> source.flatMapValues(v -> Arrays.asList(v, v == null ? null : v + "2")).to("out", produced);
+                case "flatmap" -> source.flatMap((k,v) -> Arrays.asList(KeyValue.pair(k,v), KeyValue.pair(k == null ? null : k + "2",v))).to("out", produced);
+                case "merge" -> source.merge(b.stream("right",strings)).to("out", produced);
                 case "count" -> source.groupByKey().count(Materialized.as("counts"))
                         .toStream().mapValues(v -> v.toString()).to("out", produced);
                 case "join" -> source.join(table, (a,c) -> a + ":" + c).to("out", produced);
@@ -59,7 +65,8 @@ public final class Oracle {
         props.put(StreamsConfig.STATE_DIR_CONFIG, state.toString());
         try (var driver = new TopologyTestDriver(b.build(), props)) {
             HashMap<String, TestInputTopic<String,String>> inputs = new HashMap<>();
-            for (String topic : scenario.equals("join") ? List.of("table", "in")
+            for (String topic : scenario.equals("merge") ? List.of("in", "right")
+                    : scenario.equals("join") ? List.of("table", "in")
                     : scenario.equals("table") ? List.of("table") : List.of("in")) {
                 inputs.put(topic, driver.createInputTopic(topic, new StringSerializer(), new StringSerializer()));
             }
