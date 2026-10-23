@@ -19,10 +19,10 @@ needs independent semantics, recovery and integration coverage before completion
 | Processor API | Partial | cross-type processors, record metadata/headers, punctuation, schedules, lifecycle and stores |
 | Logical topology/compilation | Partial | exchange subtopologies, exchange validation, safe rewrites and optimization evidence |
 | Partition runtime | Partial | backpressure, live fairness, pause/resume, idle partitions |
-| Kafka adapter | Missing | fetch/produce, groups, assignment, rebalance fencing, authentication and broker errors |
+| Kafka adapter | Partial: explicit input, transactions, fencing, changelogs | Consumer groups, assignment/rebalance, authentication/TLS failure coverage and production lifecycle |
 | Repartition | Rejected explicitly | broker exchanges, key serde/partitioner agreement, partition counts and recovery |
-| Changelogs/restore | In-memory model | Kafka compaction, read-committed restore, checkpoints, restore callbacks and standby tasks |
-| Exactly-once | In-memory model | atomic output/changelog/group offsets, producer fencing, ambiguous commits, crash/rebalance injection |
+| Changelogs/restore | Partial: Kafka read-committed prefix restore and compactable full checkpoints | Forced-compaction validation, snapshot acceleration, restore callbacks and standby tasks |
+| Exactly-once | Partial: Kafka atomic output/changelog/input checkpoints for fixed assignment | Consumer-group offsets/EOS v2, real ambiguous-commit fault injection, kill/rebalance tests |
 | Persistent state | Missing | key-value/window/session/versioned stores, write batches, snapshots, retention, iterators |
 | Interactive queries | Missing | task ownership discovery, local queries, consistency bounds, metadata and routing |
 | Runtime control/observability | Missing | lifecycle, error policies, metrics, lag, health and shutdown |

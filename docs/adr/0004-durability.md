@@ -1,6 +1,6 @@
 # ADR 0004: State durability and transaction coordination
 
-Status: Accepted contract; memory reference implementation only.
+Status: Accepted contract; memory reference and experimental fixed-assignment Kafka implementations.
 
 ## Decision
 

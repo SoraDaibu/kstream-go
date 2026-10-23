@@ -12,7 +12,8 @@ flowchart LR
   Task --> Store[state: task-owned overlay]
   Task --> Backend[transaction backend contract]
   Backend --> Memory[adapters/memory: executable model]
-  Backend -. future .-> Kafka[Kafka transaction adapter]
+  Backend --> Kafka[adapters/kafka: fixed-assignment transactions]
+  Kafka -. future .-> Groups[Group assignment and EOS v2 coordinator]
 ```
 
 The DSL builds typed ports and logical metadata. Build freezes the plan; NewTask

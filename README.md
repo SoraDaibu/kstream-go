@@ -4,8 +4,9 @@ An experimental, independent Go stream-processing core using Apache Kafka
 Streams as its conceptual and semantic reference. Apache-2.0 licensed.
 
 **This is an architecture and executable-core prototype, not a production Kafka
-Streams replacement.** A Kafka broker adapter, distributed repartitioning,
-consumer-group assignment and crash-safe persistent stores are not implemented.
+Streams replacement.** An experimental Kafka transaction/changelog adapter supports
+explicitly assigned tasks. Consumer-group assignment, group-offset EOS v2,
+distributed repartitioning and crash-safe local stores remain unimplemented.
 The implemented oracle scenarios pass differential testing against Kafka
 Streams 3.9.1; broader compatibility remains unproven. See the
 [compatibility matrix](docs/compatibility.md) and [validation status](docs/validation.md).
@@ -31,7 +32,7 @@ boundaries use explicit codecs. Build freezes the builder.
 ## Run
 
 Requires the Go **programming-language** toolchain, version 1.23 or newer.
-The core uses only the standard library.
+The core uses only the standard library; the Kafka adapter uses franz-go.
 
 ```sh
 go run ./examples/wordcount
@@ -40,8 +41,8 @@ go run ./examples/wordcount
 
 The complete example instantiates an in-memory transaction backend, creates a
 partition task, feeds records, and reads output. It prints `go: 1`, `kafka: 1`,
-`go: 2` after the topology description. A production service cannot yet connect
-this core directly to Kafka.
+`go: 2` after the topology description. The [Kafka count example](examples/kafka-count/main.go) demonstrates the
+experimental fixed-assignment adapter; see its [deployment boundaries](adapters/kafka/README.md).
 
 ## Included behavior
 
@@ -52,7 +53,9 @@ this core directly to Kafka.
 - Event-time tumbling counts with half-open windows, grace, aggregate timestamps,
   operator-local stream-time, and retention of open windows.
 - Partition tasks with independent state, committed changelog recovery, offset
-  replay suppression and generation fencing in the in-memory reference backend.
+  replay suppression and generation fencing in the reference backend. The
+  experimental Kafka adapter adds read-committed changelog restoration, broker
+  producer fencing and atomic output/state/input-position checkpoints.
 - Atomic state/output/offset transaction contract and fail-closed recovery after
   errors or ambiguous commit outcomes. External callback effects are outside it.
 - Bounded-worker and goroutine-per-task finite-batch schedulers and comparative

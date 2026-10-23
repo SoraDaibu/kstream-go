@@ -31,12 +31,12 @@ CI remains required for subsequent changes.
 
 ## Remaining compatibility gates
 
-The reference backend is an in-memory model. There is **no production Kafka
-adapter**, broker-backed changelog, consumer-group assignment, actual distributed
-repartition exchange or crash-safe local store yet. Consequently the project
-makes no broker-level exactly-once, rebalance-safety, production throughput, or
-full Kafka Streams compatibility claim. Broker failure injection, compaction
-restore, real repartitioning and representative live scheduling are release gates.
+The memory backend remains a reference model. An experimental Kafka adapter now
+supports explicit partition assignment with transactional output/state/input
+checkpoints, broker producer fencing and read-committed restoration. It does not
+implement consumer-group EOS v2, rebalance-safe assignment, distributed exchanges
+or a crash-safe local store. Full broker fault injection, forced-compaction
+validation, group coordination and production performance remain release gates.
 
 All five ADRs preceded implementation. The architecture is a tested experimental
 core; production scheduling and additional feature compatibility remain open.
@@ -53,3 +53,21 @@ The [paired Kafka driver comparison](../benchmarks/results/2026-10-23-driver/REA
 and [staged-state evaluation](benchmarks/2026-10-23-batching/README.md) retain actual
 raw data and limits. Full feature parity and production performance remain
 unqualified; issue #3 tracks the complete program.
+
+## Shared compilation and expanded DSL cycle
+
+Commit `7f3955d5253136a230151d138da412aa49a98e9a` passed
+[CI](https://github.com/SoraDaibu/kstream-go/actions/runs/40002240280) and the paired
+driver workflow. Ten oracle scenarios cover 3,100 source records and compare all
+three transaction batch sizes. Shared-node processor factories are instantiated
+once per task across merged sources; local race and factory-identity tests pass.
+
+## Real Kafka adapter cycle
+
+Commit `824fe1e425701a8227dd1e817aa7a0a2ac4d139e` passed
+[Kafka 3.9.1 integration](https://github.com/SoraDaibu/kstream-go/actions/runs/40003924774):
+restart/replay with read-committed isolation, aborted state/output exclusion,
+complete multi-topic checkpoints, tombstones versus empty values, producer
+fencing, independent partition identities, and source resumption. This is a
+single-broker fixture and an explicit-assignment checkpoint protocol, not
+consumer-group EOS v2 or a production fault-tolerance qualification.

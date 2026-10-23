@@ -1,0 +1,41 @@
+# Kafka transaction backend — experimental fixed assignment
+
+This adapter uses franz-go's public client APIs. It persists state changes,
+serialized output and a **full input-position checkpoint** in one Kafka producer
+transaction. State keys are scoped by application, task, partition, store and key.
+Offsets for every input topic are retained in each checkpoint so topic compaction
+cannot erase an unchanged input's position.
+
+Open initializes a stable task transactional ID by committing a unique restore
+barrier, fencing an old producer before reading the committed log prefix through
+that barrier. Unique barrier keys remain reachable during concurrent compaction;
+the task removes its barrier in its first successful data transaction. Restore
+applies state tombstones and the latest complete checkpoint. Ambiguous commit
+errors poison the task; a fresh incarnation restores the broker's committed state.
+
+The changelog topic must be provisioned with `cleanup.policy=compact`, durable
+replication and enough partitions. Outputs use Kafka-compatible keyed hashing
+through franz-go; changelogs always use the explicit task partition. Kafka/TLS
+and authentication options stay inside this adapter. Applications must close
+backend and input clients during task shutdown.
+
+`Backend.Input` consumes explicitly assigned source partitions from the committed
+checkpoint using read-committed isolation. Feed each returned bounded slice to
+`Task.ProcessBatch` before polling again. Recreate both input and task after a
+input, processing or commit error. The task ID and application ID must remain stable across
+restarts, and source ownership must be externally controlled.
+
+## Boundaries
+
+This is **not yet Kafka Streams group-managed EOS v2**. Input positions are stored
+atomically in the application's compacted changelog, not in consumer-group offset
+transactions. Consumer-group assignment/rebalance, standby tasks, persistent local
+stores, checkpoint migration, automatic topic provisioning and distributed
+repartition subtopologies remain separate work. No production qualification is
+claimed from the single-broker integration fixture.
+
+The integration workflow provisions a Kafka 3.9.1 broker and exercises restart
+recovery, replay suppression, aborted-record isolation, multi-topic checkpoints,
+tombstones/empty values, stale-producer fencing, partition identity and explicit
+input resumption. Tests require `KSTREAM_KAFKA_BROKERS` and the three documented
+`kstream-test-*` topics; ordinary unit tests skip broker-specific cases otherwise.
