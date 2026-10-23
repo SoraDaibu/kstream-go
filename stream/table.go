@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"errors"
 
-	"github.com/SoraDaibu/kstream-go/execution"
+	"github.com/SoraDaibu/kstream-go/internal/graph"
 	"github.com/SoraDaibu/kstream-go/processor"
 	"github.com/SoraDaibu/kstream-go/record"
 	"github.com/SoraDaibu/kstream-go/serde"
@@ -76,11 +76,12 @@ func Count[K, V any](s KStream[K, V], store string) KTable[K, int64] {
 	if store == "" {
 		s.builder.fail(errors.New("count store name required"))
 	}
-	p := &port[K, int64]{}
+	p := &graph.Port[K, int64]{}
 	name := store + "-count"
 	s.builder.add(topology.Node{Name: name, Kind: "count", Parents: []string{s.name}, Store: store})
-	s.port.subscribers = append(s.port.subscribers, func(t *execution.Task) processor.Handler[K, V] {
-		next := p.compile(t)
+	s.port.Subscribe(func(t *graph.Context) processor.Handler[K, V] {
+		task := t.Task
+		next := p.Compile(t)
 		return func(r record.Record[K, V]) error {
 			if r.NullKey || r.NullValue {
 				return nil
@@ -94,7 +95,7 @@ func Count[K, V any](s KStream[K, V], store string) KTable[K, int64] {
 			}
 			count := int64(0)
 			timestamp := r.Timestamp
-			if previous, ok := t.StoreGet(store, string(key)); ok {
+			if previous, ok := task.StoreGet(store, string(key)); ok {
 				var prior int64
 				count, prior, err = decodeAggregate(previous)
 				if err != nil {
@@ -105,7 +106,7 @@ func Count[K, V any](s KStream[K, V], store string) KTable[K, int64] {
 				}
 			}
 			count++
-			t.StorePut(store, string(key), encodeAggregate(count, timestamp))
+			task.StorePut(store, string(key), encodeAggregate(count, timestamp))
 			return next(record.Record[K, int64]{Key: r.Key, Value: count, Timestamp: timestamp})
 		}
 	})
@@ -127,10 +128,11 @@ func Join[K, L, R, O any](s KStream[K, L], table KTable[K, R], name string, valu
 	if joiner == nil || !value.Valid() {
 		s.builder.fail(errors.New("join requires function and codec"))
 	}
-	p := &port[K, O]{}
+	p := &graph.Port[K, O]{}
 	s.builder.add(topology.Node{Name: name, Kind: "stream-table-join", Parents: []string{s.name, table.updates.name}})
-	s.port.subscribers = append(s.port.subscribers, func(t *execution.Task) processor.Handler[K, L] {
-		next := p.compile(t)
+	s.port.Subscribe(func(t *graph.Context) processor.Handler[K, L] {
+		task := t.Task
+		next := p.Compile(t)
 		return func(r record.Record[K, L]) error {
 			if r.NullKey || r.NullValue {
 				return nil
@@ -142,7 +144,7 @@ func Join[K, L, R, O any](s KStream[K, L], table KTable[K, R], name string, valu
 			if key == nil {
 				return errors.New("non-null key encoded as nil")
 			}
-			stored, ok := t.StoreGet(table.store, string(key))
+			stored, ok := task.StoreGet(table.store, string(key))
 			if !ok {
 				return nil
 			}
