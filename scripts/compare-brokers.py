@@ -21,15 +21,16 @@ parser.add_argument('--driver', required=True)
 parser.add_argument('--classpath', required=True)
 parser.add_argument('--output', required=True)
 parser.add_argument('--brokers', default='localhost:9092')
+parser.add_argument('--profile-go', action='store_true', help='Go-only diagnostic profiles; no comparative result')
 args = parser.parse_args()
 out = Path(args.output).resolve(); out.mkdir(parents=True, exist_ok=True)
 if any(out.iterdir()):
     raise SystemExit('Use an empty output directory to preserve separate measurement runs')
 records = int(os.getenv('KSTREAM_BROKER_RECORDS', '200000'))
 warmup = int(os.getenv('KSTREAM_BROKER_WARMUP', '100000'))
-trials = int(os.getenv('KSTREAM_BROKER_TRIALS', '5'))
-if records < 1 or warmup < 0 or trials < 5:
-    raise SystemExit('positive records, nonnegative warmup and >=5 trials required')
+trials = int(os.getenv('KSTREAM_BROKER_TRIALS', '1' if args.profile_go else '5'))
+if records < 1 or warmup < 0 or trials < (1 if args.profile_go else 5):
+    raise SystemExit('positive records, nonnegative warmup and >=5 comparative trials (>=1 diagnostic) required')
 allowed = sorted(os.sched_getaffinity(0))
 app_cpu = allowed[0]
 driver_cpu = allowed[-1] if len(allowed) > 1 else app_cpu
@@ -48,12 +49,14 @@ manifest = {
     'rss_window': 'process high-water mark through measurement completion; shutdown excluded',
     'host': platform.platform(), 'allowed_cpus': allowed,
     'production_qualified': False,
+    'diagnostic_go_profiles': args.profile_go,
     'limits': 'Shared hosted runner; one broker; small state; no HA/failure/recovery throughput; different commit policies.'
 }
 (out / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
 environment = subprocess.run(['lscpu'], capture_output=True, text=True, check=True).stdout
 environment += subprocess.run(['go', 'version'], capture_output=True, text=True, check=True).stdout
 environment += subprocess.run(['java', '-version'], capture_output=True, text=True, check=True).stderr
+environment += subprocess.run(['go', 'version', '-m', args.go_app], capture_output=True, text=True, check=True).stdout
 (out / 'environment.txt').write_text(environment)
 env = dict(os.environ, GOMAXPROCS='1', GOMEMLIMIT='512MiB')
 ticks = os.sysconf('SC_CLK_TCK')
@@ -83,7 +86,7 @@ run_id = uuid.uuid4().hex[:10]
 for scenario in manifest['scenarios']:
     for trial in range(trials):
         paired = []
-        order = ['go', 'kafka'] if trial % 2 == 0 else ['kafka', 'go']
+        order = ['go'] if args.profile_go else (['go', 'kafka'] if trial % 2 == 0 else ['kafka', 'go'])
         for engine in order:
             name = f'{scenario}-{trial}-{engine}'
             application = f'ksbench-{run_id}-{name}'
@@ -106,6 +109,9 @@ for scenario in manifest['scenarios']:
                         command = [args.go_app, '-scenario', scenario, '-brokers', args.brokers,
                                    '-application', application, '-input', source, '-output', sink,
                                    '-changelog', changelog, '-state', directory, '-warmup', str(warmup)]
+                        if args.profile_go:
+                            command += ['-cpuprofile', str(out / f'{name}.cpu.pprof'),
+                                        '-heapprofile', str(out / f'{name}.heap.pprof')]
                     else:
                         command = ['java', '-XX:ActiveProcessorCount=1', '-Xms32m', '-Xmx512m',
                                    '-cp', args.classpath, 'dev.kstream.BrokerApplication', scenario,
@@ -181,6 +187,12 @@ for scenario in manifest['scenarios']:
                     if observation['warmup']['records'] != warmup or observation['measurement']['records'] != records:
                         raise RuntimeError('batch observation differs from verified input count')
                     sample['batch_observation'] = observation
+                    if args.profile_go:
+                        for profile, sample_index in [('cpu', 'cpu'), ('heap', 'alloc_space'), ('heap', 'alloc_objects'), ('heap', 'inuse_space')]:
+                            command = ['go', 'tool', 'pprof', '-top', '-cum', '-nodecount=60',
+                                       '-sample_index=' + sample_index, args.go_app, str(out / f'{name}.{profile}.pprof')]
+                            report = subprocess.run(command, capture_output=True, text=True, check=True, timeout=60)
+                            (out / f'{name}.{sample_index}.txt').write_text(report.stdout + report.stderr)
                 samples.append(sample)
                 paired.append(sample['result']['checksum'])
                 with (out / 'samples.jsonl').open('a') as output:
@@ -192,6 +204,15 @@ for scenario in manifest['scenarios']:
             raise RuntimeError(f'{scenario}/{trial}: engine output checksum mismatch')
 
 summary = {'production_qualified': False, 'target_throughput_ratio': 2.5, 'scenarios': {}}
+if args.profile_go:
+    # Profiling perturbs timing. Never enter the paired-comparison calculation.
+    summary = {'production_qualified': False, 'diagnostic_only': True,
+               'profile_scope': 'whole process; startup, warmup, measurement and shutdown',
+               'heap_scope': 'post-cleanup GC; alloc_space/alloc_objects cumulative, inuse_space not peak RSS',
+               'verified_cases': len(samples)}
+    (out / 'summary.json').write_text(json.dumps(summary, indent=2) + '\n')
+    print(json.dumps(summary, indent=2), flush=True)
+    raise SystemExit(0)
 rng = random.Random(73019)
 for scenario in manifest['scenarios']:
     by = {(sample['engine'], sample['trial']): sample for sample in samples if sample['scenario'] == scenario}
