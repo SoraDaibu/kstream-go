@@ -9,7 +9,8 @@ Both programs receive identical ordered topic/timestamp/key/value TSV traces and
 compare exact output topic/key/value/timestamp rows. Go runs transaction batch
 sizes 1, 32 and 256 against the same Java output; batching must preserve every
 record update and event-time result. Each batch size runs both memory and Pebble
-task stores, using both independent and grouped task commits. This configures 276
+task stores, using both independent and grouped task commits, with output capacity
+hints 0 and 256. This configures 552
 exact trace comparisons across twenty-three scenarios. `~` represents null; empty
 fields represent non-null empty strings. The fixed boundary cases are followed
 by 300 generated rows with seed 73019 per scenario. Caching is disabled to make

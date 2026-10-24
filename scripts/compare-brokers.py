@@ -29,6 +29,9 @@ if any(out.iterdir()):
 records = int(os.getenv('KSTREAM_BROKER_RECORDS', '200000'))
 warmup = int(os.getenv('KSTREAM_BROKER_WARMUP', '100000'))
 trials = int(os.getenv('KSTREAM_BROKER_TRIALS', '1' if args.profile_go else '5'))
+output_capacity = int(os.getenv('KSTREAM_BROKER_OUTPUT_CAPACITY', '0'))
+if not 0 <= output_capacity <= 65536:
+    raise SystemExit('output capacity must be between 0 and 65536')
 if records < 1 or warmup < 0 or trials < (1 if args.profile_go else 5):
     raise SystemExit('positive records, nonnegative warmup and >=5 comparative trials (>=1 diagnostic) required')
 allowed = sorted(os.sched_getaffinity(0))
@@ -44,6 +47,8 @@ manifest = {
     'compression': 'none', 'app_cpu_affinity': [app_cpu], 'driver_cpu_affinity': [driver_cpu],
     'heap_targets': 'Go GOMEMLIMIT=512MiB; Java -Xms32m -Xmx512m, active processors 1',
     'hard_rss_cap': False, 'broker_cpu_isolated': False, 'go_batch_observation': True,
+    'go_output_capacity': output_capacity,
+    'go_output_reservation': 'fresh transaction array, allocated on first output; not an output limit',
     'latency': 'external driver monotonic send ledger to read-committed output receipt',
     'cpu_window': 'observed around driver measurement events, before offset/tail verification; approximate',
     'rss_window': 'process high-water mark through measurement completion; shutdown excluded',
@@ -108,7 +113,8 @@ for scenario in manifest['scenarios']:
                     if engine == 'go':
                         command = [args.go_app, '-scenario', scenario, '-brokers', args.brokers,
                                    '-application', application, '-input', source, '-output', sink,
-                                   '-changelog', changelog, '-state', directory, '-warmup', str(warmup)]
+                                   '-changelog', changelog, '-state', directory, '-warmup', str(warmup),
+                                   '-output-capacity', str(output_capacity)]
                         if args.profile_go:
                             command += ['-cpuprofile', str(out / f'{name}.cpu.pprof'),
                                         '-heapprofile', str(out / f'{name}.heap.pprof')]

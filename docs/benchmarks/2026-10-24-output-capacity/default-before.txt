@@ -1,0 +1,30 @@
+goos: linux
+goarch: amd64
+pkg: github.com/SoraDaibu/kstream-go/execution
+cpu: AMD EPYC 9V74 80-Core Processor                
+BenchmarkTransactionBatch/stateful=false/batch=1         	     762	    474970 ns/op	      1024 records/op	  449920 B/op	   10080 allocs/op
+BenchmarkTransactionBatch/stateful=false/batch=1         	     746	    534853 ns/op	      1024 records/op	  449920 B/op	   10080 allocs/op
+BenchmarkTransactionBatch/stateful=false/batch=1         	     733	    469134 ns/op	      1024 records/op	  449920 B/op	   10080 allocs/op
+BenchmarkTransactionBatch/stateful=false/batch=16        	    1622	    217893 ns/op	      1024 records/op	  231808 B/op	    6496 allocs/op
+BenchmarkTransactionBatch/stateful=false/batch=16        	    1591	    207263 ns/op	      1024 records/op	  231808 B/op	    6496 allocs/op
+BenchmarkTransactionBatch/stateful=false/batch=16        	    1716	    206078 ns/op	      1024 records/op	  231808 B/op	    6496 allocs/op
+BenchmarkTransactionBatch/stateful=false/batch=256       	    2070	    164094 ns/op	      1024 records/op	  221248 B/op	    6032 allocs/op
+BenchmarkTransactionBatch/stateful=false/batch=256       	    2151	    163979 ns/op	      1024 records/op	  221248 B/op	    6032 allocs/op
+BenchmarkTransactionBatch/stateful=false/batch=256       	    2104	    188159 ns/op	      1024 records/op	  221248 B/op	    6032 allocs/op
+BenchmarkTransactionBatch/stateful=false/batch=1024      	    1854	    192042 ns/op	      1024 records/op	  327216 B/op	    5999 allocs/op
+BenchmarkTransactionBatch/stateful=false/batch=1024      	    1779	    218784 ns/op	      1024 records/op	  327216 B/op	    5999 allocs/op
+BenchmarkTransactionBatch/stateful=false/batch=1024      	    1922	    184951 ns/op	      1024 records/op	  327216 B/op	    5999 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=1          	     484	    698041 ns/op	      1024 records/op	  580373 B/op	   16927 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=1          	     510	    696755 ns/op	      1024 records/op	  580372 B/op	   16927 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=1          	     518	    693725 ns/op	      1024 records/op	  580372 B/op	   16927 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=16         	     622	    533757 ns/op	      1024 records/op	  512273 B/op	   12895 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=16         	     514	    592231 ns/op	      1024 records/op	  512277 B/op	   12895 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=16         	     632	    561230 ns/op	      1024 records/op	  512273 B/op	   12895 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=256        	     882	    400911 ns/op	      1024 records/op	  344428 B/op	   11147 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=256        	     938	    401456 ns/op	      1024 records/op	  344427 B/op	   11147 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=256        	     954	    416292 ns/op	      1024 records/op	  344427 B/op	   11147 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=1024       	     976	    371300 ns/op	      1024 records/op	  394403 B/op	   10877 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=1024       	    1002	    361568 ns/op	      1024 records/op	  394403 B/op	   10877 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=1024       	     972	    353507 ns/op	      1024 records/op	  394403 B/op	   10877 allocs/op
+PASS
+ok  	github.com/SoraDaibu/kstream-go/execution	9.551s

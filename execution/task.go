@@ -62,6 +62,7 @@ type Task struct {
 	sourceOffset      int64
 	hasRecordMetadata bool
 	captureMetadata   bool
+	outputCapacity    int
 }
 
 func New(ctx context.Context, s Spec, b Backend, options ...Option) (*Task, error) {
@@ -97,7 +98,7 @@ func New(ctx context.Context, s Spec, b Backend, options ...Option) (*Task, erro
 	if err != nil {
 		return nil, err
 	}
-	task := &Task{spec: s, backend: b, generation: generation, store: storage, offsets: cloneOffsets(checkpoint.NextOffsets), streamTime: checkpoint.StreamTime, handlers: make(map[string]func(record.Bytes) error), captureMetadata: config.recordMetadata}
+	task := &Task{spec: s, backend: b, generation: generation, store: storage, offsets: cloneOffsets(checkpoint.NextOffsets), streamTime: checkpoint.StreamTime, handlers: make(map[string]func(record.Bytes) error), captureMetadata: config.recordMetadata, outputCapacity: config.outputCapacity}
 	task.group, _ = b.(*Group)
 	initialized = true
 	return task, nil
@@ -397,6 +398,9 @@ func (t *Task) StoreScan(store string, visit func(string, []byte)) error {
 }
 func (t *Task) Emit(r record.Bytes) {
 	t.requirePending()
+	if t.outputCapacity > 0 && t.pending.Outputs == nil {
+		t.pending.Outputs = make([]record.Bytes, 0, t.outputCapacity)
+	}
 	r.Partition = t.spec.Partition
 	r.Offset = -1
 	t.pending.Outputs = append(t.pending.Outputs, r.Clone())

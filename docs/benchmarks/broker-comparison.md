@@ -33,6 +33,10 @@ The current CI experiment explicitly sets one million warmup and one million
 measured records to investigate startup/runtime effects after observing mostly
 full input batches. Environment overrides and each retained manifest identify
 the actual size; the script defaults preserve reproduction of the first run.
+The current CI experiment also explicitly sets KSTREAM_BROKER_OUTPUT_CAPACITY=4096
+for its one-output-per-input fixtures. The library and script defaults remain
+zero. Each manifest records the actual hint; it is not an output limit. See
+[output capacity](../output-capacity.md) and its sparse-output tradeoff.
 
 The output retains samples.jsonl, summary.json, manifest.json, environment data,
 commands and all app/driver/admin logs. Throughput excludes warmup and result
