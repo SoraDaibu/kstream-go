@@ -1,5 +1,9 @@
 # Kafka transaction backend — experimental fixed assignment
 
+This page describes Backend and Input for explicit assignment.
+[RunGroup](GROUPS.md) adds a separate experimental consumer-group worker with
+atomic group offsets, state and output and a bounded task owner.
+
 This adapter uses franz-go's public client APIs. It persists state changes,
 serialized output and a **full input-position checkpoint** in one Kafka producer
 transaction. State keys are scoped by application, task, partition, store and key.
@@ -36,11 +40,11 @@ restarts, and source ownership must be externally controlled.
 
 ## Boundaries
 
-This is **not yet Kafka Streams group-managed EOS v2**. Input positions are stored
-atomically in the application's compacted changelog, not in consumer-group offset
-transactions. Consumer-group assignment/rebalance, standby tasks, local checkpoint
-reuse/migration, automatic topic provisioning and distributed
-repartition subtopologies remain separate work. No production qualification is
+Fixed-assignment input positions are stored atomically in the application's
+compacted changelog. Consumer-group offset transactions and eager assignment are
+provided by the separate RunGroup API. Standby tasks, local checkpoint
+reuse/migration, restore-marker garbage collection, automatic topic provisioning
+and distributed repartition subtopologies remain separate work. No production qualification is
 claimed from the single-broker integration fixture.
 Optional Pebble task stores are covered by the integration suite, but this is
 not yet a complete Kafka Streams state subsystem.

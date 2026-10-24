@@ -15,13 +15,13 @@ links the passing Go/race suite and differential scenarios.
 | Tumbling count | [start,end), grace boundary, late drop, closed-window eviction; null values count when key is present | Go tests; Java oracle window trace |
 | Processor API | Factories instantiate per task; explicit key-change declaration | Go tests |
 | Partition tasks | Single partition number, task-local state | Isolation and race tests |
-| Changelog/recovery/EOS | In-memory model plus experimental fixed-assignment Kafka transactions/checkpoints | Model failures and real-broker recovery/fencing/aborted-record tests; group EOS v2 pending |
+| Changelog/recovery/EOS | In-memory model, fixed checkpoints and experimental group-offset transactions | Model and broker recovery/fencing/aborted-record gates; broader group fault qualification remains open |
 | Persistent local stores | Optional shared Pebble engine, task-owned key-value namespaces, atomic batches, synchronous write mode and streamed cache loads | Ownership/reopen/failure tests; local checkpoint reuse and specialized stores pending |
 | Repartition | Logical explicit node; Build fails until Kafka exchange exists | Rejection tests |
 | Other joins/windows | Not implemented | Do not infer compatibility |
 | Caching/suppression | Disabled/absent; every update emitted | Deliberate difference, oracle cache disabled |
 | Negative timestamps | Rejected | Deliberate restriction tested |
-| Assignment/fault tolerance | Caller-owned task lifecycle; no rebalance protocol | Kafka adapter release gate |
+| Assignment/fault tolerance | Explicit assignment or experimental eager range group worker with co-location checks | Group restart/rebalance/kill gates; cooperative assignment, standby and broader failure qualification pending |
 
 Nulls use explicit flags, not Go zero values. Keys used in stores are encoded with
 an explicit deterministic codec. Users must select codecs with stable encodings

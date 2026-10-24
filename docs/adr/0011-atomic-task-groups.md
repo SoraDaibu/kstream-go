@@ -1,6 +1,6 @@
 # ADR 0011: Atomic multi-task transaction boundary
 
-Status: Proposed before implementation; model, oracle and broker integration gated.
+Status: Accepted for the tested atomic model boundary; Kafka group integration has separate broker gates.
 
 The current task commits one partition's state/output/checkpoint independently.
 A group consumer poll may contain several partitions. Committing that poll's

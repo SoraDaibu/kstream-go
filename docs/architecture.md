@@ -13,8 +13,9 @@ flowchart LR
   Store --> Persistent[adapters/pebble: shared physical engine]
   Task --> Backend[transaction backend contract]
   Backend --> Memory[adapters/memory: executable model]
-  Backend --> Kafka[adapters/kafka: fixed-assignment transactions]
-  Kafka -. future .-> Groups[Group assignment and EOS v2 coordinator]
+  Backend --> Kafka[adapters/kafka: fixed and group transactions]
+  Kafka --> Groups[Bounded group worker]
+  Groups -. future .-> More[Cooperative assignment and standby replication]
 ```
 
 The DSL builds typed ports and logical metadata. Build freezes the plan; NewTask
@@ -51,8 +52,10 @@ Task IDs and application IDs are stable caller-provided infrastructure identitie
 An execution.Group optionally stages several task batches before a single atomic
 backend decision, then applies all local caches before publishing checkpoints.
 The memory model validates every participant's generation before publication.
-This enables a future consumer-group coordinator; it does not itself implement
-Kafka group metadata, assignment or EOS v2. See [task groups](task-groups.md).
+The Kafka adapter's RunGroup composes this boundary with a group transaction
+session, assignment snapshots and source polling. Generic execution does not
+import Kafka client types. See [task groups](task-groups.md) and
+[group worker boundaries](../adapters/kafka/GROUPS.md).
 
 ## Roadmap and acceptance gates
 
