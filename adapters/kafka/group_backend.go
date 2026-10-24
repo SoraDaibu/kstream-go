@@ -137,28 +137,45 @@ func (b *groupBackend) CommitTasks(ctx context.Context, transactions []execution
 			}
 		}
 	}
-	var rows []*kgo.Record
+	rowCount := len(transactions) // One complete checkpoint per changed task.
+	for _, tx := range transactions {
+		rowCount += len(tx.Transaction.Mutations) + len(tx.Transaction.Outputs)
+	}
+	for _, entry := range b.entries {
+		if entry.barrier != nil {
+			rowCount++
+		}
+	}
+	// Fresh arrays own all record structs for this call. Do not reuse them after
+	// ProduceSync: client hooks/results can retain individual record pointers.
+	records := make([]kgo.Record, rowCount)
+	rows := make([]*kgo.Record, 0, rowCount)
+	appendRow := func(row kgo.Record) {
+		i := len(rows)
+		records[i] = row
+		rows = append(rows, &records[i])
+	}
 	now := time.Now()
 	for _, tx := range transactions {
 		for _, mutation := range tx.Transaction.Mutations {
-			rows = append(rows, &kgo.Record{Topic: b.config.ChangelogTopic, Partition: tx.Spec.Partition, Key: encodeKey(stateKind, tx.Spec, mutation.Store, mutation.Key), Value: mutation.Value, Timestamp: now})
+			appendRow(kgo.Record{Topic: b.config.ChangelogTopic, Partition: tx.Spec.Partition, Key: encodeKey(stateKind, tx.Spec, mutation.Store, mutation.Key), Value: mutation.Value, Timestamp: now})
 		}
 		for _, output := range tx.Transaction.Outputs {
 			if output.Topic == b.config.ChangelogTopic {
 				return b.abort(ctx, errors.New("user output cannot target the internal changelog"))
 			}
-			rows = append(rows, &kgo.Record{Topic: output.Topic, Partition: output.Partition, Key: output.Key, Value: output.Value, Timestamp: time.UnixMilli(output.Timestamp)})
+			appendRow(kgo.Record{Topic: output.Topic, Partition: output.Partition, Key: output.Key, Value: output.Value, Timestamp: time.UnixMilli(output.Timestamp)})
 		}
 		meta := proposed[tx.Spec.Partition]
 		encoded, err := json.Marshal(checkpoint{NextOffsets: meta.NextOffsets, StreamTime: meta.StreamTime})
 		if err != nil {
 			return b.abort(ctx, err)
 		}
-		rows = append(rows, &kgo.Record{Topic: b.config.ChangelogTopic, Partition: tx.Spec.Partition, Key: encodeKey(metadataKind, tx.Spec, "", ""), Value: encoded, Timestamp: now})
+		appendRow(kgo.Record{Topic: b.config.ChangelogTopic, Partition: tx.Spec.Partition, Key: encodeKey(metadataKind, tx.Spec, "", ""), Value: encoded, Timestamp: now})
 	}
 	for partition, entry := range b.entries {
 		if entry.barrier != nil {
-			rows = append(rows, &kgo.Record{Topic: b.config.ChangelogTopic, Partition: partition, Key: entry.barrier, Value: nil, Timestamp: now})
+			appendRow(kgo.Record{Topic: b.config.ChangelogTopic, Partition: partition, Key: entry.barrier, Value: nil, Timestamp: now})
 		}
 	}
 	if len(rows) > 0 {

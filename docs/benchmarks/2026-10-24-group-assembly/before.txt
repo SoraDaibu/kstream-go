@@ -1,0 +1,21 @@
+goos: linux
+goarch: amd64
+pkg: github.com/SoraDaibu/kstream-go/adapters/kafka
+cpu: AMD EPYC 9V74 80-Core Processor                
+BenchmarkGroupAssembly/records=2         	  148474	      4494 ns/op	    1992 B/op	      40 allocs/op
+BenchmarkGroupAssembly/records=2         	  137624	      4636 ns/op	    1992 B/op	      40 allocs/op
+BenchmarkGroupAssembly/records=2         	  151038	      4370 ns/op	    1992 B/op	      40 allocs/op
+BenchmarkGroupAssembly/records=2         	  137104	      4076 ns/op	    1992 B/op	      40 allocs/op
+BenchmarkGroupAssembly/records=2         	  137403	      4164 ns/op	    1992 B/op	      40 allocs/op
+BenchmarkGroupAssembly/records=512       	   12674	     46179 ns/op	   92818 B/op	     556 allocs/op
+BenchmarkGroupAssembly/records=512       	   12594	     46796 ns/op	   92817 B/op	     556 allocs/op
+BenchmarkGroupAssembly/records=512       	   12804	     47943 ns/op	   92818 B/op	     556 allocs/op
+BenchmarkGroupAssembly/records=512       	   12346	     48209 ns/op	   92818 B/op	     556 allocs/op
+BenchmarkGroupAssembly/records=512       	   12637	     47629 ns/op	   92818 B/op	     556 allocs/op
+BenchmarkGroupAssembly/records=4096      	    1404	    429416 ns/op	  811749 B/op	    4147 allocs/op
+BenchmarkGroupAssembly/records=4096      	    1293	    485323 ns/op	  811750 B/op	    4147 allocs/op
+BenchmarkGroupAssembly/records=4096      	    1207	    480731 ns/op	  811750 B/op	    4147 allocs/op
+BenchmarkGroupAssembly/records=4096      	    1243	    456834 ns/op	  811748 B/op	    4147 allocs/op
+BenchmarkGroupAssembly/records=4096      	    1372	    447026 ns/op	  811750 B/op	    4147 allocs/op
+PASS
+ok  	github.com/SoraDaibu/kstream-go/adapters/kafka	12.269s
