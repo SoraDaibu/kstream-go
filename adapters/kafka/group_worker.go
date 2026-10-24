@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/SoraDaibu/kstream-go/execution"
-	"github.com/SoraDaibu/kstream-go/record"
 	"github.com/twmb/franz-go/pkg/kerr"
 	"github.com/twmb/franz-go/pkg/kgo"
 )
@@ -273,19 +272,24 @@ func RunGroup(ctx context.Context, config GroupConfig, factory TaskFactory) (err
 				return errors.New("source partition count changed while worker was running")
 			}
 		}
-		batches := make([]execution.TaskBatch, 0, len(assignment.partitions))
-		positions := make(map[int32]int, len(assignment.partitions))
-		backend.pollNext = make(map[int32]map[string]int64)
-		ownershipChanged := false
-		for _, row := range rows {
-			if !assignment.partitions[row.Partition] {
-				ownershipChanged = true
-				break
+		batches, positions, prepareErr := prepareGroupBatches(rows, assignment.partitions)
+		if prepareErr != nil {
+			if err := backend.abortPoll(ctx); err != nil {
+				return err
 			}
-			task := tasks[row.Partition]
+			if err := reset(tracker.current.Load()); err != nil {
+				return err
+			}
+			continue
+		}
+		backend.pollNext = positions
+		ownershipChanged := false
+		for i := range batches {
+			partition := batches[i].Records[0].Partition
+			task := tasks[partition]
 			if task == nil {
 				restoreCtx, stop := context.WithTimeout(ctx, config.RestoreTimeout)
-				task, err = factory(restoreCtx, execution.Spec{ApplicationID: config.ApplicationID, ID: "0", Partition: row.Partition}, group)
+				task, err = factory(restoreCtx, execution.Spec{ApplicationID: config.ApplicationID, ID: "0", Partition: partition}, group)
 				stop()
 				if err != nil {
 					if errors.Is(err, errGroupRebalanced) {
@@ -312,19 +316,9 @@ func RunGroup(ctx context.Context, config GroupConfig, factory TaskFactory) (err
 				if !valid {
 					return errors.Join(errors.New("task source topics differ from group subscription"), task.Close())
 				}
-				tasks[row.Partition] = task
+				tasks[partition] = task
 			}
-			index, ok := positions[row.Partition]
-			if !ok {
-				index = len(batches)
-				positions[row.Partition] = index
-				batches = append(batches, execution.TaskBatch{Task: task})
-			}
-			batches[index].Records = append(batches[index].Records, record.Bytes{Topic: row.Topic, Partition: row.Partition, Offset: row.Offset, Timestamp: row.Timestamp.UnixMilli(), Key: row.Key, Value: row.Value})
-			if backend.pollNext[row.Partition] == nil {
-				backend.pollNext[row.Partition] = make(map[string]int64)
-			}
-			backend.pollNext[row.Partition][row.Topic] = row.Offset + 1
+			batches[i].Task = task
 		}
 		if ownershipChanged || tracker.current.Load() != assignment {
 			if err := backend.abortPoll(ctx); err != nil {
