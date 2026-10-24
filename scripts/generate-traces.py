@@ -9,7 +9,7 @@ base = [("in", 0, "a", "one"), ("in", 9, "a", "two"), ("in", 10, "b", "x"),
         ("in", 14, "a", "x"), ("in", 8, "a", "late"), ("in", 15, "b", "clock"),
         ("in", 9, "a", "closed"), ("in", 20, "~", "null-key"),
         ("in", 21, "a", "~"), ("in", 22, "", "")]
-for scenario in ("filter", "filter-not", "mapvalues", "flatmap", "flatmapvalues", "merge", "metadata", "metadata-fanout", "process-typed", "process-typed-fanout", "count", "reduce", "aggregate", "aggregate-null", "window", "hopping", "hopping-uneven", "table", "table-filter", "table-filter-not", "table-mapvalues", "table-transform-join", "join", "join-null", "left-join"):
+for scenario in ("filter", "filter-not", "branch", "branch-default", "mapvalues", "flatmap", "flatmapvalues", "merge", "metadata", "metadata-fanout", "process-typed", "process-typed-fanout", "count", "reduce", "aggregate", "aggregate-null", "window", "hopping", "hopping-uneven", "table", "table-filter", "table-filter-not", "table-mapvalues", "table-transform-join", "join", "join-null", "left-join"):
     rows = list(base)
     if scenario.startswith("process-typed"):
         rows += [("in", 3, "é🌊", "漢字"), ("in", 4, "skip", "!skip"),

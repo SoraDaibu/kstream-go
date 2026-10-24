@@ -243,3 +243,20 @@ configuration. Both settings preserve exact reference output.
 shows lower sampled output-array allocation, while filter remains below the
 2.5x throughput target and peak Go RSS remains higher. Default output capacity
 stays zero; application-specific hints have documented sparse/fanout tradeoffs.
+
+## Cross-type Processor API cycle
+
+Source `bf1c22cf6dde49e26eb1ce026b07f2ffcb0719ec` passed
+[Go/race/layer and all 600 reference comparisons](https://github.com/SoraDaibu/kstream-go/actions/runs/40084028574),
+[persistent state](https://github.com/SoraDaibu/kstream-go/actions/runs/40084028579)
+and all four [broker fault suites](https://github.com/SoraDaibu/kstream-go/actions/runs/40084028587).
+Twenty-five scenarios compare 7,833 inputs across both stores, three batch sizes,
+two commit modes and output capacities 0/256. Two public Java ContextualProcessor
+traces check numeric intermediate keys/values, UTF-8 byte lengths, source offsets,
+nulls, dropped records and fanout with modified timestamps. All preceding input
+traces remain unchanged. Local tests additionally cover staged custom state,
+task/supplier ownership, recovery/replay, and state/output/offset rollback.
+
+[Dispatch measurements](benchmarks/2026-10-24-typed-processors/README.md) find the
+same transaction allocations for same-type and cross-type APIs at 1/256 records;
+this is an overhead check, not a Kafka throughput qualification.

@@ -7,7 +7,7 @@ needs independent semantics, recovery and integration coverage before completion
 | Layer/family | Current status | Required work and evidence |
 |---|---|---|
 | Source/sink codecs, nulls, timestamps | Partial: codecs/null flags, timestamps and processor source metadata | Headers, timestamp extractors, serde failure policies, custom partitioners |
-| KStream filter/map | Partial: filter/filterNot, map/mapValues, flatMap/flatMapValues, selectKey, merge, peek/foreach | Split/branch, print, richer metadata/error policies; broader reference coverage |
+| KStream filter/map | Partial: filter/filterNot, map/mapValues, flatMap/flatMapValues, selectKey, merge, ordered branch, peek/foreach | Named split builder, print, richer metadata/error policies; broader reference coverage |
 | KStream aggregation | Partial: groupByKey, count, reduce, typed aggregate and timestamp propagation | groupBy broker exchange plans, caching, window aggregates and broader reference coverage |
 | KTable | Partial: source, filter/filterNot, nullable mapValues, ToStream and lookup joins | table aggregations/retractions, toStream/selectKey, caching and suppression |
 | Stream-table joins | Partial: inner/left current-value lookup and nullable results | versioned table lookup, co-partitioning validation and broker scheduling qualification |

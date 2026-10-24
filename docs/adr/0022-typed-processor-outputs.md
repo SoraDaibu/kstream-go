@@ -1,6 +1,7 @@
 # ADR 0022: Typed processor input and output boundaries
 
-Status: accepted for implementation; independent reference validation required.
+Status: accepted; 600 independent reference comparisons passed at source
+`bf1c22cf6dde49e26eb1ce026b07f2ffcb0719ec`.
 
 Kafka Streams' public Processor API permits distinct input and output types.
 The existing Go KStream.Process method deliberately uses one key/value pair:

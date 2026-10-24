@@ -67,6 +67,23 @@ func run() error {
 			s.Filter("nonempty", func(r record.Record[string, string]) bool { return !r.NullValue && r.Value != "" }).To("out")
 		case "filter-not":
 			s.FilterNot("not-nonempty", func(r record.Record[string, string]) bool { return !r.NullValue && r.Value != "" }).To("out")
+		case "branch", "branch-default":
+			checks := []func(record.Record[string, string]) bool{
+				func(r record.Record[string, string]) bool { return !r.NullValue && r.Value == "" },
+				func(r record.Record[string, string]) bool { return r.NullKey || r.Key == "a" },
+			}
+			if scenario == "branch-default" {
+				checks = append(checks, func(record.Record[string, string]) bool { return true })
+			}
+			for i, branch := range s.Branch("routes", checks...) {
+				prefix := strconv.Itoa(i) + ":"
+				stream.MapValues(branch, "label-"+strconv.Itoa(i), serde.String, func(v string, null bool) (string, bool) {
+					if null {
+						v = "null"
+					}
+					return prefix + v, false
+				}).To("out")
+			}
 		case "mapvalues":
 			stream.MapValues(s, "values", serde.String, func(v string, null bool) (string, bool) {
 				if null {
