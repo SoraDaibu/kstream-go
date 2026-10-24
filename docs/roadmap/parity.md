@@ -16,7 +16,7 @@ needs independent semantics, recovery and integration coverage before completion
 | Foreign-key table joins | Missing | subscription/repartition protocol, old-key removal, recovery |
 | GlobalKTable | Missing | replicated global state, stream joins, bootstrap and fault tolerance |
 | Windows | Partial: tumbling/hopping counts and per-window grace | sliding, session, window aggregates, configurable retention, emit strategies, suppression and broader late-record qualification |
-| Processor API | Partial: typed task factories, staged stores and source-record metadata | cross-type processors, headers, punctuation, schedules, lifecycle and richer stores |
+| Processor API | Partial: same/cross-type task factories, staged stores and source-record metadata | fixed-key processors, headers, punctuation, schedules, lifecycle and richer stores |
 | Logical topology/compilation | Partial | exchange subtopologies, exchange validation, safe rewrites and optimization evidence |
 | Partition runtime | Partial: task ownership, bounded batches, atomic groups and serial Kafka worker | cross-topic timestamp scheduling, idle controls, live fairness, pause/resume and broader backpressure |
 | Kafka adapter | Partial: fixed input and bounded group worker, transactions, fencing, changelogs | Cooperative/heterogeneous assignment, authentication/TLS failure coverage and broader production lifecycle |

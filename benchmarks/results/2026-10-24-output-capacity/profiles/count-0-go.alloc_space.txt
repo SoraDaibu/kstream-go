@@ -1,0 +1,46 @@
+File: app
+Build ID: 30c98f60d26d69ec2bed37eeb0bf0bd9797391bb
+Type: alloc_space
+Time: 2026-10-24 09:52:16 UTC
+Showing nodes accounting for 1695.59MB, 98.78% of 1716.52MB total
+Dropped 123 nodes (cum <= 8.58MB)
+      flat  flat%   sum%        cum   cum%
+         0     0%     0%  1059.47MB 61.72%  runtime.main
+         0     0%     0%  1057.92MB 61.63%  main.main
+         0     0%     0%  1057.92MB 61.63%  main.run
+         0     0%     0%  1056.24MB 61.53%  github.com/SoraDaibu/kstream-go/adapters/kafka.RunGroup
+         0     0%     0%   875.56MB 51.01%  github.com/SoraDaibu/kstream-go/execution.(*Group).Process
+    0.50MB 0.029% 0.029%   613.80MB 35.76%  github.com/twmb/franz-go/pkg/kgo.(*cursorOffsetNext).processRespPartition
+         0     0% 0.029%   613.80MB 35.76%  github.com/twmb/franz-go/pkg/kgo.(*source).fetch.func5
+         0     0% 0.029%   613.80MB 35.76%  github.com/twmb/franz-go/pkg/kgo.(*source).handleReqResp
+         0     0% 0.029%   613.30MB 35.73%  github.com/twmb/franz-go/pkg/kgo.(*cursorOffsetNext).processRecordBatch
+  339.85MB 19.80% 19.83%   548.25MB 31.94%  github.com/SoraDaibu/kstream-go/adapters/kafka.(*groupBackend).CommitTasks
+         0     0% 19.83%   327.31MB 19.07%  github.com/SoraDaibu/kstream-go/execution.(*Task).stage
+         0     0% 19.83%   327.31MB 19.07%  github.com/SoraDaibu/kstream-go/stream.Stream[go.shape.string,go.shape.string].func1.1
+         0     0% 19.83%   306.31MB 17.84%  github.com/SoraDaibu/kstream-go/internal/graph.(*Port[go.shape.string,go.shape.string]).Compile.func1
+         0     0% 19.83%   306.31MB 17.84%  github.com/SoraDaibu/kstream-go/stream.Count[go.shape.string,go.shape.string].func1.1
+  298.55MB 17.39% 37.22%   298.55MB 17.39%  github.com/twmb/franz-go/pkg/kgo.recordToRecord
+         0     0% 37.22%   235.80MB 13.74%  github.com/SoraDaibu/kstream-go/internal/graph.(*Port[go.shape.string,go.shape.int64]).Compile.func1
+         0     0% 37.22%   235.80MB 13.74%  github.com/SoraDaibu/kstream-go/stream.KStream[go.shape.string,go.shape.int64].To.func1.1
+  227.54MB 13.26% 50.48%   227.54MB 13.26%  github.com/twmb/franz-go/pkg/kgo.readRawRecords
+  185.30MB 10.80% 61.27%   215.80MB 12.57%  github.com/SoraDaibu/kstream-go/execution.(*Task).Emit
+   48.56MB  2.83% 64.10%   203.40MB 11.85%  github.com/twmb/franz-go/pkg/kgo.(*Client).ProduceSync
+         0     0% 64.10%   203.40MB 11.85%  github.com/twmb/franz-go/pkg/kgo.(*GroupTransactSession).ProduceSync
+  164.21MB  9.57% 73.67%   164.21MB  9.57%  github.com/SoraDaibu/kstream-go/adapters/kafka.prepareGroupBatches
+         0     0% 73.67%   154.84MB  9.02%  github.com/twmb/franz-go/pkg/kgo.(*Client).Produce (inline)
+  141.01MB  8.21% 81.88%   154.84MB  9.02%  github.com/twmb/franz-go/pkg/kgo.(*Client).produce
+   91.50MB  5.33% 87.21%    91.50MB  5.33%  github.com/SoraDaibu/kstream-go/record.CloneBytes (inline)
+   87.21MB  5.08% 92.29%    87.21MB  5.08%  github.com/twmb/franz-go/pkg/kgo.(*cursorOffsetNext).maybeKeepRecord (inline)
+         0     0% 92.29%       36MB  2.10%  github.com/SoraDaibu/kstream-go/execution.(*Task).StoreGet
+   32.05MB  1.87% 94.16%    32.05MB  1.87%  github.com/twmb/franz-go/pkg/kgo.(*brokerCxn).readConn.func2
+         0     0% 94.16%    30.50MB  1.78%  github.com/SoraDaibu/kstream-go/record.Bytes.Clone (inline)
+    4.51MB  0.26% 94.42%    29.51MB  1.72%  github.com/SoraDaibu/kstream-go/execution.(*Task).StorePut
+      21MB  1.22% 95.65%       21MB  1.22%  github.com/SoraDaibu/kstream-go/serde.init.func2
+   14.96MB  0.87% 96.52%    14.96MB  0.87%  github.com/twmb/franz-go/pkg/kgo.Fetches.Records
+   14.50MB  0.84% 97.36%    14.50MB  0.84%  github.com/SoraDaibu/kstream-go/serde.init.func3
+         0     0% 97.36%    13.84MB  0.81%  github.com/twmb/franz-go/pkg/kgo.(*Client).doPartitionRecord
+         0     0% 97.36%    13.84MB  0.81%  github.com/twmb/franz-go/pkg/kgo.(*Client).partitionRecord
+   13.84MB  0.81% 98.17%    13.84MB  0.81%  github.com/twmb/franz-go/pkg/kgo.(*recBatch).appendRecord
+         0     0% 98.17%    13.84MB  0.81%  github.com/twmb/franz-go/pkg/kgo.(*recBatch).tryBuffer
+         0     0% 98.17%    13.84MB  0.81%  github.com/twmb/franz-go/pkg/kgo.(*recBuf).bufferRecord
+   10.50MB  0.61% 98.78%    10.50MB  0.61%  github.com/SoraDaibu/kstream-go/serde.init.func1

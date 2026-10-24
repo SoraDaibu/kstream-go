@@ -1,0 +1,21 @@
+File: app
+Build ID: 30c98f60d26d69ec2bed37eeb0bf0bd9797391bb
+Type: inuse_space
+Time: 2026-10-24 09:52:06 UTC
+Showing nodes accounting for 2.31MB, 100% of 2.31MB total
+      flat  flat%   sum%        cum   cum%
+         0     0%     0%     2.31MB   100%  github.com/SoraDaibu/kstream-go/adapters/kafka.(*groupBackend).CommitTasks
+         0     0%     0%     2.31MB   100%  github.com/SoraDaibu/kstream-go/adapters/kafka.RunGroup
+         0     0%     0%     2.31MB   100%  github.com/SoraDaibu/kstream-go/execution.(*Group).Process
+         0     0%     0%     2.31MB   100%  github.com/twmb/franz-go/pkg/kgo.(*Client).Produce (inline)
+         0     0%     0%     2.31MB   100%  github.com/twmb/franz-go/pkg/kgo.(*Client).ProduceSync
+         0     0%     0%     2.31MB   100%  github.com/twmb/franz-go/pkg/kgo.(*Client).doPartitionRecord
+         0     0%     0%     2.31MB   100%  github.com/twmb/franz-go/pkg/kgo.(*Client).partitionRecord
+         0     0%     0%     2.31MB   100%  github.com/twmb/franz-go/pkg/kgo.(*Client).produce
+         0     0%     0%     2.31MB   100%  github.com/twmb/franz-go/pkg/kgo.(*GroupTransactSession).ProduceSync
+    2.31MB   100%   100%     2.31MB   100%  github.com/twmb/franz-go/pkg/kgo.(*recBatch).appendRecord
+         0     0%   100%     2.31MB   100%  github.com/twmb/franz-go/pkg/kgo.(*recBatch).tryBuffer
+         0     0%   100%     2.31MB   100%  github.com/twmb/franz-go/pkg/kgo.(*recBuf).bufferRecord
+         0     0%   100%     2.31MB   100%  main.main
+         0     0%   100%     2.31MB   100%  main.run
+         0     0%   100%     2.31MB   100%  runtime.main

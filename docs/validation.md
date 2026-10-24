@@ -228,3 +228,18 @@ Metadata capture uses setup wrappers only for custom processors; raw runtime
 handlers opt in. A rejected slice-reference design added one per-record
 allocation. The final design preserves allocation counts, with retained
 [paired overhead measurements](benchmarks/2026-10-24-processor-metadata/README.md).
+
+## Explicit output capacity cycle
+
+Source `58a50254fb02f8bc5eaa59aacd90becce750fe42` passed
+[Go/race/layer and all 552 reference comparisons](https://github.com/SoraDaibu/kstream-go/actions/runs/40083138116),
+[persistent state](https://github.com/SoraDaibu/kstream-go/actions/runs/40083138150),
+all four [broker fault suites](https://github.com/SoraDaibu/kstream-go/actions/runs/40083138120)
+and verified comparison/profile workloads. The 23 scenarios and 7,205 inputs
+are unchanged; output capacity 0 and 256 now run in every batch/store/commit
+configuration. Both settings preserve exact reference output.
+
+[Retained broker evidence](../benchmarks/results/2026-10-24-output-capacity/README.md)
+shows lower sampled output-array allocation, while filter remains below the
+2.5x throughput target and peak Go RSS remains higher. Default output capacity
+stays zero; application-specific hints have documented sparse/fanout tradeoffs.
