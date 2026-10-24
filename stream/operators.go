@@ -25,7 +25,7 @@ func (s KStream[K, V]) Peek(name string, action func(record.Record[K, V]) error)
 	if action == nil {
 		s.builder.fail(errors.New("nil observer"))
 	}
-	out := s.Process(name, false, func(_ processor.Context, next processor.Forward[K, V]) processor.Handler[K, V] {
+	out := s.process(name, false, func(_ processor.Context, next processor.Forward[K, V]) processor.Handler[K, V] {
 		return func(r record.Record[K, V]) error {
 			if err := action(r); err != nil {
 				return err
@@ -42,7 +42,7 @@ func (s KStream[K, V]) Foreach(name string, action func(record.Record[K, V]) err
 	if action == nil {
 		s.builder.fail(errors.New("nil action"))
 	}
-	s.Process(name, false, func(_ processor.Context, _ processor.Forward[K, V]) processor.Handler[K, V] {
+	s.process(name, false, func(_ processor.Context, _ processor.Forward[K, V]) processor.Handler[K, V] {
 		return processor.Handler[K, V](action)
 	})
 	s.builder.nodes[len(s.builder.nodes)-1].Kind = "foreach"

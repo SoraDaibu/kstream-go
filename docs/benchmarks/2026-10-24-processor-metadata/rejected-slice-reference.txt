@@ -1,0 +1,18 @@
+goos: linux
+goarch: amd64
+pkg: github.com/SoraDaibu/kstream-go/stream
+cpu: AMD EPYC 9V74 80-Core Processor                
+BenchmarkWindowExpiry/keys=64/size=1024         	  137095	      1703 ns/op	     991 B/op	      23 allocs/op
+BenchmarkWindowExpiry/keys=64/size=1024         	  144294	      1733 ns/op	     991 B/op	      23 allocs/op
+BenchmarkWindowExpiry/keys=64/size=1024         	  141393	      1884 ns/op	     992 B/op	      23 allocs/op
+BenchmarkWindowExpiry/keys=64/size=1152921504606846976         	  133696	      1708 ns/op	     976 B/op	      23 allocs/op
+BenchmarkWindowExpiry/keys=64/size=1152921504606846976         	  143095	      1726 ns/op	     976 B/op	      23 allocs/op
+BenchmarkWindowExpiry/keys=64/size=1152921504606846976         	  140241	      1717 ns/op	     976 B/op	      23 allocs/op
+BenchmarkWindowExpiry/keys=4096/size=1024                      	  100803	      2257 ns/op	    1360 B/op	      23 allocs/op
+BenchmarkWindowExpiry/keys=4096/size=1024                      	  103551	      2333 ns/op	    1361 B/op	      23 allocs/op
+BenchmarkWindowExpiry/keys=4096/size=1024                      	   96762	      2364 ns/op	    1360 B/op	      23 allocs/op
+BenchmarkWindowExpiry/keys=4096/size=1152921504606846976       	  129022	      1858 ns/op	    1007 B/op	      23 allocs/op
+BenchmarkWindowExpiry/keys=4096/size=1152921504606846976       	  133669	      1834 ns/op	    1007 B/op	      23 allocs/op
+BenchmarkWindowExpiry/keys=4096/size=1152921504606846976       	  131241	      1836 ns/op	    1007 B/op	      23 allocs/op
+PASS
+ok  	github.com/SoraDaibu/kstream-go/stream	3.456s

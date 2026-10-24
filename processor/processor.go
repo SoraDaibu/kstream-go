@@ -10,6 +10,9 @@ type Forward[K, V any] func(record.Record[K, V]) error
 // Stores belong exclusively to the current task. Scan order is unspecified.
 type Context interface {
 	StreamTime() int64
+	// RecordMetadata is present only while processing a consumed input record.
+	// Synchronous downstream forwarding retains that source identity.
+	RecordMetadata() (record.Metadata, bool)
 	StoreGet(store, key string) ([]byte, bool, error)
 	StorePut(store, key string, value []byte)
 	StoreScan(store string, visit func(string, []byte)) error

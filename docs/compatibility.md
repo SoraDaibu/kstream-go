@@ -15,7 +15,7 @@ links the passing Go/race suite and differential scenarios.
 | Event time | Operator-local max timestamp for windows; task clock for custom processors | Go boundary/isolation tests; Java oracle |
 | Tumbling count | [start,end), grace boundary, late drop, closed-window eviction; null values count when key is present | Go tests; Java oracle window trace |
 | Hopping count | Overlapping half-open windows, ascending start order, per-window grace, null values count | Membership/recovery/aborted-fanout tests; divisible/uneven advance Java traces passed |
-| Processor API | Factories instantiate per task; explicit key-change declaration | Go tests |
+| Processor API | Factories instantiate per task; explicit key-change declaration; optional current-input topic/partition/offset | Go callback/fanout/replay/cleanup tests; Java metadata traces required |
 | Partition tasks | Single partition number, task-local state | Isolation and race tests |
 | Changelog/recovery/EOS | In-memory model, fixed checkpoints and experimental group-offset transactions | Model and broker recovery/fencing/aborted-record gates; broader group fault qualification remains open |
 | Persistent local stores | Optional shared Pebble engine, task-owned key-value namespaces, atomic batches, synchronous write mode and streamed cache loads | Ownership/reopen/failure tests; local checkpoint reuse and specialized stores pending |

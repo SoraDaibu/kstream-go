@@ -58,6 +58,10 @@ type Task struct {
 	poisoned          bool
 	closed            bool
 	pendingStoreError error
+	sourceTopic       string
+	sourceOffset      int64
+	hasRecordMetadata bool
+	captureMetadata   bool
 }
 
 func New(ctx context.Context, s Spec, b Backend, options ...Option) (*Task, error) {
@@ -93,7 +97,7 @@ func New(ctx context.Context, s Spec, b Backend, options ...Option) (*Task, erro
 	if err != nil {
 		return nil, err
 	}
-	task := &Task{spec: s, backend: b, generation: generation, store: storage, offsets: cloneOffsets(checkpoint.NextOffsets), streamTime: checkpoint.StreamTime, handlers: make(map[string]func(record.Bytes) error)}
+	task := &Task{spec: s, backend: b, generation: generation, store: storage, offsets: cloneOffsets(checkpoint.NextOffsets), streamTime: checkpoint.StreamTime, handlers: make(map[string]func(record.Bytes) error), captureMetadata: config.recordMetadata}
 	task.group, _ = b.(*Group)
 	initialized = true
 	return task, nil
@@ -124,6 +128,19 @@ func cloneOffsets(m map[string]int64) map[string]int64 {
 func (t *Task) Register(topic string, h func(record.Bytes) error) error {
 	if topic == "" || h == nil || t.handlers[topic] != nil {
 		return fmt.Errorf("invalid or duplicate source %q", topic)
+	}
+	if t.captureMetadata {
+		t.handlers[topic] = func(r record.Bytes) error {
+			if t.sourceTopic != r.Topic {
+				t.sourceTopic = r.Topic
+			}
+			t.sourceOffset = r.Offset
+			t.hasRecordMetadata = true
+			err := h(r)
+			t.hasRecordMetadata = false
+			return err
+		}
+		return nil
 	}
 	t.handlers[topic] = h
 	return nil
@@ -211,6 +228,11 @@ func (t *Task) clearPending() {
 	t.pending = nil
 	t.pendingIndex = nil
 	t.pendingStoreError = nil
+	if t.captureMetadata {
+		t.sourceTopic = ""
+		t.sourceOffset = 0
+		t.hasRecordMetadata = false
+	}
 }
 func (t *Task) finish(completed *bool) {
 	t.clearPending()
@@ -275,6 +297,15 @@ func (t *Task) StreamTime() int64 {
 		return t.pending.StreamTime
 	}
 	return t.streamTime
+}
+
+// RecordMetadata is available only within a synchronous input callback. Tracking
+// scalar fields adds no per-record object or field to every typed record.
+func (t *Task) RecordMetadata() (record.Metadata, bool) {
+	if !t.hasRecordMetadata {
+		return record.Metadata{}, false
+	}
+	return record.Metadata{Topic: t.sourceTopic, Partition: t.spec.Partition, Offset: t.sourceOffset}, true
 }
 
 // mutationIndex uses a short linear scan for small write sets and promotes to

@@ -16,12 +16,13 @@ import (
 )
 
 type StreamsBuilder struct {
-	nodes   []topology.Node
-	sources []func(*graph.Context) error
-	topics  map[string]bool
-	sinks   map[string]int
-	err     error
-	frozen  bool
+	nodes          []topology.Node
+	sources        []func(*graph.Context) error
+	topics         map[string]bool
+	sinks          map[string]int
+	err            error
+	frozen         bool
+	recordMetadata bool
 }
 
 func NewStreamsBuilder() *StreamsBuilder {
@@ -40,8 +41,9 @@ func (b *StreamsBuilder) fail(err error) {
 func (b *StreamsBuilder) add(n topology.Node) { b.mutable(); b.nodes = append(b.nodes, n) }
 
 type Topology struct {
-	plan    topology.Plan
-	sources []func(*graph.Context) error
+	plan           topology.Plan
+	sources        []func(*graph.Context) error
+	recordMetadata bool
 }
 
 func (b *StreamsBuilder) Build() (Topology, error) {
@@ -59,13 +61,16 @@ func (b *StreamsBuilder) Build() (Topology, error) {
 	if err != nil {
 		return Topology{}, err
 	}
-	return Topology{plan: p, sources: append([]func(*graph.Context) error(nil), b.sources...)}, nil
+	return Topology{plan: p, sources: append([]func(*graph.Context) error(nil), b.sources...), recordMetadata: b.recordMetadata}, nil
 }
 func (t Topology) Describe() string    { return t.plan.Describe() }
 func (t Topology) Plan() topology.Plan { return t.plan }
 func (t Topology) NewTask(ctx context.Context, s execution.Spec, backend execution.Backend, options ...execution.Option) (*execution.Task, error) {
 	if len(t.sources) == 0 {
 		return nil, errors.New("task requires a built topology with sources")
+	}
+	if t.recordMetadata {
+		options = append([]execution.Option{execution.WithRecordMetadata()}, options...)
 	}
 	task, err := execution.New(ctx, s, backend, options...)
 	if err != nil {
@@ -132,6 +137,12 @@ func Stream[K, V any](b *StreamsBuilder, topic string, key serde.Codec[K], value
 }
 func (s KStream[K, V]) Process(name string, changesKeys bool, f processor.Factory[K, V]) KStream[K, V] {
 	s.builder.mutable()
+	s.builder.recordMetadata = true
+	return s.process(name, changesKeys, f)
+}
+
+func (s KStream[K, V]) process(name string, changesKeys bool, f processor.Factory[K, V]) KStream[K, V] {
+	s.builder.mutable()
 	if f == nil {
 		s.builder.fail(errors.New("nil processor factory"))
 	}
@@ -146,7 +157,7 @@ func (s KStream[K, V]) Filter(name string, predicate func(record.Record[K, V]) b
 	if predicate == nil {
 		s.builder.fail(errors.New("nil predicate"))
 	}
-	out := s.Process(name, false, func(_ processor.Context, next processor.Forward[K, V]) processor.Handler[K, V] {
+	out := s.process(name, false, func(_ processor.Context, next processor.Forward[K, V]) processor.Handler[K, V] {
 		return func(r record.Record[K, V]) error {
 			if predicate(r) {
 				return next(r)
@@ -216,7 +227,7 @@ func (s KStream[K, V]) To(topic string) {
 // Repartition records an explicit broker exchange. Build rejects this until an
 // adapter can materialize the sink/source subtopology, avoiding false local routing.
 func (s KStream[K, V]) Repartition(name string) KStream[K, V] {
-	out := s.Process(name, false, func(_ processor.Context, next processor.Forward[K, V]) processor.Handler[K, V] {
+	out := s.process(name, false, func(_ processor.Context, next processor.Forward[K, V]) processor.Handler[K, V] {
 		return processor.Handler[K, V](next)
 	})
 	s.builder.nodes[len(s.builder.nodes)-1].Kind = "repartition"

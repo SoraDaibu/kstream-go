@@ -1,0 +1,26 @@
+goos: linux
+goarch: amd64
+pkg: github.com/SoraDaibu/kstream-go/execution
+cpu: AMD EPYC 9V74 80-Core Processor                
+BenchmarkRecordMetadataCapture/batch=1/enabled=false         	 1000000	       300.5 ns/op	     320 B/op	       3 allocs/op
+BenchmarkRecordMetadataCapture/batch=1/enabled=false         	 1213136	       331.1 ns/op	     320 B/op	       3 allocs/op
+BenchmarkRecordMetadataCapture/batch=1/enabled=false         	 1216027	       294.7 ns/op	     320 B/op	       3 allocs/op
+BenchmarkRecordMetadataCapture/batch=1/enabled=false         	 1242201	       293.1 ns/op	     320 B/op	       3 allocs/op
+BenchmarkRecordMetadataCapture/batch=1/enabled=false         	 1245057	       289.8 ns/op	     320 B/op	       3 allocs/op
+BenchmarkRecordMetadataCapture/batch=1/enabled=true          	 1000000	       302.1 ns/op	     320 B/op	       3 allocs/op
+BenchmarkRecordMetadataCapture/batch=1/enabled=true          	 1211269	       294.5 ns/op	     320 B/op	       3 allocs/op
+BenchmarkRecordMetadataCapture/batch=1/enabled=true          	 1233028	       294.6 ns/op	     320 B/op	       3 allocs/op
+BenchmarkRecordMetadataCapture/batch=1/enabled=true          	 1219225	       293.1 ns/op	     320 B/op	       3 allocs/op
+BenchmarkRecordMetadataCapture/batch=1/enabled=true          	 1217030	       326.9 ns/op	     320 B/op	       3 allocs/op
+BenchmarkRecordMetadataCapture/batch=256/enabled=false       	   27256	     13425 ns/op	     320 B/op	       3 allocs/op
+BenchmarkRecordMetadataCapture/batch=256/enabled=false       	   27688	     12915 ns/op	     320 B/op	       3 allocs/op
+BenchmarkRecordMetadataCapture/batch=256/enabled=false       	   28518	     12756 ns/op	     320 B/op	       3 allocs/op
+BenchmarkRecordMetadataCapture/batch=256/enabled=false       	   28953	     12395 ns/op	     320 B/op	       3 allocs/op
+BenchmarkRecordMetadataCapture/batch=256/enabled=false       	   29695	     12369 ns/op	     320 B/op	       3 allocs/op
+BenchmarkRecordMetadataCapture/batch=256/enabled=true        	   25911	     14821 ns/op	     320 B/op	       3 allocs/op
+BenchmarkRecordMetadataCapture/batch=256/enabled=true        	   24114	     14649 ns/op	     320 B/op	       3 allocs/op
+BenchmarkRecordMetadataCapture/batch=256/enabled=true        	   24840	     14298 ns/op	     320 B/op	       3 allocs/op
+BenchmarkRecordMetadataCapture/batch=256/enabled=true        	   25292	     14432 ns/op	     320 B/op	       3 allocs/op
+BenchmarkRecordMetadataCapture/batch=256/enabled=true        	   26042	     14009 ns/op	     320 B/op	       3 allocs/op
+PASS
+ok  	github.com/SoraDaibu/kstream-go/execution	10.975s
