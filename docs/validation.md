@@ -313,3 +313,19 @@ Whole-process sampled allocation changes little. The CPU model changed, paired
 throughput ratios fell, filter remains below target and Go RSS remains higher.
 [Completion-model measurements](benchmarks/2026-10-24-produce-completion/README.md)
 retain tiny-batch timing/byte regressions and their limited scope.
+
+## Typed window aggregate cycle
+
+Source `76d9081a6e89c8df83a52ea308b0076909ac92c2` passed
+[ordinary and all 864 reference comparisons](https://github.com/SoraDaibu/kstream-go/actions/runs/40087207424),
+[persistent state](https://github.com/SoraDaibu/kstream-go/actions/runs/40087207370),
+all four [broker fault suites](https://github.com/SoraDaibu/kstream-go/actions/runs/40087207384)
+and verified comparison/profile workloads. Thirty-six scenarios compare 11,423
+inputs. Six new public Java windowed aggregate traces cover ordinary/nullable
+initialization, null inputs/results, typed numeric state, delete/reinitialize
+timestamp lifetimes and tumbling/divisible/uneven hopping windows.
+
+Go tests additionally check zero state, typed recovery/replay, null-key clock
+isolation, callback flags, invalid setup and failed fanout. The shared typed fold
+preserves reduce allocation totals; [sequential and paired measurements](benchmarks/2026-10-24-windowed-aggregate/README.md)
+retain the initial apparent timing regression and its alternating follow-up.

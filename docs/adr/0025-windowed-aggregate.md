@@ -1,6 +1,7 @@
 # ADR 0025: Typed window aggregate state
 
-Status: accepted for implementation; independent reference validation required.
+Status: accepted; all 864 independent reference comparisons passed at source
+`76d9081a6e89c8df83a52ea308b0076909ac92c2`.
 
 Add WindowedAggregate and HoppingWindowedAggregate with explicit result codecs,
 nullable initializers, nullable input values and nullable aggregate results. Use

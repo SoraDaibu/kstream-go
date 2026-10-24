@@ -35,9 +35,13 @@ func run() (err error) {
 	cpuProfile := flag.String("cpuprofile", "", "diagnostic whole-process CPU profile path")
 	heapProfile := flag.String("heapprofile", "", "diagnostic post-cleanup cumulative allocation profile path")
 	outputCapacity := flag.Int("output-capacity", 0, "initial transaction output capacity; zero keeps append growth")
+	fetchBytes := flag.Int64("fetch-bytes", 8<<20, "consumer fetch target in bytes; Kafka may return oversized batches")
 	flag.Parse()
 	if *outputCapacity < 0 || *outputCapacity > 65536 {
 		return errors.New("output capacity must be between 0 and 65536")
+	}
+	if *fetchBytes < 1024 || *fetchBytes > 1<<31-1 {
+		return errors.New("fetch bytes must be between 1024 and 2147483647")
 	}
 	finishProfiles, err := startProfiles(*cpuProfile, *heapProfile)
 	if err != nil {
@@ -71,6 +75,7 @@ func run() (err error) {
 	defer stop()
 	config := kafka.GroupConfig{Kafka: kafka.Config{Brokers: strings.Split(*brokers, ","), ChangelogTopic: *changelog, Options: []kgo.Opt{kgo.ProducerBatchCompression(kgo.NoCompression())}}, ApplicationID: *app, InstanceID: "benchmark-worker", Topics: []string{*input}, BatchSize: 4096, Options: []kgo.Opt{kgo.RebalanceTimeout(5 * time.Minute)}}
 	observation := batchObservation{Event: "batch_metrics", warmupLimit: *warmup}
+	config.FetchBytes = int32(*fetchBytes)
 	config.OnBatch = observation.add
 	err = kafka.RunGroup(ctx, config, func(ctx context.Context, spec execution.Spec, backend execution.Backend) (*execution.Task, error) {
 		return plan.NewTask(ctx, spec, backend, execution.WithStoreFactory(engine.Task), execution.WithOutputCapacity(*outputCapacity))
