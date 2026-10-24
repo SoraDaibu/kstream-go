@@ -329,3 +329,16 @@ Go tests additionally check zero state, typed recovery/replay, null-key clock
 isolation, callback flags, invalid setup and failed fanout. The shared typed fold
 preserves reduce allocation totals; [sequential and paired measurements](benchmarks/2026-10-24-windowed-aggregate/README.md)
 retain the initial apparent timing regression and its alternating follow-up.
+
+
+The connected-stage clock revision adds two Java oracle scenarios for unrelated
+sources and delayed exchange delivery, including filtered inputs, null keys and
+late timestamps. The suite now configures 960 exact comparisons across forty
+scenarios. Go tests additionally cover merged-source prefixes, typed processors,
+replay, callback/commit rollback, metadata/state delegation, checkpoint ownership
+and invalid restored clocks. The real repartition recovery case sends older
+inputs after a fresh-store restart and checks the restored processor clock.
+[Local evaluation](benchmarks/2026-10-24-processing-clocks/README.md) retains the
+initial 16-byte transaction regression, final private-descriptor measurements,
+ordinary-path regressions and explicit scoped-map overhead. Independent CI gates
+remain required before accepting the change.

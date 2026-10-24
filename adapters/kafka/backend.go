@@ -46,6 +46,7 @@ type Backend struct {
 	opened, failed, closed bool
 	generation             uint64
 	next                   map[string]int64
+	clocks                 map[string]int64
 	barrier                []byte
 }
 
@@ -55,6 +56,7 @@ var _ execution.StreamingRestorer = (*Backend)(nil)
 type checkpoint struct {
 	NextOffsets map[string]int64 `json:"next_offsets"`
 	StreamTime  int64            `json:"stream_time"`
+	ScopeTimes  map[string]int64 `json:"scope_times,omitempty"`
 }
 
 func New(config Config) (*Backend, error) {
@@ -145,7 +147,7 @@ func (b *Backend) Open(ctx context.Context, s execution.Spec) (uint64, execution
 	if err != nil {
 		return 0, execution.Snapshot{}, err
 	}
-	return generation, execution.Snapshot{State: image, NextOffsets: checkpoint.NextOffsets, StreamTime: checkpoint.StreamTime}, nil
+	return generation, execution.Snapshot{State: image, NextOffsets: checkpoint.NextOffsets, StreamTime: checkpoint.StreamTime, ScopeTimes: checkpoint.ScopeTimes}, nil
 }
 
 func (b *Backend) OpenInto(ctx context.Context, s execution.Spec, sink execution.RestoreSink) (uint64, execution.Checkpoint, error) {
@@ -215,6 +217,7 @@ func (b *Backend) OpenInto(ctx context.Context, s execution.Spec, sink execution
 	b.failed = false
 	b.generation++
 	b.next = cloneOffsets(snapshot.NextOffsets)
+	b.clocks = cloneClocks(snapshot.ScopeTimes)
 	b.barrier = record.CloneBytes(marker.Key)
 	success = true
 	return b.generation, snapshot, nil
@@ -275,6 +278,12 @@ func (b *Backend) restore(ctx context.Context, s execution.Spec, end int64, sink
 					}
 					snapshot.NextOffsets = cloneOffsets(meta.NextOffsets)
 					snapshot.StreamTime = meta.StreamTime
+					for scope, stamp := range meta.ScopeTimes {
+						if scope == "" || stamp < 0 || stamp > meta.StreamTime {
+							return execution.Checkpoint{}, errors.New("invalid checkpoint processing clock")
+						}
+					}
+					snapshot.ScopeTimes = cloneClocks(meta.ScopeTimes)
 				}
 			}
 			if r.Offset == end {
@@ -306,7 +315,11 @@ func (b *Backend) Commit(ctx context.Context, s execution.Spec, generation uint6
 	for topic, offset := range tx.NextOffsets {
 		next[topic] = offset
 	}
-	meta, err := json.Marshal(checkpoint{next, tx.StreamTime})
+	clocks := tx.ScopeTimes
+	if clocks == nil {
+		clocks = b.clocks
+	}
+	meta, err := json.Marshal(checkpoint{NextOffsets: next, StreamTime: tx.StreamTime, ScopeTimes: clocks})
 	if err != nil {
 		return err
 	}
@@ -339,6 +352,7 @@ func (b *Backend) Commit(ctx context.Context, s execution.Spec, generation uint6
 		return fenceError(err)
 	}
 	b.next = next
+	b.clocks = cloneClocks(clocks)
 	b.barrier = nil
 	return nil
 }
@@ -357,4 +371,11 @@ func (b *Backend) Close() {
 		b.producer.Close()
 		b.producer = nil
 	}
+}
+
+func cloneClocks(clocks map[string]int64) map[string]int64 {
+	if clocks == nil {
+		return nil
+	}
+	return cloneOffsets(clocks)
 }

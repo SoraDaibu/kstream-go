@@ -1,7 +1,9 @@
 # Typed processors and source metadata
 
 KStream.Process creates one synchronous handler per task from a factory.
-Its Context owns staged stores and exposes the task's stream-time. Declare
+Its Context owns staged stores and exposes the connected processing stage's
+stream-time. [Processing clocks](processing-clocks.md) describes source merging,
+repartition boundaries, recovery and the lower-level task clock. Declare
 whether the processor changes keys so downstream grouping/join validation can
 enforce partition ownership. Forward only while the handler is running.
 

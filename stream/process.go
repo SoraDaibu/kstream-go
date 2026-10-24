@@ -16,13 +16,14 @@ import (
 func Process[KIn, VIn, KOut, VOut any](s KStream[KIn, VIn], name string, key serde.Codec[KOut], value serde.Codec[VOut], supplier processor.Supplier[KIn, VIn, KOut, VOut]) KStream[KOut, VOut] {
 	s.builder.mutable()
 	s.builder.recordMetadata = true
+	s.builder.customProcessors = append(s.builder.customProcessors, name)
 	if supplier == nil || !key.Valid() || !value.Valid() {
 		s.builder.fail(errors.New("process requires supplier and valid output codecs"))
 	}
 	p := &graph.Port[KOut, VOut]{}
 	s.builder.add(topology.Node{Name: name, Kind: "processor", Parents: []string{s.name}})
 	s.port.Subscribe(func(ctx *graph.Context) processor.Handler[KIn, VIn] {
-		return supplier(ctx.Task, processor.Forward[KOut, VOut](p.Compile(ctx)))
+		return supplier(ctx.ProcessorContext(name), processor.Forward[KOut, VOut](p.Compile(ctx)))
 	})
 	return KStream[KOut, VOut]{s.builder, p, name, key, value, false}
 }

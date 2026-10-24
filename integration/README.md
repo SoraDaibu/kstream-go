@@ -10,12 +10,13 @@ compare exact output topic/key/value/timestamp rows. Go runs transaction batch
 sizes 1, 32 and 256 against the same Java output; batching must preserve every
 record update and event-time result. Each batch size runs both memory and Pebble
 task stores, using both independent and grouped task commits, with output capacity
-hints 0 and 256. This configures 912
-exact trace comparisons across thirty-eight scenarios. `~` represents null; empty
+hints 0 and 256. This configures 960
+exact trace comparisons across forty scenarios. `~` represents null; empty
 fields represent non-null empty strings. The fixed boundary cases are followed
 by 300 generated rows with seed 73019 per scenario. Caching is disabled to make
 update traces observable. Scenarios cover ordered first-match branching with and without catch-all routes, filter/filterNot, null-aware mapValues, flatMap, flatMapValues,
-merge, source topic/partition/offset through processors and fanout,
+merge, explicit broker-exchange semantics, connected-stage clock isolation,
+source topic/partition/offset through processors and fanout,
 cross-type processors with numeric intermediate keys/values, UTF-8 byte lengths,
 skipped records, nulls and changed timestamps,
 grouped count/reduce/aggregate (including nullable initialization), table upserts

@@ -17,8 +17,8 @@ needs independent semantics, recovery and integration coverage before completion
 | GlobalKTable | Missing | replicated global state, stream joins, bootstrap and fault tolerance |
 | Windows | Partial: tumbling/hopping count, typed reduce/aggregate with per-window grace | sliding, session, full WindowedKTable/query API, configurable retention, emit strategies, suppression and broader late-record qualification |
 | Processor API | Partial: same/cross-type task factories, staged stores and source-record metadata | fixed-key processors, headers, punctuation, schedules, lifecycle and richer stores |
-| Logical topology/compilation | Partial | exchange subtopologies, exchange validation, safe rewrites and optimization evidence |
-| Partition runtime | Partial: task ownership, bounded batches, atomic groups and serial Kafka worker | subtopology-scoped custom processor clocks, cross-topic timestamp scheduling, idle controls, live fairness, pause/resume and broader backpressure |
+| Logical topology/compilation | Partial | heterogeneous exchange subtopologies, safe rewrites and optimization evidence |
+| Partition runtime | Partial: task ownership, bounded batches, atomic groups and serial Kafka worker | cross-topic timestamp scheduling, idle controls, live fairness, pause/resume and broader backpressure |
 | Kafka adapter | Partial: fixed input and bounded group worker, transactions, fencing, changelogs | Cooperative/heterogeneous assignment, authentication/TLS failure coverage and broader production lifecycle |
 | Repartition | Partial: explicit broker exchange, standard key routing and equal-count group workers | heterogeneous stage tasks/counts, automatic provisioning, broader fault qualification |
 | Changelogs/restore | Partial: Kafka read-committed prefix restore, bounded mutation batches and compactable full checkpoints | Forced-compaction validation, orphan-marker GC, local checkpoint reuse, restore lifecycle callbacks and standby tasks |

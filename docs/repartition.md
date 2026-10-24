@@ -62,13 +62,18 @@ and requires equal-count eager co-location. Kafka still separates stage delivery
 and transactions. Independent stage scheduling, heterogeneous counts, automatic
 topic provisioning and custom internal partitioners remain open.
 
-Context.StreamTime currently describes that coalesced partition task, including
-its other stages. It differs from Kafka's separate subtopology task clocks: after
-upstream t=100, a delayed exchange t=9 can observe task time 100. Window operators
-retain their own input clocks and still accept eligible t=9 records. This boundary
-is explicitly [tested](../stream/repartition_test.go); subtopology-scoped custom
-processor clocks and cross-source timestamp scheduling are not yet equivalent.
-No global order across independent stages/topics is promised.
+Context.StreamTime reports the maximum accepted source timestamp of the
+processor's connected stage. Merged streams and table lookup dependencies share
+a clock; disconnected sources and broker repartition boundaries have separate
+clocks. After upstream t=100, a downstream exchange input t=9 therefore observes
+9 until that stage consumes a later timestamp. Source clocks advance before
+filters, so a filtered input still advances its connected stage. Window operators
+retain their own admitted-input clocks. Clock changes, state, outputs and offsets
+commit together and restore before processor factories run. The lower-level raw
+Task.StreamTime still describes the native partition task. See
+[processing clocks](processing-clocks.md) for the wire contract and upgrade limits.
+Cross-source timestamp scheduling is still incomplete; no global order across
+independent stages/topics is promised.
 
 Backends must explicitly declare execution.RepartitionValidator support for
 exchange topologies; backend wrappers must forward it. Unknown transports fail

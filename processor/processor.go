@@ -9,6 +9,8 @@ type Forward[K, V any] func(record.Record[K, V]) error
 // Context is valid during an input transaction. Returned state bytes are copies.
 // Stores belong exclusively to the current task. Scan order is unspecified.
 type Context interface {
+	// StreamTime is the maximum accepted input timestamp in this connected
+	// processing stage, or -1 before its first input. Repartition cuts stages.
 	StreamTime() int64
 	// RecordMetadata is present only while processing a consumed input record.
 	// Synchronous downstream forwarding retains that source identity.

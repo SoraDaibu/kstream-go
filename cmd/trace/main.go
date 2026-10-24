@@ -114,6 +114,20 @@ func run() error {
 		case "merge":
 			right := stream.Stream(b, "right", serde.String, serde.String)
 			stream.Merge(s, right, "merged").To("out")
+		case "clock-disconnected", "clock-repartition":
+			clocked := s
+			if scenario == "clock-disconnected" {
+				stream.Stream(b, "right", serde.String, serde.String).Foreach("ignore", func(record.Record[string, string]) error { return nil })
+			} else {
+				clocked = s.Repartition("exchange")
+			}
+			clocked.Filter("skip", func(r record.Record[string, string]) bool { return r.NullValue || r.Value != "!skip" }).Process("clock", false,
+				func(c processor.Context, next processor.Forward[string, string]) processor.Handler[string, string] {
+					return func(r record.Record[string, string]) error {
+						r.Value, r.NullValue = strconv.FormatInt(c.StreamTime(), 10), false
+						return next(r)
+					}
+				}).To("out")
 		case "repartition-values":
 			s.Repartition("exchange").To("out")
 		case "repartition-count":

@@ -1,0 +1,1 @@
+Go 1.27.3; GOMAXPROCS=1; CPU 0; five alternating pairs; 200ms per case
