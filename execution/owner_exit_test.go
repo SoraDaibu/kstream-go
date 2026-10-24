@@ -14,7 +14,7 @@ import (
 func TestSingleTaskOwnerExitPoisonsUncommittedIncarnation(t *testing.T) {
 	backend := memory.New()
 	spec := execution.Spec{ApplicationID: "owner-exit", ID: "0"}
-	task, err := execution.New(ctx, spec, backend)
+	task, err := execution.New(ctx, spec, backend, execution.WithRecordMetadata())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -36,6 +36,9 @@ func TestSingleTaskOwnerExitPoisonsUncommittedIncarnation(t *testing.T) {
 	if _, _, err := task.StoreGet("s", "key"); !errors.Is(err, execution.ErrPoisoned) {
 		t.Fatal("terminated owner left a reusable task", err)
 	}
+	if meta, present := task.RecordMetadata(); present || meta != (record.Metadata{}) {
+		t.Fatal("terminated owner retained record metadata", meta)
+	}
 	if err := task.Close(); err != nil {
 		t.Fatal("terminated owner retained guard", err)
 	}
@@ -53,7 +56,7 @@ func TestGroupOwnerExitPoisonsEveryParticipant(t *testing.T) {
 			runtime.Goexit()
 		}
 		return nil
-	}, nil)
+	}, func(int) []execution.Option { return []execution.Option{execution.WithRecordMetadata()} })
 	done := make(chan struct{})
 	go func() { defer close(done); _ = group.Process(ctx, groupRows(tasks, 0)) }()
 	select {
@@ -65,6 +68,9 @@ func TestGroupOwnerExitPoisonsEveryParticipant(t *testing.T) {
 		t.Fatal("terminated owner reached durable commit")
 	}
 	for i, task := range tasks {
+		if meta, present := task.RecordMetadata(); present || meta != (record.Metadata{}) {
+			t.Fatal("terminated group participant retained record metadata", meta)
+		}
 		if _, _, err := task.StoreGet("counts", "key"); !errors.Is(err, execution.ErrPoisoned) {
 			t.Fatal("group participant remained reusable", err)
 		}

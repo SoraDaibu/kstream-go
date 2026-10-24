@@ -11,7 +11,7 @@ trap 'rm -rf "$work"' EXIT
 python3 scripts/generate-traces.py "$work"
 go build -o "$work/trace" ./cmd/trace
 mvn -q -f integration/kafka-streams/pom.xml compile
-for scenario in filter filter-not mapvalues flatmap flatmapvalues merge count reduce aggregate aggregate-null table join join-null left-join window hopping hopping-uneven table-filter table-filter-not table-mapvalues table-transform-join; do
+for scenario in filter filter-not mapvalues flatmap flatmapvalues merge count reduce aggregate aggregate-null table join join-null left-join window hopping hopping-uneven table-filter table-filter-not table-mapvalues table-transform-join metadata metadata-fanout; do
   mvn -q -f integration/kafka-streams/pom.xml exec:java \
     -Dexec.mainClass=dev.kstream.Oracle \
     "-Dexec.args=$scenario $work/$scenario.tsv $work/$scenario.java.tsv"

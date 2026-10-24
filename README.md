@@ -95,7 +95,8 @@ experimental fixed-assignment adapter; see its [deployment boundaries](adapters/
 ## Included behavior
 
 - `KStream`: filter/filterNot, map/mapValues, flatMap/flatMapValues, selectKey,
-  merge, observers, typed custom processors and sinks.
+  merge, observers, typed custom processors with source metadata and sinks.
+  See the [Processor API](docs/processor-api.md).
 - `KTable`: source upserts, tombstone deletes, filter/filterNot, nullable value
   mapping, grouped counts and stream-triggered
   inner/left joins against current table state, including nullable results. See

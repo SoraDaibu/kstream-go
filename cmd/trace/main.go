@@ -97,6 +97,31 @@ func run() error {
 		case "merge":
 			right := stream.Stream(b, "right", serde.String, serde.String)
 			stream.Merge(s, right, "merged").To("out")
+		case "metadata", "metadata-fanout":
+			merged := stream.Merge(s, stream.Stream(b, "right", serde.String, serde.String), "merged")
+			if scenario == "metadata-fanout" {
+				merged = stream.FlatMapValues(merged, "twice", serde.String, func(v string, null bool, yield func(string, bool) error) error {
+					if err := yield(v, null); err != nil {
+						return err
+					}
+					return yield(v, null)
+				})
+			}
+			merged.Process("metadata", false, func(ctx processor.Context, next processor.Forward[string, string]) processor.Handler[string, string] {
+				return func(r record.Record[string, string]) error {
+					meta, present := ctx.RecordMetadata()
+					if !present {
+						return fmt.Errorf("source metadata unavailable")
+					}
+					v := r.Value
+					if r.NullValue {
+						v = "null"
+					}
+					r.Value = fmt.Sprintf("%s:%d:%d:%s", meta.Topic, meta.Partition, meta.Offset, v)
+					r.NullValue = false
+					return next(r)
+				}
+			}).To("out")
 		case "count":
 			stream.Map(stream.Count(s, "counts").ToStream(), "format", serde.String, serde.String, func(r record.Record[string, int64]) record.Record[string, string] {
 				return record.Record[string, string]{Key: r.Key, Value: strconv.FormatInt(r.Value, 10), Timestamp: r.Timestamp}

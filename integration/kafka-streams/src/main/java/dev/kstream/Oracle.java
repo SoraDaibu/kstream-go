@@ -19,6 +19,8 @@ import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.kstream.TimeWindows;
+import org.apache.kafka.streams.processor.api.ContextualProcessor;
+import org.apache.kafka.streams.processor.api.Record;
 
 /** Independent executable oracle using only Kafka Streams' public DSL. */
 public final class Oracle {
@@ -52,6 +54,16 @@ public final class Oracle {
                 case "flatmapvalues" -> source.flatMapValues(v -> Arrays.asList(v, v == null ? null : v + "2")).to("out", produced);
                 case "flatmap" -> source.flatMap((k,v) -> Arrays.asList(KeyValue.pair(k,v), KeyValue.pair(k == null ? null : k + "2",v))).to("out", produced);
                 case "merge" -> source.merge(b.stream("right",strings)).to("out", produced);
+                case "metadata", "metadata-fanout" -> {
+                    var merged = source.merge(b.stream("right", strings));
+                    if (scenario.equals("metadata-fanout")) merged = merged.flatMapValues(v -> Arrays.asList(v, v));
+                    merged.process(() -> new ContextualProcessor<String,String,String,String>() {
+                        @Override public void process(Record<String,String> record) {
+                            var meta = context().recordMetadata().orElseThrow();
+                            context().forward(record.withValue(meta.topic() + ":" + meta.partition() + ":" + meta.offset() + ":" + (record.value() == null ? "null" : record.value())));
+                        }
+                    }).to("out", produced);
+                }
                 case "count" -> source.groupByKey().count(Materialized.as("counts"))
                         .toStream().mapValues(v -> v.toString()).to("out", produced);
                 case "reduce" -> source.groupByKey().reduce((a,v) -> v.equals("!delete") ? null : a + ":" + v,
@@ -92,7 +104,7 @@ public final class Oracle {
         props.put(StreamsConfig.STATE_DIR_CONFIG, state.toString());
         try (var driver = new TopologyTestDriver(b.build(), props)) {
             HashMap<String, TestInputTopic<String,String>> inputs = new HashMap<>();
-            for (String topic : scenario.equals("merge") ? List.of("in", "right")
+            for (String topic : scenario.equals("merge") || scenario.equals("metadata") || scenario.equals("metadata-fanout") ? List.of("in", "right")
                     : scenario.equals("join") || scenario.equals("join-null") || scenario.equals("left-join") || scenario.equals("table-transform-join") ? List.of("table", "in")
                     : scenario.equals("table") || scenario.startsWith("table-") ? List.of("table") : List.of("in")) {
                 inputs.put(topic, driver.createInputTopic(topic, new StringSerializer(), new StringSerializer()));

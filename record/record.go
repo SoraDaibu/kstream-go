@@ -1,6 +1,14 @@
 // Package record defines typed records and Kafka boundary records.
 package record
 
+// Metadata identifies the original consumed record. Its availability is scoped
+// to a task's synchronous record callback; copies are ordinary immutable values.
+type Metadata struct {
+	Topic     string
+	Partition int32
+	Offset    int64
+}
+
 // Record represents an immutable event. Timestamp is Unix milliseconds.
 // Null flags distinguish Kafka nulls from ordinary Go zero values.
 type Record[K, V any] struct {

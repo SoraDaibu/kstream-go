@@ -9,7 +9,7 @@ base = [("in", 0, "a", "one"), ("in", 9, "a", "two"), ("in", 10, "b", "x"),
         ("in", 14, "a", "x"), ("in", 8, "a", "late"), ("in", 15, "b", "clock"),
         ("in", 9, "a", "closed"), ("in", 20, "~", "null-key"),
         ("in", 21, "a", "~"), ("in", 22, "", "")]
-for scenario in ("filter", "filter-not", "mapvalues", "flatmap", "flatmapvalues", "merge", "count", "reduce", "aggregate", "aggregate-null", "window", "hopping", "hopping-uneven", "table", "table-filter", "table-filter-not", "table-mapvalues", "table-transform-join", "join", "join-null", "left-join"):
+for scenario in ("filter", "filter-not", "mapvalues", "flatmap", "flatmapvalues", "merge", "metadata", "metadata-fanout", "count", "reduce", "aggregate", "aggregate-null", "window", "hopping", "hopping-uneven", "table", "table-filter", "table-filter-not", "table-mapvalues", "table-transform-join", "join", "join-null", "left-join"):
     rows = list(base)
     if scenario in ("reduce", "aggregate", "aggregate-null"):
         # Deletion/reinitialization must reset the aggregate timestamp lifetime.
@@ -42,7 +42,7 @@ for scenario in ("filter", "filter-not", "mapvalues", "flatmap", "flatmapvalues"
             rows += [("in", 15, "clock", "x"), ("in", 9, "boundary", "x"),
                      ("in", 20, "clock", "x"), ("in", 14, "boundary", "~"),
                      ("in", 1000, "~", "ignored"), ("in", 19, "boundary", "x")]
-    if scenario == "merge":
+    if scenario in ("merge", "metadata", "metadata-fanout"):
         rows = [("in" if i % 2 == 0 else "right", ts, k, v) for i, (_, ts, k, v) in enumerate(rows)]
     rng = random.Random(73019)
     clock = 30
@@ -56,6 +56,6 @@ for scenario in ("filter", "filter-not", "mapvalues", "flatmap", "flatmapvalues"
         topic = "table" if scenario == "table" or scenario.startswith("table-") else "in"
         if scenario in ("join", "join-null", "left-join", "table-transform-join"): topic = rng.choice(["table", "in"])
         if scenario in ("join-null", "left-join", "table-mapvalues", "table-transform-join") and rng.randrange(5) == 0: value = "!null-output"
-        if scenario == "merge": topic = rng.choice(["in", "right"])
+        if scenario in ("merge", "metadata", "metadata-fanout"): topic = rng.choice(["in", "right"])
         rows.append((topic, timestamp, key, value))
     (out / (scenario + ".tsv")).write_text("".join("\t".join(map(str,r)) + "\n" for r in rows))

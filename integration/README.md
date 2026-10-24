@@ -9,12 +9,13 @@ Both programs receive identical ordered topic/timestamp/key/value TSV traces and
 compare exact output topic/key/value/timestamp rows. Go runs transaction batch
 sizes 1, 32 and 256 against the same Java output; batching must preserve every
 record update and event-time result. Each batch size runs both memory and Pebble
-task stores, using both independent and grouped task commits. This configures 252
-exact trace comparisons across twenty-one scenarios. `~` represents null; empty
+task stores, using both independent and grouped task commits. This configures 276
+exact trace comparisons across twenty-three scenarios. `~` represents null; empty
 fields represent non-null empty strings. The fixed boundary cases are followed
 by 300 generated rows with seed 73019 per scenario. Caching is disabled to make
 update traces observable. Scenarios cover filter/filterNot, null-aware mapValues, flatMap, flatMapValues,
-merge, grouped count/reduce/aggregate (including nullable initialization), table upserts
+merge, source topic/partition/offset through processors and fanout,
+grouped count/reduce/aggregate (including nullable initialization), table upserts
 and tombstones, table filter/filterNot/nullable value maps and chained lookups,
 stream-table inner/left joins with nullable results, and tumbling/hopping windows with size 10ms and
 grace 5ms. Hopping advances of 5ms and 6ms cover divisible and uneven overlap.
@@ -25,8 +26,8 @@ and update the compatibility matrix only after an explicit semantic decision.
 Never change expected output just to pass the suite. This suite does not cover
 rebalance, Kafka transactions, producer fencing, network failures, repartition,
 compaction, or restored RocksDB. Separate broker tests cover fixed-assignment
-transactions and Kafka/Pebble recovery; group rebalance and forced compaction
-remain open gates.
+transactions, group restart/rebalance, process kills and Kafka/Pebble recovery.
+Forced compaction and broader network/coordinator failures remain open gates.
 
 Operator-local versus unrelated-source stream-time is also tested in Go. No
 results are claimed until the Java and Go programs have actually run successfully.

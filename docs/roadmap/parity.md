@@ -6,7 +6,7 @@ needs independent semantics, recovery and integration coverage before completion
 
 | Layer/family | Current status | Required work and evidence |
 |---|---|---|
-| Source/sink codecs, nulls, timestamps | Partial | Headers/metadata, timestamp extractors, serde failure policies, custom partitioners |
+| Source/sink codecs, nulls, timestamps | Partial: codecs/null flags, timestamps and processor source metadata | Headers, timestamp extractors, serde failure policies, custom partitioners |
 | KStream filter/map | Partial: filter/filterNot, map/mapValues, flatMap/flatMapValues, selectKey, merge, peek/foreach | Split/branch, print, richer metadata/error policies; broader reference coverage |
 | KStream aggregation | Partial: groupByKey, count, reduce, typed aggregate and timestamp propagation | groupBy broker exchange plans, caching, window aggregates and broader reference coverage |
 | KTable | Partial: source, filter/filterNot, nullable mapValues, ToStream and lookup joins | table aggregations/retractions, toStream/selectKey, caching and suppression |
@@ -16,7 +16,7 @@ needs independent semantics, recovery and integration coverage before completion
 | Foreign-key table joins | Missing | subscription/repartition protocol, old-key removal, recovery |
 | GlobalKTable | Missing | replicated global state, stream joins, bootstrap and fault tolerance |
 | Windows | Partial: tumbling/hopping counts and per-window grace | sliding, session, window aggregates, configurable retention, emit strategies, suppression and broader late-record qualification |
-| Processor API | Partial | cross-type processors, record metadata/headers, punctuation, schedules, lifecycle and stores |
+| Processor API | Partial: typed task factories, staged stores and source-record metadata | cross-type processors, headers, punctuation, schedules, lifecycle and richer stores |
 | Logical topology/compilation | Partial | exchange subtopologies, exchange validation, safe rewrites and optimization evidence |
 | Partition runtime | Partial: task ownership, bounded batches, atomic groups and serial Kafka worker | cross-topic timestamp scheduling, idle controls, live fairness, pause/resume and broader backpressure |
 | Kafka adapter | Partial: fixed input and bounded group worker, transactions, fencing, changelogs | Cooperative/heterogeneous assignment, authentication/TLS failure coverage and broader production lifecycle |

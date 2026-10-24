@@ -25,7 +25,7 @@ func materialize[K, V any](s KStream[K, V], store string) KTable[K, V] {
 	if store == "" {
 		s.builder.fail(errors.New("table store name required"))
 	}
-	out := s.Process(store+"-table", false, func(ctx processor.Context, next processor.Forward[K, V]) processor.Handler[K, V] {
+	out := s.process(store+"-table", false, func(ctx processor.Context, next processor.Forward[K, V]) processor.Handler[K, V] {
 		return func(r record.Record[K, V]) error {
 			if r.NullKey {
 				return nil
