@@ -1,6 +1,6 @@
 # ADR 0013: Paired broker-backed exactly-once comparison
 
-Status: Measurement design before implementation; no performance claim.
+Status: Accepted for exploratory broker measurements; full qualification remains gated.
 
 The in-process driver comparison omits brokers, transaction protocols and durable
 changelogs. With an experimental group worker available, measure a matched

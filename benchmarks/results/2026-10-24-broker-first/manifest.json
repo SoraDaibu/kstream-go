@@ -1,0 +1,41 @@
+{
+  "reference": "Kafka Streams 3.9.1",
+  "broker": "Kafka 3.9.1, one node, replication factor 1",
+  "semantics": "Kafka transactions: committed output/changelog/group offsets",
+  "cache": "rebuildable persistent local caches; Go WAL disabled, no local sync",
+  "source_partitions": 3,
+  "keys": 64,
+  "input": "uniform keys, continuous decimal sequence values",
+  "records": 200000,
+  "warmup": 100000,
+  "trials": 5,
+  "scenarios": [
+    "filter",
+    "count"
+  ],
+  "max_poll_records": 4096,
+  "go_commit": "after each bounded poll",
+  "kafka_commit_interval_ms": 10,
+  "compression": "none",
+  "app_cpu_affinity": [
+    0
+  ],
+  "driver_cpu_affinity": [
+    3
+  ],
+  "heap_targets": "Go GOMEMLIMIT=512MiB; Java -Xms32m -Xmx512m, active processors 1",
+  "hard_rss_cap": false,
+  "broker_cpu_isolated": false,
+  "latency": "external driver monotonic send ledger to read-committed output receipt",
+  "cpu_window": "observed around driver measurement events, before offset/tail verification; approximate",
+  "rss_window": "process high-water mark through measurement completion; shutdown excluded",
+  "host": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "allowed_cpus": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "production_qualified": false,
+  "limits": "Shared hosted runner; one broker; small state; no HA/failure/recovery throughput; different commit policies."
+}

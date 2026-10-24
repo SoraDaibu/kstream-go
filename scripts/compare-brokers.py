@@ -117,7 +117,7 @@ for scenario in manifest['scenarios']:
                     driver = subprocess.Popen(control + ['run'] + common + ['-timeout', '180s'],
                                               env=env, stdout=subprocess.PIPE, stderr=driver_log,
                                               text=True, start_new_session=True)
-                    events = queue.Queue()
+                    events = queue.Queue(maxsize=8)
                     def read_events(stream):
                         for line in stream:
                             events.put(line)

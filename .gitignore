@@ -3,3 +3,4 @@
 coverage.out
 /integration/kafka-streams/target/
 __pycache__/
+/results/

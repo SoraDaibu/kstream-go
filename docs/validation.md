@@ -161,3 +161,14 @@ These are focused single-broker fixtures. They do not certify all commit phases,
 network ambiguity, coordinator failover, forced compaction, cooperative or
 heterogeneous assignment, or Kafka Streams production throughput. See
 [group-worker limits](../adapters/kafka/GROUPS.md) and the parity inventory.
+
+## First broker comparison cycle
+
+Source `b200080febd82e1508fcb7d7ee40f80d22b8078d` passed ordinary CI,
+all four broker fault suites, persistent-state integration, driver checksums and
+the [first paired broker workflow](https://github.com/SoraDaibu/kstream-go/actions/runs/40058301396).
+Twenty samples verified ordered per-key outputs, checksums and actual group offsets.
+The [retained results](../benchmarks/results/2026-10-24-broker-first/README.md)
+report a 6.90x median paired ratio for count and 2.06x for filter, with lower
+observed p99/RSS in both. Filter remains below the target, and the experiment's
+single-broker/shared-host limits prevent production qualification.
