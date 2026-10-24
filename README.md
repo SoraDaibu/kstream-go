@@ -19,6 +19,22 @@ The implementation keeps typed operators synchronous inside serial partition
 tasks. It separates the public DSL, typed graph compiler, Processor API, logical plan, execution,
 state and infrastructure adapters. No Java source or class hierarchy is ported.
 
+```mermaid
+flowchart TD
+    DSL["Public DSL · stream"] --> Plan["Logical topology · topology"]
+    DSL --> Compiler["Typed compiler · internal/graph"]
+    API["Processor API · processor"] --> Compiler
+    Compiler --> Tasks["Serial partition tasks · execution"]
+    Tasks --> Stores["Task-local store contract · state"]
+    Stores --> Pebble["Shared Pebble engine"]
+    Tasks --> Transactions["Transaction backend contract"]
+    Transactions --> Kafka["Kafka adapter · changelog, output, offsets"]
+```
+
+Operators run as synchronous calls inside a task. Workers own tasks and stores;
+the optional adapters supply broker transactions and persistent caches. See the
+[architecture](docs/architecture.md) for package boundaries and current limits.
+
 ```go
 b := stream.NewStreamsBuilder()
 words := stream.Stream(b, "words", serde.String, serde.String)
@@ -33,9 +49,36 @@ type-preserving operations use methods. Null keys and values have explicit flags
 in `record.Record[K,V]`; Go zero values are ordinary data. Source/sink/store
 boundaries use explicit codecs. Build freezes the builder.
 
+For the experimental Kafka group worker, a successful batch follows this path:
+
+```mermaid
+sequenceDiagram
+    participant Kafka as Kafka broker
+    participant Worker as Group worker
+    participant Tasks as Owned tasks
+    participant Adapter as Kafka transaction adapter
+    participant Cache as Local stores
+    Worker->>Kafka: Poll a bounded input batch
+    Kafka-->>Worker: Read-committed records
+    Worker->>Tasks: Process records in task order
+    Tasks->>Tasks: Stage state, outputs and checkpoints
+    Tasks->>Adapter: Commit the staged task group
+    Adapter->>Kafka: Atomic changelog + output + group offsets
+    alt Transaction commits
+        Kafka-->>Adapter: Durable decision
+        Adapter-->>Tasks: Committed
+        Tasks->>Cache: Apply all local changes
+        Tasks-->>Worker: Publish task offsets and clocks
+    else Transaction fails or ownership changes
+        Tasks-->>Worker: Discard task incarnations
+        Worker->>Kafka: Restore the committed prefix
+    end
+    Note over Worker,Cache: Processing or local-apply failures also require restoration
+```
+
 ## Run
 
-Requires the Go **programming-language** toolchain, version 1.23 or newer.
+Requires Go **1.27** or newer; the current toolchain baseline is **Go 1.27.3**.
 The core uses only the standard library; optional Kafka and persistent-state
 adapters use franz-go and Pebble respectively.
 
@@ -79,6 +122,19 @@ experimental fixed-assignment adapter; see its [deployment boundaries](adapters/
 - Optional [atomic task groups](docs/task-groups.md) stage several partition tasks
   before one durable decision. The memory model and experimental
   [Kafka group worker](adapters/kafka/GROUPS.md) use this boundary.
+
+Hopping windows let one event contribute to several counts. For size 10ms,
+advance 5ms and grace 5ms, an event at 9ms belongs to both windows below:
+
+```mermaid
+flowchart LR
+    Event["Event time: 9ms"] --> A["Window [0, 10)"]
+    Event --> B["Window [5, 15)"]
+    A --> Closed["Closes at stream-time 15ms"]
+    B --> Open["Closes at stream-time 20ms"]
+```
+
+If that event arrives at stream-time 15ms, it updates only the second window.
 
 Key-changing maps/processors require repartitioning before key-local operations.
 An explicit `Repartition` node is represented logically, and Build rejects it

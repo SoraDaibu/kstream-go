@@ -1,6 +1,6 @@
 # ADR 0016: Hopping window counts
 
-Status: Design before implementation; independent oracle and regression gated.
+Status: Accepted for window counts; independent oracle, allocation and broker gates passed.
 
 Add window.Hopping{Size, Advance, Grace} and stream.HoppingWindowedCount. Use
 Unix-millisecond, half-open windows starting at nonnegative multiples of Advance.

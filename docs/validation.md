@@ -194,3 +194,20 @@ for size 10 validate output order, overlap, grace boundaries and null-valued
 input. Local tests cover bounded arithmetic, replay and restoration after an
 aborted multi-window batch with both stores. Existing tumbling allocations stay
 unchanged in the retained [before/after samples](benchmarks/2026-10-24-hopping-refactor/README.md).
+
+## Table transforms and Go 1.27 cycle
+
+Source `54155a7bc2b34e20d5067f22f2d5359d760ba55b` passed
+[Go/race/layer and differential CI](https://github.com/SoraDaibu/kstream-go/actions/runs/40075665208).
+Twenty-one scenarios compare 6,585 input records across both stores, all three
+batch sizes and both transaction modes: 252 exact traces. The first run found
+redundant Go tombstones for already absent filtered rows. The implementation was
+corrected; a seven-row fixture and focused test preserve the reference behavior.
+Nullable table mapping and chained transformed-table lookup also match.
+
+Source `c0d66893fd12e76db1d61bfdc690dc3e7bbde90e` repeated the
+[correctness/oracle suite on Go 1.27.3](https://github.com/SoraDaibu/kstream-go/actions/runs/40075877906),
+with [persistent-state tests](https://github.com/SoraDaibu/kstream-go/actions/runs/40075877956)
+and all four [broker recovery/fault suites](https://github.com/SoraDaibu/kstream-go/actions/runs/40075877912)
+passing. Historical Go 1.23 measurements remain historical; new performance
+conclusions require the [current toolchain baseline](toolchain.md).
