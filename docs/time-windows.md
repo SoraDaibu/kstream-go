@@ -1,4 +1,4 @@
-# Time-window counts
+# Time-window counts and reduce
 
 WindowedCount accepts window.Tumbling{Size, Grace}. HoppingWindowedCount accepts
 window.Hopping{Size, Advance, Grace}. All durations are integral milliseconds;
@@ -30,3 +30,45 @@ state; failed tasks cannot reuse a partially updated heap. Closed windows are
 removed from local state when input advances the clock. There is no additional
 post-close query retention, emit-on-close, suppression, sliding/session window
 support or windowed join in this API.
+
+## Typed reduce
+
+WindowedReduce accepts a tumbling window; HoppingWindowedReduce accepts a
+hopping window. Both use the source value codec and a nullable reducer:
+
+```go
+updates := stream.HoppingWindowedReduce(events, "reduced",
+    window.Hopping{Size: 10_000, Advance: 5_000, Grace: 2_000},
+    func(previous, value string) (string, bool) {
+        return previous + ":" + value, value == "!delete"
+    })
+updates.To("window-reductions")
+```
+
+For each key/window, the first accepted value initializes state directly without
+calling the reducer. Subsequent records call it in processing order. A true null
+flag deletes that window's aggregate and emits a tombstone. The next value starts
+a fresh lifetime, including its aggregate timestamp; even `!delete` in this example
+is ordinary data when it is the first value. Empty strings and numeric zero are
+non-null values. Input null keys and values skip without advancing this operator's
+clock. Counts retain their separately tested behavior of counting null values.
+
+Reduce shares counts' membership, ascending hopping order, per-window grace,
+operator-local clock and atomic fanout rules. A window that closes does not block
+an eligible overlapping window for the same input. Every non-null update stores
+the maximum timestamp for its aggregate lifetime; a deletion emits that lifetime's
+timestamp too. All updates emit immediately; caching/suppression are absent.
+
+The derived expiry heap is rebuilt from committed live windows. A reduce-only
+set prevents heap growth when the same open row is repeatedly deleted/recreated.
+It retains one key per distinct unexpired window key, including deleted rows,
+until the event-time clock closes the window. It is not a queryable tombstone
+store. Failed tasks discard both indexes. Count keeps its specialized integer
+state without that set. Each operator loads its committed clock once per task
+incarnation and stages every advance; restoration discards any failed cached
+clock. Store namespaces belong to their operator and must not be changed by
+unrelated custom processors. Existing count state encodings remain unchanged.
+
+Windowed reduce requires a nonempty store, a reducer, valid codecs and already
+partitioned keys. Its independent Java scenarios cover tumbling and divisible/
+uneven hopping windows; reference validation is required before qualification.

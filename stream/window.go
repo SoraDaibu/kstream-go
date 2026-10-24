@@ -3,7 +3,6 @@ package stream
 import (
 	"encoding/binary"
 	"errors"
-	"math"
 
 	"github.com/SoraDaibu/kstream-go/internal/graph"
 	"github.com/SoraDaibu/kstream-go/processor"
@@ -42,68 +41,14 @@ func timeWindowedCount[K, V any](s KStream[K, V], store string, w window.Hopping
 	s.port.Subscribe(func(t *graph.Context) processor.Handler[K, V] {
 		task := t.Task
 		next := p.Compile(t)
-		var expiry windowExpiryHeap
-		initialized := false
+		windows := timeWindowState{task: task, store: store, w: w}
 		return func(r record.Record[K, V]) error {
 			if r.NullKey {
 				return nil
 			}
-			first, last, err := w.Starts(r.Timestamp)
+			first, last, clock, err := windows.advance(r.Timestamp)
 			if err != nil {
 				return err
-			}
-			if !initialized {
-				var invalid error
-				if err := task.StoreScan(store, func(key string, _ []byte) {
-					if key == "" {
-						return // Operator-local clock metadata.
-					}
-					if len(key) < 8 {
-						invalid = errors.New("invalid stored window key")
-						return
-					}
-					start := int64(binary.BigEndian.Uint64([]byte(key[:8])))
-					if start < 0 || start > math.MaxInt64-w.Size {
-						invalid = errors.New("invalid stored window bounds")
-						return
-					}
-					expiry = append(expiry, windowExpiry{end: start + w.Size, key: key})
-				}); err != nil {
-					return err
-				}
-				if invalid != nil {
-					return invalid
-				}
-				expiry.initialize()
-				initialized = true
-			}
-			// The empty store key holds operator-local stream-time. Window keys
-			// always contain at least the eight-byte window-start prefix.
-			clock := r.Timestamp
-			advanced := true
-			raw, ok, err := task.StoreGet(store, "")
-			if err != nil {
-				return err
-			}
-			if ok {
-				previous, err := serde.Int64.Decode(raw)
-				if err != nil {
-					return err
-				}
-				if previous >= clock {
-					clock = previous
-					advanced = false
-				}
-			}
-			if advanced {
-				encoded, err := serde.Int64.Encode(clock)
-				if err != nil {
-					return err
-				}
-				task.StorePut(store, "", encoded)
-				for len(expiry) > 0 && w.Closed(expiry[0].end, clock) {
-					task.StorePut(store, expiry.pop().key, nil)
-				}
 			}
 			if w.Closed(last+w.Size, clock) {
 				return nil // All earlier overlapping windows are also closed.
@@ -137,7 +82,7 @@ func timeWindowedCount[K, V any](s KStream[K, V], store string, w window.Hopping
 							timestamp = prior
 						}
 					} else {
-						expiry.add(windowExpiry{end: end, key: storageKey})
+						windows.track(storageKey, end)
 					}
 					count++
 					task.StorePut(store, storageKey, encodeAggregate(count, timestamp))

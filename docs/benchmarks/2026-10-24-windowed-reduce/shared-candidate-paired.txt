@@ -1,0 +1,81 @@
+Go 1.27.3; pinned logical CPU 0; alternating before/after order; before b3c50210e22ad24028b01b7bba85839d37409a67
+pair=0 phase=before
+goos: linux
+goarch: amd64
+pkg: github.com/SoraDaibu/kstream-go/stream
+cpu: AMD EPYC 9V74 80-Core Processor                
+BenchmarkWindowExpiry/keys=64/size=1024         	  723916	      1631 ns/op	     896 B/op	      22 allocs/op
+PASS
+ok  	github.com/SoraDaibu/kstream-go/stream	1.251s
+pair=0 phase=after
+goos: linux
+goarch: amd64
+pkg: github.com/SoraDaibu/kstream-go/stream
+cpu: AMD EPYC 9V74 80-Core Processor                
+BenchmarkWindowExpiry/keys=64/size=1024         	  732872	      1702 ns/op	     896 B/op	      22 allocs/op
+PASS
+ok  	github.com/SoraDaibu/kstream-go/stream	1.325s
+pair=1 phase=after
+goos: linux
+goarch: amd64
+pkg: github.com/SoraDaibu/kstream-go/stream
+cpu: AMD EPYC 9V74 80-Core Processor                
+BenchmarkWindowExpiry/keys=64/size=1024         	  759823	      1618 ns/op	     896 B/op	      22 allocs/op
+PASS
+ok  	github.com/SoraDaibu/kstream-go/stream	1.298s
+pair=1 phase=before
+goos: linux
+goarch: amd64
+pkg: github.com/SoraDaibu/kstream-go/stream
+cpu: AMD EPYC 9V74 80-Core Processor                
+BenchmarkWindowExpiry/keys=64/size=1024         	  684289	      1608 ns/op	     896 B/op	      22 allocs/op
+PASS
+ok  	github.com/SoraDaibu/kstream-go/stream	1.168s
+pair=2 phase=before
+goos: linux
+goarch: amd64
+pkg: github.com/SoraDaibu/kstream-go/stream
+cpu: AMD EPYC 9V74 80-Core Processor                
+BenchmarkWindowExpiry/keys=64/size=1024         	  704356	      1773 ns/op	     896 B/op	      22 allocs/op
+PASS
+ok  	github.com/SoraDaibu/kstream-go/stream	2.156s
+pair=2 phase=after
+goos: linux
+goarch: amd64
+pkg: github.com/SoraDaibu/kstream-go/stream
+cpu: AMD EPYC 9V74 80-Core Processor                
+BenchmarkWindowExpiry/keys=64/size=1024         	  600168	      1698 ns/op	     896 B/op	      22 allocs/op
+PASS
+ok  	github.com/SoraDaibu/kstream-go/stream	1.085s
+pair=3 phase=after
+goos: linux
+goarch: amd64
+pkg: github.com/SoraDaibu/kstream-go/stream
+cpu: AMD EPYC 9V74 80-Core Processor                
+BenchmarkWindowExpiry/keys=64/size=1024         	  694762	      1632 ns/op	     896 B/op	      22 allocs/op
+PASS
+ok  	github.com/SoraDaibu/kstream-go/stream	1.202s
+pair=3 phase=before
+goos: linux
+goarch: amd64
+pkg: github.com/SoraDaibu/kstream-go/stream
+cpu: AMD EPYC 9V74 80-Core Processor                
+BenchmarkWindowExpiry/keys=64/size=1024         	  715093	      1557 ns/op	     896 B/op	      22 allocs/op
+PASS
+ok  	github.com/SoraDaibu/kstream-go/stream	1.178s
+pair=4 phase=before
+goos: linux
+goarch: amd64
+pkg: github.com/SoraDaibu/kstream-go/stream
+cpu: AMD EPYC 9V74 80-Core Processor                
+BenchmarkWindowExpiry/keys=64/size=1024         	  737390	      1563 ns/op	     896 B/op	      22 allocs/op
+PASS
+ok  	github.com/SoraDaibu/kstream-go/stream	1.223s
+pair=4 phase=after
+goos: linux
+goarch: amd64
+pkg: github.com/SoraDaibu/kstream-go/stream
+cpu: AMD EPYC 9V74 80-Core Processor                
+BenchmarkWindowExpiry/keys=64/size=1024         	  665426	      1642 ns/op	     896 B/op	      22 allocs/op
+PASS
+ok  	github.com/SoraDaibu/kstream-go/stream	1.171s
