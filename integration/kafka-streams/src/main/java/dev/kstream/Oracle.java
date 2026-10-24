@@ -17,6 +17,8 @@ import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.TestInputTopic;
 import org.apache.kafka.streams.TopologyTestDriver;
 import org.apache.kafka.streams.kstream.Consumed;
+import org.apache.kafka.streams.kstream.Branched;
+import org.apache.kafka.streams.kstream.Named;
 import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.kstream.TimeWindows;
@@ -51,6 +53,18 @@ public final class Oracle {
             switch (scenario) {
                 case "filter" -> source.filter((k,v) -> v != null && !v.isEmpty()).to("out", produced);
                 case "filter-not" -> source.filterNot((k,v) -> v != null && !v.isEmpty()).to("out", produced);
+                case "branch", "branch-default" -> {
+                    var split = source.split(Named.as("routes-"))
+                            .branch((k,v) -> v != null && v.isEmpty(), Branched.as("empty"))
+                            .branch((k,v) -> k == null || k.equals("a"), Branched.as("a-or-null"));
+                    var branches = scenario.equals("branch-default")
+                            ? split.defaultBranch(Branched.as("other")) : split.noDefaultBranch();
+                    branches.get("routes-empty").mapValues(v -> "0:" + (v == null ? "null" : v)).to("out", produced);
+                    branches.get("routes-a-or-null").mapValues(v -> "1:" + (v == null ? "null" : v)).to("out", produced);
+                    if (scenario.equals("branch-default")) {
+                        branches.get("routes-other").mapValues(v -> "2:" + (v == null ? "null" : v)).to("out", produced);
+                    }
+                }
                 case "mapvalues" -> source.mapValues(v -> v == null ? "null" : v + "!").to("out", produced);
                 case "flatmapvalues" -> source.flatMapValues(v -> Arrays.asList(v, v == null ? null : v + "2")).to("out", produced);
                 case "flatmap" -> source.flatMap((k,v) -> Arrays.asList(KeyValue.pair(k,v), KeyValue.pair(k == null ? null : k + "2",v))).to("out", produced);

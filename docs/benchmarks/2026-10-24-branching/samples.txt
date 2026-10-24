@@ -1,0 +1,33 @@
+goos: linux
+goarch: amd64
+pkg: github.com/SoraDaibu/kstream-go/stream
+cpu: AMD EPYC 9V74 80-Core Processor                
+BenchmarkBranchRouting/predicates=1/match=first         	   13291	     17935 ns/op	     320 B/op	       3 allocs/op
+BenchmarkBranchRouting/predicates=1/match=first         	   12843	     18117 ns/op	     320 B/op	       3 allocs/op
+BenchmarkBranchRouting/predicates=1/match=first         	   12895	     18063 ns/op	     320 B/op	       3 allocs/op
+BenchmarkBranchRouting/predicates=1/match=last          	   13512	     18106 ns/op	     320 B/op	       3 allocs/op
+BenchmarkBranchRouting/predicates=1/match=last          	   12968	     17579 ns/op	     320 B/op	       3 allocs/op
+BenchmarkBranchRouting/predicates=1/match=last          	   10000	     20175 ns/op	     320 B/op	       3 allocs/op
+BenchmarkBranchRouting/predicates=1/match=none          	   13962	     16110 ns/op	     320 B/op	       3 allocs/op
+BenchmarkBranchRouting/predicates=1/match=none          	   14546	     17766 ns/op	     320 B/op	       3 allocs/op
+BenchmarkBranchRouting/predicates=1/match=none          	   13095	     15923 ns/op	     320 B/op	       3 allocs/op
+BenchmarkBranchRouting/predicates=8/match=first         	   14348	     16622 ns/op	     320 B/op	       3 allocs/op
+BenchmarkBranchRouting/predicates=8/match=first         	   13816	     16729 ns/op	     320 B/op	       3 allocs/op
+BenchmarkBranchRouting/predicates=8/match=first         	   13940	     16803 ns/op	     320 B/op	       3 allocs/op
+BenchmarkBranchRouting/predicates=8/match=last          	   10000	     21001 ns/op	     320 B/op	       3 allocs/op
+BenchmarkBranchRouting/predicates=8/match=last          	   10000	     20309 ns/op	     320 B/op	       3 allocs/op
+BenchmarkBranchRouting/predicates=8/match=last          	   10000	     20298 ns/op	     320 B/op	       3 allocs/op
+BenchmarkBranchRouting/predicates=8/match=none          	   12385	     19693 ns/op	     320 B/op	       3 allocs/op
+BenchmarkBranchRouting/predicates=8/match=none          	   12138	     20043 ns/op	     320 B/op	       3 allocs/op
+BenchmarkBranchRouting/predicates=8/match=none          	   10000	     20121 ns/op	     320 B/op	       3 allocs/op
+BenchmarkBranchRouting/predicates=64/match=first        	   13711	     16873 ns/op	     320 B/op	       3 allocs/op
+BenchmarkBranchRouting/predicates=64/match=first        	   13820	     17035 ns/op	     320 B/op	       3 allocs/op
+BenchmarkBranchRouting/predicates=64/match=first        	   13473	     18225 ns/op	     320 B/op	       3 allocs/op
+BenchmarkBranchRouting/predicates=64/match=last         	    4556	     55928 ns/op	     320 B/op	       3 allocs/op
+BenchmarkBranchRouting/predicates=64/match=last         	    4578	     54301 ns/op	     320 B/op	       3 allocs/op
+BenchmarkBranchRouting/predicates=64/match=last         	    4665	     51984 ns/op	     320 B/op	       3 allocs/op
+BenchmarkBranchRouting/predicates=64/match=none         	    4596	     51180 ns/op	     320 B/op	       3 allocs/op
+BenchmarkBranchRouting/predicates=64/match=none         	    4695	     52086 ns/op	     320 B/op	       3 allocs/op
+BenchmarkBranchRouting/predicates=64/match=none         	    4677	     51235 ns/op	     320 B/op	       3 allocs/op
+PASS
+ok  	github.com/SoraDaibu/kstream-go/stream	9.269s

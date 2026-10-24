@@ -61,6 +61,9 @@ flowchart LR
     Forward --> Output["KStream · explicit output codecs"]
 ```
 
+Use [ordered branching](docs/stream-branching.md) to route each record to its
+first matching stream; an explicit final predicate supplies a catch-all route.
+
 For the experimental Kafka group worker, a successful batch follows this path:
 
 ```mermaid
