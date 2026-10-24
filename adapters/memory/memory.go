@@ -46,7 +46,7 @@ func (b *Backend) Open(ctx context.Context, s execution.Spec) (uint64, execution
 	if err != nil {
 		return 0, execution.Snapshot{}, err
 	}
-	return generation, execution.Snapshot{State: restored, NextOffsets: checkpoint.NextOffsets, StreamTime: checkpoint.StreamTime}, nil
+	return generation, execution.Snapshot{State: restored, NextOffsets: checkpoint.NextOffsets, StreamTime: checkpoint.StreamTime, ScopeTimes: checkpoint.ScopeTimes}, nil
 }
 
 var _ execution.StreamingRestorer = (*Backend)(nil)
@@ -84,7 +84,7 @@ func (b *Backend) OpenInto(ctx context.Context, s execution.Spec, sink execution
 	for k, v := range e.snapshot.NextOffsets {
 		offsets[k] = v
 	}
-	return e.generation, execution.Checkpoint{NextOffsets: offsets, StreamTime: e.snapshot.StreamTime}, nil
+	return e.generation, execution.Checkpoint{NextOffsets: offsets, StreamTime: e.snapshot.StreamTime, ScopeTimes: cloneClocks(e.snapshot.ScopeTimes)}, nil
 }
 func (b *Backend) Commit(ctx context.Context, s execution.Spec, g uint64, tx execution.Transaction) error {
 	if err := ctx.Err(); err != nil {
@@ -140,6 +140,9 @@ func apply(e *entry, tx execution.Transaction) {
 		e.snapshot.NextOffsets[topic] = offset
 	}
 	e.snapshot.StreamTime = tx.StreamTime
+	if tx.ScopeTimes != nil {
+		e.snapshot.ScopeTimes = cloneClocks(tx.ScopeTimes)
+	}
 }
 func (b *Backend) Outputs(s execution.Spec) []record.Bytes {
 	b.mu.Lock()
@@ -151,6 +154,17 @@ func (b *Backend) Outputs(s execution.Spec) []record.Bytes {
 	out := make([]record.Bytes, len(e.outputs))
 	for i, r := range e.outputs {
 		out[i] = r.Clone()
+	}
+	return out
+}
+
+func cloneClocks(clocks map[string]int64) map[string]int64 {
+	if clocks == nil {
+		return nil
+	}
+	out := make(map[string]int64, len(clocks))
+	for scope, stamp := range clocks {
+		out[scope] = stamp
 	}
 	return out
 }

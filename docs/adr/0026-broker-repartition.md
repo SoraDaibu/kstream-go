@@ -32,15 +32,12 @@ and checks configuration before task open; transaction groups forward it and
 reject hidden/unsupported transports. Memory backends explicitly accept caller
 transport: tests deliver committed exchange outputs to the selected downstream partition.
 
-Initially retain the current equal-partition-count/eager co-location worker.
-One task owns all compiled stages for its partition number, but a broker exchange
-still separates delivery and transactions. Context.StreamTime remains partition-
-task-wide across stages,
-which differs from separate Kafka subtopology task clocks; a focused test pins
-this boundary while operator-local window clocks remain independent. This is a
-Go-native coalescing
-choice, not Kafka's subtopology task hierarchy. Heterogeneous partition counts,
-independent stage scheduling and custom internal partitioners remain unsupported.
+Retain the current equal-partition-count/eager co-location worker. One native
+task owns compiled stages for its partition number, while broker exchanges still
+separate delivery and transactions. ADR 0027 supersedes the initial shared
+custom-processor-clock boundary with connected-stage clocks, without copying
+Kafka's task hierarchy. Heterogeneous partition counts, independent stage
+scheduling and custom internal partitioners remain unsupported.
 
 Validate source/sink setup ownership, actual cross-partition grouping, null/empty
 payloads, replay/recovery, aborted exchange visibility and real group offsets.

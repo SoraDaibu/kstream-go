@@ -6,10 +6,12 @@ import (
 	"github.com/SoraDaibu/kstream-go/state"
 )
 
-// Checkpoint is the committed input position and task clock after restoration.
+// Checkpoint is the committed input position and native/logical processing
+// clocks after restoration. Backends return owned clock maps.
 type Checkpoint struct {
 	NextOffsets map[string]int64
 	StreamTime  int64
+	ScopeTimes  map[string]int64
 }
 
 // RestoreSink consumes an ordered bounded batch synchronously. Mutation values
@@ -54,5 +56,5 @@ func restoreBackend(ctx context.Context, spec Spec, backend Backend, sink Restor
 			return 0, Checkpoint{}, err
 		}
 	}
-	return generation, Checkpoint{NextOffsets: snapshot.NextOffsets, StreamTime: snapshot.StreamTime}, nil
+	return generation, Checkpoint{NextOffsets: snapshot.NextOffsets, StreamTime: snapshot.StreamTime, ScopeTimes: snapshot.ScopeTimes}, nil
 }

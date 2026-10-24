@@ -10,12 +10,13 @@ compare exact output topic/key/value/timestamp rows. Go runs transaction batch
 sizes 1, 32 and 256 against the same Java output; batching must preserve every
 record update and event-time result. Each batch size runs both memory and Pebble
 task stores, using both independent and grouped task commits, with output capacity
-hints 0 and 256. This configures 912
-exact trace comparisons across thirty-eight scenarios. `~` represents null; empty
+hints 0 and 256. This configures 960
+exact trace comparisons across forty scenarios. `~` represents null; empty
 fields represent non-null empty strings. The fixed boundary cases are followed
 by 300 generated rows with seed 73019 per scenario. Caching is disabled to make
 update traces observable. Scenarios cover ordered first-match branching with and without catch-all routes, filter/filterNot, null-aware mapValues, flatMap, flatMapValues,
-merge, source topic/partition/offset through processors and fanout,
+merge, explicit broker-exchange semantics, connected-stage clock isolation,
+source topic/partition/offset through processors and fanout,
 cross-type processors with numeric intermediate keys/values, UTF-8 byte lengths,
 skipped records, nulls and changed timestamps,
 grouped count/reduce/aggregate (including nullable initialization), table upserts
@@ -44,3 +45,31 @@ Explicit repartition traces compare committed exchange delivery and changed-key
 grouping with the public Java repartition API. The Go model drains only committed
 exchange outputs into a separate processing transaction; real Kafka tests cover
 physical routing, restart, aborted exchange visibility and actual group offsets.
+
+
+Clock cases require an explicit harness boundary. Kafka Streams 3.9.1's
+TopologyTestDriver creates one simulated StreamTask for the whole topology,
+including disconnected and repartitioned sections. A single-driver attempt
+therefore produced 10000 for an unrelated-stage clock; the minimized input is
+retained in [this fixture](fixtures/clock-driver-task-isolation.json).
+[ClockOracle](kafka-streams/src/main/java/dev/kstream/ClockOracle.java) first
+asserts that the original public DSL describes two subtopologies, then pins the
+single-driver behavior. It evaluates each task component with its own driver,
+routing serialized exchange outputs explicitly through a new public input topic.
+All processors, null-key filtering and currentStreamTimeMs come from Kafka's
+public APIs; no Go component compiler or Kafka internal code is reused.
+
+These two composed-driver cases test per-task processing clocks and explicit
+exchange records. They do not test Kafka's production task assignment, consumer
+scheduling or transaction transport. The real Go broker suite separately checks
+exchange recovery with late input. The repartition CI suite also runs
+[BrokerClockOracle](kafka-streams/src/main/java/dev/kstream/BrokerClockOracle.java)
+against a real Kafka broker. A committed acknowledgment proves unrelated or
+upstream time reached 10000 before a late t=3 record is sent; the downstream
+processor must still report 9. Both cases run EOS v2 on one stream thread with
+read-committed observers and one partition, proving that task isolation survives
+physical co-location. This validates the two covered boundary assumptions; broad
+live Java/Go scheduling and fault equivalence remains open. The harness limitation is visible in the pinned
+[3.9.1 test-driver construction](https://github.com/apache/kafka/blob/3.9.1/streams/test-utils/src/main/java/org/apache/kafka/streams/TopologyTestDriver.java#L519),
+which constructs one StreamTask with all input partitions. Reading that code
+diagnosed the test harness; no implementation is ported from it.

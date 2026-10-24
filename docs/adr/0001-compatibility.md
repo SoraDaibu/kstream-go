@@ -5,7 +5,7 @@ Status: Accepted for the experimental core; production compatibility remains gat
 This records the initial v0 scope. Later ADRs and the current compatibility
 matrix supersede its original unavailable-feature list. In particular, ADR 0026
 adds explicit broker exchanges with manual provisioning/equal-count workers and
-a tested partition-wide custom processor clock boundary across stages.
+ADR 0027 adds transactional connected-stage custom processor clocks.
 
 ## Context
 

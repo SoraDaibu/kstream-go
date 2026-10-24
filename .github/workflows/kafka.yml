@@ -70,3 +70,16 @@ jobs:
           KSTREAM_KAFKA_BROKERS: localhost:9092
           KSTREAM_KAFKA_STATE_DIR: ${{ runner.temp }}/kstream-persistent-caches
         run: go test -race -v -count=1 -run '${{ matrix.tests }}' ./adapters/kafka
+      - uses: actions/setup-java@v4
+        if: matrix.suite == 'repartition'
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - name: Verify live Kafka Streams task clock boundaries
+        if: matrix.suite == 'repartition'
+        timeout-minutes: 5
+        run: >-
+          mvn -q -f integration/kafka-streams/pom.xml compile exec:java
+          -Dexec.mainClass=dev.kstream.BrokerClockOracle
+          -Dexec.args=localhost:9092

@@ -11,6 +11,7 @@ import (
 
 	persistent "github.com/SoraDaibu/kstream-go/adapters/pebble"
 	"github.com/SoraDaibu/kstream-go/execution"
+	"github.com/SoraDaibu/kstream-go/processor"
 	"github.com/SoraDaibu/kstream-go/record"
 	"github.com/SoraDaibu/kstream-go/serde"
 	"github.com/SoraDaibu/kstream-go/stream"
@@ -158,7 +159,12 @@ func TestBrokerRepartitionCrossPartitionRecoveryAndAbortedExchange(t *testing.T)
 	builder := stream.NewStreamsBuilder()
 	changed := stream.SelectKey(stream.Stream(builder, source, serde.String, serde.String), "key", serde.String,
 		func(record.Record[string, string]) (string, bool) { return key, false })
-	stream.Count(changed.Repartition("exchange"), "counts").ToStream().To(output)
+	var clocks []int64
+	downstream := changed.Repartition("exchange").Process("clock", false,
+		func(c processor.Context, next processor.Forward[string, string]) processor.Handler[string, string] {
+			return func(r record.Record[string, string]) error { clocks = append(clocks, c.StreamTime()); return next(r) }
+		})
+	stream.Count(downstream, "counts").ToStream().To(output)
 	plan, err := builder.Build()
 	if err != nil {
 		t.Fatal(err)
@@ -189,7 +195,7 @@ func TestBrokerRepartitionCrossPartitionRecoveryAndAbortedExchange(t *testing.T)
 	write := func(first, count int) int64 {
 		var rows []*kgo.Record
 		for i := first; i < first+count; i++ {
-			rows = append(rows, &kgo.Record{Topic: source, Partition: 0, Key: []byte(fmt.Sprintf("old-%d", i)), Value: []byte("x"), Timestamp: stamp.Add(time.Duration(i) * time.Millisecond)})
+			rows = append(rows, &kgo.Record{Topic: source, Partition: 0, Key: []byte(fmt.Sprintf("old-%d", i)), Value: []byte("x"), Timestamp: stamp.Add(time.Duration(i%8) * time.Millisecond)})
 		}
 		if err := producer.ProduceSync(ctx, rows...).FirstErr(); err != nil {
 			t.Fatal(err)
@@ -207,7 +213,7 @@ func TestBrokerRepartitionCrossPartitionRecoveryAndAbortedExchange(t *testing.T)
 			for _, row := range fetch.Records() {
 				seen++
 				value, err := serde.Int64.Decode(row.Value)
-				if err != nil || string(row.Key) != key || row.Partition != int32(partition) || value != int64(seen) || !row.Timestamp.Equal(stamp.Add(time.Duration(seen-1)*time.Millisecond)) {
+				if err != nil || string(row.Key) != key || row.Partition != int32(partition) || value != int64(seen) || !row.Timestamp.Equal(stamp.Add(time.Duration(min(seen-1, 7))*time.Millisecond)) {
 					t.Fatal("lost routing/count/timestamp or replayed exchange", row, value, seen, err)
 				}
 			}
@@ -248,6 +254,14 @@ func TestBrokerRepartitionCrossPartitionRecoveryAndAbortedExchange(t *testing.T)
 	awaitExchangeOffset(t, ctx, admin, application, source, 0, next)
 	awaitExchangeOffset(t, ctx, admin, application, exchanges[0], int32(partition), lastExchange)
 	second.stop(t)
+	if len(clocks) != 16 {
+		t.Fatal("missing processor clocks", clocks)
+	}
+	for i, clock := range clocks {
+		if want := stamp.Add(time.Duration(min(i, 7)) * time.Millisecond).UnixMilli(); clock != want {
+			t.Fatal("downstream processing clock did not restore before late input", i, clock, want)
+		}
+	}
 	if seen != 16 || exchanged != 16 {
 		t.Fatal("unexpected exchange/output totals", seen, exchanged)
 	}

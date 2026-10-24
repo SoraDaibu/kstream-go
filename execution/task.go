@@ -26,15 +26,20 @@ type Snapshot struct {
 	State       state.Image
 	NextOffsets map[string]int64
 	StreamTime  int64
+	// ScopeTimes contains committed logical processing clocks. Nil is legacy.
+	ScopeTimes map[string]int64
 }
 type Transaction struct {
 	Mutations   []state.Mutation
 	Outputs     []record.Bytes
 	NextOffsets map[string]int64
 	StreamTime  int64
+	// ScopeTimes is a complete clock snapshot; nil preserves existing clocks.
+	ScopeTimes map[string]int64
 }
 
-// Backend must atomically persist mutations, outputs, next offsets and stream-time.
+// Backend must atomically persist mutations, outputs, next offsets, stream-time
+// and ScopeTimes. A nil transaction ScopeTimes preserves committed scope clocks.
 // Open fences older generations and returns a consistent committed snapshot.
 // A Commit error may be ambiguous; callers must restore, never retry in place.
 type Backend interface {
@@ -51,8 +56,11 @@ type Task struct {
 	store             state.Store
 	offsets           map[string]int64
 	streamTime        int64
+	scopeTimes        map[string]int64
+	pendingScopesCopy bool
 	handlers          map[string]func(record.Bytes) error
 	pending           *Transaction
+	staged            Transaction
 	pendingIndex      map[stateLocation]int
 	active            atomic.Bool
 	poisoned          bool
@@ -98,7 +106,12 @@ func New(ctx context.Context, s Spec, b Backend, options ...Option) (*Task, erro
 	if err != nil {
 		return nil, err
 	}
-	task := &Task{spec: s, backend: b, generation: generation, store: storage, offsets: cloneOffsets(checkpoint.NextOffsets), streamTime: checkpoint.StreamTime, handlers: make(map[string]func(record.Bytes) error), captureMetadata: config.recordMetadata, outputCapacity: config.outputCapacity}
+	for scope, stamp := range checkpoint.ScopeTimes {
+		if scope == "" || stamp < 0 || stamp > checkpoint.StreamTime {
+			return nil, errors.New("invalid restored processing clock")
+		}
+	}
+	task := &Task{spec: s, backend: b, generation: generation, store: storage, offsets: cloneOffsets(checkpoint.NextOffsets), streamTime: checkpoint.StreamTime, scopeTimes: copyScopeTimes(checkpoint.ScopeTimes), handlers: make(map[string]func(record.Bytes) error), captureMetadata: config.recordMetadata, outputCapacity: config.outputCapacity}
 	task.group, _ = b.(*Group)
 	initialized = true
 	return task, nil
@@ -227,6 +240,8 @@ func (t *Task) validate(ctx context.Context, records []record.Bytes) error {
 
 func (t *Task) clearPending() {
 	t.pending = nil
+	t.staged = Transaction{}
+	t.pendingScopesCopy = false
 	t.pendingIndex = nil
 	t.pendingStoreError = nil
 	if t.captureMetadata {
@@ -247,8 +262,11 @@ func (t *Task) finish(completed *bool) {
 }
 
 func (t *Task) stage(ctx context.Context, records []record.Bytes) (*Transaction, error) {
-	tx := Transaction{StreamTime: t.streamTime}
-	t.pending = &tx
+	// Reuse only this private descriptor under exclusive task ownership. Every
+	// slice/map that can escape to a backend retains its own fresh allocation.
+	t.staged = Transaction{StreamTime: t.streamTime, ScopeTimes: t.scopeTimes}
+	tx := &t.staged
+	t.pending = tx
 	for _, r := range records {
 		if err := ctx.Err(); err != nil {
 			return nil, err
@@ -274,7 +292,7 @@ func (t *Task) stage(ctx context.Context, records []record.Bytes) (*Transaction,
 		}
 		tx.NextOffsets[r.Topic] = r.Offset + 1
 	}
-	return &tx, nil
+	return tx, nil
 }
 func (t *Task) apply(tx *Transaction) error {
 	if err := t.store.ApplyBatch(tx.Mutations); err != nil {
@@ -287,6 +305,7 @@ func (t *Task) publish(tx *Transaction) {
 		t.offsets[topic] = offset
 	}
 	t.streamTime = tx.StreamTime
+	t.scopeTimes = tx.ScopeTimes
 }
 func (t *Task) requirePending() {
 	if t.pending == nil {

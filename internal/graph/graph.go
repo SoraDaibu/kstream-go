@@ -12,10 +12,35 @@ type Context struct {
 	Task          *execution.Task
 	ApplicationID string
 	compiled      map[any]any
+	scopes        map[string]string
+	clocks        map[string]*execution.ScopedContext
 }
 
-func New(task *execution.Task, application string) *Context {
-	return &Context{Task: task, ApplicationID: application, compiled: make(map[any]any)}
+func New(task *execution.Task, application string, scopes map[string]string) *Context {
+	return &Context{Task: task, ApplicationID: application, compiled: make(map[any]any), scopes: scopes}
+}
+
+func (c *Context) SourceClock(node string) *execution.ScopedContext {
+	scope := c.scopes[node]
+	if scope == "" {
+		return nil
+	}
+	if clock := c.clocks[scope]; clock != nil {
+		return clock
+	}
+	if c.clocks == nil {
+		c.clocks = make(map[string]*execution.ScopedContext)
+	}
+	clock := c.Task.ScopedContext(scope)
+	c.clocks[scope] = clock
+	return clock
+}
+
+func (c *Context) ProcessorContext(node string) processor.Context {
+	if clock := c.SourceClock(node); clock != nil {
+		return clock
+	}
+	return c.Task
 }
 
 type Port[K, V any] struct {

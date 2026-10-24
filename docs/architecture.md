@@ -83,3 +83,9 @@ requires an explicit design decision and a corresponding rule update.
 The [parity inventory](roadmap/parity.md) and [qualification target](roadmap/qualification.md)
 track the remaining feature and performance program. Existing tests are evidence
 for their covered cases, not a complete compatibility certification.
+
+Custom processor clocks follow connected logical stages and broker cuts, while
+native partition tasks keep bounded synchronous ownership. Optional clock maps
+commit and restore with the same complete checkpoint; ordinary single-stage
+paths need no map. See [processing clocks](processing-clocks.md) and
+[ADR 0027](adr/0027-processing-clocks.md).

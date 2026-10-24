@@ -16,14 +16,15 @@ import (
 )
 
 type StreamsBuilder struct {
-	nodes          []topology.Node
-	sources        []func(*graph.Context) error
-	sourceTopics   []sourceTopic
-	topics         map[string]bool
-	sinks          map[string]int
-	err            error
-	frozen         bool
-	recordMetadata bool
+	nodes            []topology.Node
+	sources          []func(*graph.Context) error
+	sourceTopics     []sourceTopic
+	topics           map[string]bool
+	sinks            map[string]int
+	err              error
+	frozen           bool
+	recordMetadata   bool
+	customProcessors []string
 }
 
 func NewStreamsBuilder() *StreamsBuilder {
@@ -47,6 +48,7 @@ type Topology struct {
 	sourceTopics   []sourceTopic
 	recordMetadata bool
 	sinkTopics     []string
+	clockScopes    map[string]string
 }
 
 func (b *StreamsBuilder) Build() (Topology, error) {
@@ -68,7 +70,7 @@ func (b *StreamsBuilder) Build() (Topology, error) {
 	for topic := range b.sinks {
 		sinks = append(sinks, topic)
 	}
-	return Topology{plan: p, sources: append([]func(*graph.Context) error(nil), b.sources...), sourceTopics: append([]sourceTopic(nil), b.sourceTopics...), sinkTopics: sinks, recordMetadata: b.recordMetadata}, nil
+	return Topology{plan: p, sources: append([]func(*graph.Context) error(nil), b.sources...), sourceTopics: append([]sourceTopic(nil), b.sourceTopics...), sinkTopics: sinks, recordMetadata: b.recordMetadata, clockScopes: processingScopes(p, b.customProcessors)}, nil
 }
 func (t Topology) Describe() string    { return t.plan.Describe() }
 func (t Topology) Plan() topology.Plan { return t.plan }
@@ -102,7 +104,7 @@ func (t Topology) NewTask(ctx context.Context, s execution.Spec, backend executi
 			_ = task.Close()
 		}
 	}()
-	compiled := graph.New(task, s.ApplicationID)
+	compiled := graph.New(task, s.ApplicationID, t.clockScopes)
 	for _, source := range t.sources {
 		if err := source(compiled); err != nil {
 			return nil, err
@@ -140,7 +142,8 @@ func bindSource[K, V any](b *StreamsBuilder, node topology.Node, source sourceTo
 	b.sources = append(b.sources, func(t *graph.Context) error {
 		topic := source.topic(t.ApplicationID)
 		h := p.Compile(t)
-		return t.Task.Register(topic, func(in record.Bytes) error {
+		clock := t.SourceClock(node.Name)
+		decode := func(in record.Bytes) error {
 			r := record.Record[K, V]{Timestamp: in.Timestamp, NullKey: in.Key == nil, NullValue: in.Value == nil}
 			var err error
 			if !r.NullKey {
@@ -156,14 +159,24 @@ func bindSource[K, V any](b *StreamsBuilder, node topology.Node, source sourceTo
 				}
 			}
 			return h(r)
-		})
+		}
+		if clock != nil {
+			return t.Task.Register(topic, func(in record.Bytes) error { clock.Observe(in.Timestamp); return decode(in) })
+		}
+		return t.Task.Register(topic, decode)
 	})
 	return s
 }
 func (s KStream[K, V]) Process(name string, changesKeys bool, f processor.Factory[K, V]) KStream[K, V] {
 	s.builder.mutable()
 	s.builder.recordMetadata = true
-	return s.process(name, changesKeys, f)
+	s.builder.customProcessors = append(s.builder.customProcessors, name)
+	if f == nil {
+		s.builder.fail(errors.New("nil processor factory"))
+	}
+	return s.processContext(name, changesKeys, func(t *graph.Context, next processor.Forward[K, V]) processor.Handler[K, V] {
+		return f(t.ProcessorContext(name), next)
+	})
 }
 
 func (s KStream[K, V]) process(name string, changesKeys bool, f processor.Factory[K, V]) KStream[K, V] {
@@ -171,10 +184,14 @@ func (s KStream[K, V]) process(name string, changesKeys bool, f processor.Factor
 	if f == nil {
 		s.builder.fail(errors.New("nil processor factory"))
 	}
+	return s.processContext(name, changesKeys, func(t *graph.Context, next processor.Forward[K, V]) processor.Handler[K, V] { return f(t.Task, next) })
+}
+
+func (s KStream[K, V]) processContext(name string, changesKeys bool, f func(*graph.Context, processor.Forward[K, V]) processor.Handler[K, V]) KStream[K, V] {
 	p := &graph.Port[K, V]{}
 	s.builder.add(topology.Node{Name: name, Kind: "processor", Parents: []string{s.name}})
 	s.port.Subscribe(func(t *graph.Context) processor.Handler[K, V] {
-		return f(t.Task, processor.Forward[K, V](p.Compile(t)))
+		return f(t, processor.Forward[K, V](p.Compile(t)))
 	})
 	return KStream[K, V]{s.builder, p, name, s.key, s.value, s.partitioned && !changesKeys}
 }

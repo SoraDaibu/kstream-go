@@ -33,6 +33,10 @@ public final class Oracle {
     public static void main(String[] args) throws Exception {
         if (args.length != 3) throw new IllegalArgumentException("scenario input.tsv output.tsv required");
         String scenario = args[0];
+        if (scenario.equals("clock-disconnected") || scenario.equals("clock-repartition")) {
+            ClockOracle.run(scenario, Path.of(args[1]), Path.of(args[2]));
+            return;
+        }
         StreamsBuilder b = new StreamsBuilder();
         var strings = Consumed.with(Serdes.String(), Serdes.String());
         var produced = Produced.with(Serdes.String(), Serdes.String());

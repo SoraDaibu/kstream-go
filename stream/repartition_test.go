@@ -78,7 +78,7 @@ func TestRepartitionRequiresCommittedTransportBeforeCrossPartitionGrouping(t *te
 	}
 }
 
-func TestRepartitionCoalescedTaskClockAndWindowClockBoundary(t *testing.T) {
+func TestRepartitionCustomProcessorAndWindowUseDownstreamClock(t *testing.T) {
 	b := stream.NewStreamsBuilder()
 	var observed []int64
 	s := stream.Stream(b, "in", serde.String, serde.String).Repartition("exchange").Process("clock", false,
@@ -104,10 +104,10 @@ func TestRepartitionCoalescedTaskClockAndWindowClockBoundary(t *testing.T) {
 		t.Fatal(err)
 	}
 	out := backend.Outputs(spec())
-	// The current runtime coalesces stages into a partition-wide task clock.
-	// Window operators retain their own input clock and must still accept t=9.
-	if !reflect.DeepEqual(observed, []int64{100}) || len(out) != 3 || out[2].Topic != "out" || out[2].Timestamp != 9 {
-		t.Fatal("documented task/window clock boundary changed", observed, out)
+	// The downstream stage has consumed only t=9, even though the upstream
+	// stage already committed t=100 in this same native partition task.
+	if !reflect.DeepEqual(observed, []int64{9}) || len(out) != 3 || out[2].Topic != "out" || out[2].Timestamp != 9 {
+		t.Fatal("downstream clock borrowed upstream progress", observed, out)
 	}
 }
 

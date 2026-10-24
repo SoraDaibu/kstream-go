@@ -58,7 +58,7 @@ func (b *groupBackend) Open(ctx context.Context, spec execution.Spec) (uint64, e
 	if err != nil {
 		return 0, execution.Snapshot{}, err
 	}
-	return generation, execution.Snapshot{State: image, NextOffsets: checkpoint.NextOffsets, StreamTime: checkpoint.StreamTime}, nil
+	return generation, execution.Snapshot{State: image, NextOffsets: checkpoint.NextOffsets, StreamTime: checkpoint.StreamTime, ScopeTimes: checkpoint.ScopeTimes}, nil
 }
 func (b *groupBackend) OpenInto(ctx context.Context, spec execution.Spec, sink execution.RestoreSink) (uint64, execution.Checkpoint, error) {
 	if !b.owns(spec) || b.tracker.current.Load() != b.assignment {
@@ -120,7 +120,11 @@ func (b *groupBackend) CommitTasks(ctx context.Context, transactions []execution
 		for topic, offset := range tx.Transaction.NextOffsets {
 			next[topic] = offset
 		}
-		proposed[tx.Spec.Partition] = execution.Checkpoint{NextOffsets: next, StreamTime: tx.Transaction.StreamTime}
+		clocks := tx.Transaction.ScopeTimes
+		if clocks == nil {
+			clocks = entry.checkpoint.ScopeTimes
+		}
+		proposed[tx.Spec.Partition] = execution.Checkpoint{NextOffsets: next, StreamTime: tx.Transaction.StreamTime, ScopeTimes: cloneClocks(clocks)}
 	}
 	for partition, positions := range b.pollNext {
 		entry, ok := b.entries[partition]
@@ -167,7 +171,7 @@ func (b *groupBackend) CommitTasks(ctx context.Context, transactions []execution
 			appendRow(kgo.Record{Topic: output.Topic, Partition: output.Partition, Key: output.Key, Value: output.Value, Timestamp: time.UnixMilli(output.Timestamp)})
 		}
 		meta := proposed[tx.Spec.Partition]
-		encoded, err := json.Marshal(checkpoint{NextOffsets: meta.NextOffsets, StreamTime: meta.StreamTime})
+		encoded, err := json.Marshal(checkpoint{NextOffsets: meta.NextOffsets, StreamTime: meta.StreamTime, ScopeTimes: meta.ScopeTimes})
 		if err != nil {
 			return b.abort(ctx, err)
 		}

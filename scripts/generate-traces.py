@@ -10,7 +10,7 @@ base = [("in", 0, "a", "one"), ("in", 9, "a", "two"), ("in", 10, "b", "x"),
         ("in", 9, "a", "closed"), ("in", 20, "~", "null-key"),
         ("in", 21, "a", "~"), ("in", 22, "", "")]
 window_folds = ("window-reduce", "hopping-reduce", "hopping-uneven-reduce", "window-aggregate", "window-aggregate-null", "hopping-aggregate", "hopping-aggregate-null", "hopping-uneven-aggregate", "hopping-uneven-aggregate-null")
-for scenario in ("filter", "filter-not", "branch", "branch-default", "mapvalues", "flatmap", "flatmapvalues", "merge", "repartition-values", "repartition-count", "metadata", "metadata-fanout", "process-typed", "process-typed-fanout", "count", "reduce", "aggregate", "aggregate-null", "window", "hopping", "hopping-uneven", "window-reduce", "hopping-reduce", "hopping-uneven-reduce", "window-aggregate", "window-aggregate-null", "hopping-aggregate", "hopping-aggregate-null", "hopping-uneven-aggregate", "hopping-uneven-aggregate-null", "table", "table-filter", "table-filter-not", "table-mapvalues", "table-transform-join", "join", "join-null", "left-join"):
+for scenario in ("filter", "filter-not", "branch", "branch-default", "mapvalues", "flatmap", "flatmapvalues", "merge", "repartition-values", "repartition-count", "clock-disconnected", "clock-repartition", "metadata", "metadata-fanout", "process-typed", "process-typed-fanout", "count", "reduce", "aggregate", "aggregate-null", "window", "hopping", "hopping-uneven", "window-reduce", "hopping-reduce", "hopping-uneven-reduce", "window-aggregate", "window-aggregate-null", "hopping-aggregate", "hopping-aggregate-null", "hopping-uneven-aggregate", "hopping-uneven-aggregate-null", "table", "table-filter", "table-filter-not", "table-mapvalues", "table-transform-join", "join", "join-null", "left-join"):
     rows = list(base)
     if scenario.startswith("process-typed"):
         rows += [("in", 3, "é🌊", "漢字"), ("in", 4, "skip", "!skip"),
@@ -55,7 +55,7 @@ for scenario in ("filter", "filter-not", "branch", "branch-default", "mapvalues"
             rows += [("in", 15, "clock", "x"), ("in", 9, "boundary", "x"),
                      ("in", 20, "clock", "x"), ("in", 14, "boundary", "~"),
                      ("in", 1000, "~", "ignored"), ("in", 19, "boundary", "x")]
-    if scenario in ("merge", "metadata", "metadata-fanout", "process-typed", "process-typed-fanout"):
+    if scenario in ("merge", "clock-disconnected", "metadata", "metadata-fanout", "process-typed", "process-typed-fanout"):
         rows = [("in" if i % 2 == 0 else "right", ts, k, v) for i, (_, ts, k, v) in enumerate(rows)]
     rng = random.Random(73019)
     clock = 30
@@ -69,8 +69,13 @@ for scenario in ("filter", "filter-not", "branch", "branch-default", "mapvalues"
         topic = "table" if scenario == "table" or scenario.startswith("table-") else "in"
         if scenario in ("join", "join-null", "left-join", "table-transform-join"): topic = rng.choice(["table", "in"])
         if scenario in ("join-null", "left-join", "table-mapvalues", "table-transform-join") and rng.randrange(5) == 0: value = "!null-output"
-        if scenario in ("merge", "metadata", "metadata-fanout", "process-typed", "process-typed-fanout"): topic = rng.choice(["in", "right"])
+        if scenario in ("merge", "clock-disconnected", "metadata", "metadata-fanout", "process-typed", "process-typed-fanout"): topic = rng.choice(["in", "right"])
         rows.append((topic, timestamp, key, value))
+    if scenario.startswith("clock-"):
+        fixture = Path(__file__).resolve().parent.parent / "integration/fixtures/clock-driver-task-isolation.json"
+        prefix = [tuple("~" if cell is None else cell for cell in row) for row in json.loads(fixture.read_text())]
+        if scenario == "clock-repartition": prefix = [("in", ts, key, value) for _, ts, key, value in prefix]
+        rows = prefix + rows
     if scenario in window_folds:
         fixture = Path(__file__).resolve().parent.parent / "integration/fixtures/window-reduce-null-input.json"
         rows += [tuple("~" if cell is None else cell for cell in row) for row in json.loads(fixture.read_text())]

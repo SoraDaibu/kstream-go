@@ -49,7 +49,7 @@ func TestBrokerBoundedStreamRestoreMatchesLegacyAndPropagatesSinkFailure(t *test
 		rows = append(rows, row)
 		expected.Apply(row)
 	}
-	if err = first.Commit(ctx, spec, g, execution.Transaction{Mutations: rows, NextOffsets: map[string]int64{"left": 5, "right": 9}, StreamTime: 123}); err != nil {
+	if err = first.Commit(ctx, spec, g, execution.Transaction{Mutations: rows, NextOffsets: map[string]int64{"left": 5, "right": 9}, StreamTime: 123, ScopeTimes: map[string]int64{"upstream": 120, "downstream": 70}}); err != nil {
 		t.Fatal(err)
 	}
 	rows = []state.Mutation{{Store: "s", Key: "0", Value: nil}, {Store: "s", Key: "1", Value: []byte{}}, {Store: "s", Key: "2", Value: []byte("updated")}}
@@ -90,11 +90,14 @@ func TestBrokerBoundedStreamRestoreMatchesLegacyAndPropagatesSinkFailure(t *test
 		}
 		return nil
 	})
+	if !reflect.DeepEqual(checkpoint.ScopeTimes, map[string]int64{"upstream": 120, "downstream": 70}) {
+		t.Fatal("stream restore dropped logical clocks", checkpoint)
+	}
 	if err != nil || batches < 2 || !reflect.DeepEqual(image, expected) || checkpoint.StreamTime != 124 || !reflect.DeepEqual(checkpoint.NextOffsets, map[string]int64{"left": 7, "right": 9}) {
 		t.Fatal("streamed restore lost state/checkpoint", batches, checkpoint, err)
 	}
 	_, legacy, err := restored.Open(ctx, spec)
-	if err != nil || !reflect.DeepEqual(image, legacy.State) || !reflect.DeepEqual(checkpoint.NextOffsets, legacy.NextOffsets) || checkpoint.StreamTime != legacy.StreamTime {
+	if err != nil || !reflect.DeepEqual(image, legacy.State) || !reflect.DeepEqual(checkpoint.NextOffsets, legacy.NextOffsets) || checkpoint.StreamTime != legacy.StreamTime || !reflect.DeepEqual(checkpoint.ScopeTimes, legacy.ScopeTimes) {
 		t.Fatal("legacy and streamed restore differ", err)
 	}
 }

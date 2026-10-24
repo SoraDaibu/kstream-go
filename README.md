@@ -107,11 +107,22 @@ partition task, feeds records, and reads output. It prints `go: 1`, `kafka: 1`,
 `go: 2` after the topology description. The [Kafka count example](examples/kafka-count/main.go) demonstrates the
 experimental fixed-assignment adapter; see its [deployment boundaries](adapters/kafka/README.md).
 
+Custom processor clocks follow connected stages, including broker exchanges:
+
+```mermaid
+flowchart LR
+    Input[Source t=9 then t=100] --> Up[Upstream clock: 100]
+    Up --> Exchange[(Committed repartition topic)]
+    Exchange -->|Consume first record t=9| Down[Downstream clock: 9]
+    Other[Unrelated source t=1000] --> Own[Separate clock: 1000]
+```
+
 ## Included behavior
 
 - `KStream`: filter/filterNot, map/mapValues, flatMap/flatMapValues, selectKey,
   merge, ordered branching, observers, typed custom processors with source metadata and sinks.
-  See the [Processor API](docs/processor-api.md).
+  See the [Processor API](docs/processor-api.md) and
+  [transactional processing clocks](docs/processing-clocks.md).
 - `KTable`: source upserts, tombstone deletes, filter/filterNot, nullable value
   mapping, grouped counts and stream-triggered
   inner/left joins against current table state, including nullable results. See
