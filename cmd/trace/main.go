@@ -41,11 +41,25 @@ func run() error {
 	scenario := os.Args[1]
 	b := stream.NewStreamsBuilder()
 	var table stream.KTable[string, string]
-	if scenario == "join" || scenario == "left-join" || scenario == "join-null" || scenario == "table" {
+	if scenario == "join" || scenario == "left-join" || scenario == "join-null" || scenario == "table" || strings.HasPrefix(scenario, "table-") {
 		table = stream.Table(b, "table", "lookup", serde.String, serde.String)
 	}
-	if scenario == "table" {
-		table.ToStream().To("out")
+	if scenario == "table" || (strings.HasPrefix(scenario, "table-") && scenario != "table-transform-join") {
+		switch scenario {
+		case "table":
+			table.ToStream().To("out")
+		case "table-filter":
+			table.Filter("filtered", func(_, v string) bool { return v != "" }).ToStream().To("out")
+		case "table-filter-not":
+			table.FilterNot("filtered", func(_, v string) bool { return v != "" }).ToStream().To("out")
+		case "table-mapvalues":
+			mapped := stream.MapTableValues(table, "mapped", serde.Int64, func(k, v string) (int64, bool) {
+				return int64(len(k) + len(v)), v == "!null-output"
+			})
+			stream.MapValues(mapped.ToStream(), "format", serde.String, func(v int64, null bool) (string, bool) { return strconv.FormatInt(v, 10), null }).To("out")
+		default:
+			return fmt.Errorf("unknown scenario %q", scenario)
+		}
 	} else {
 		s := stream.Stream(b, "in", serde.String, serde.String)
 		switch scenario {
@@ -113,6 +127,15 @@ func run() error {
 					c = "missing"
 				}
 				return a + ":" + c, a == "!null-output"
+			}).To("out")
+		case "table-transform-join":
+			filtered := table.Filter("filtered", func(_, v string) bool { return v != "" })
+			mapped := stream.MapTableValues(filtered, "mapped", serde.String, func(_, v string) (string, bool) { return v + "!", v == "!null-output" })
+			stream.LeftJoin(s, mapped, "enrich", serde.String, func(a, c string, missing bool) (string, bool) {
+				if missing {
+					c = "missing"
+				}
+				return a + ":" + c, false
 			}).To("out")
 		case "window", "hopping", "hopping-uneven":
 			var counts stream.KStream[window.Key[string], int64]

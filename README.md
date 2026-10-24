@@ -53,9 +53,10 @@ experimental fixed-assignment adapter; see its [deployment boundaries](adapters/
 
 - `KStream`: filter/filterNot, map/mapValues, flatMap/flatMapValues, selectKey,
   merge, observers, typed custom processors and sinks.
-- `KTable`: source upserts, tombstone deletes, grouped counts and stream-triggered
+- `KTable`: source upserts, tombstone deletes, filter/filterNot, nullable value
+  mapping, grouped counts and stream-triggered
   inner/left joins against current table state, including nullable results. See
-  [stream-table joins](docs/stream-table-joins.md).
+  [table transforms](docs/table-transforms.md) and [stream-table joins](docs/stream-table-joins.md).
 - `KGroupedStream`: `GroupByKey`, count, reduce, and type-changing aggregate with
   explicit nullable initialization/results and aggregate timestamps. See
   [grouped aggregation](docs/grouped-aggregation.md).

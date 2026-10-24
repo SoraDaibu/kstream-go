@@ -31,10 +31,18 @@ public final class Oracle {
         var strings = Consumed.with(Serdes.String(), Serdes.String());
         var produced = Produced.with(Serdes.String(), Serdes.String());
         // Declare the table before the stream to match the logical Go graph.
-        var table = scenario.equals("join") || scenario.equals("join-null") || scenario.equals("left-join") || scenario.equals("table")
+        var table = scenario.equals("join") || scenario.equals("join-null") || scenario.equals("left-join") || scenario.equals("table") || scenario.startsWith("table-")
                 ? b.table("table", strings, Materialized.as("lookup")) : null;
-        if (scenario.equals("table")) {
-            table.toStream().to("out", produced);
+        if (scenario.equals("table") || (scenario.startsWith("table-") && !scenario.equals("table-transform-join"))) {
+            switch (scenario) {
+                case "table" -> table.toStream().to("out", produced);
+                case "table-filter" -> table.filter((k,v) -> !v.isEmpty(), Materialized.as("filtered")).toStream().to("out", produced);
+                case "table-filter-not" -> table.filterNot((k,v) -> !v.isEmpty(), Materialized.as("filtered")).toStream().to("out", produced);
+                case "table-mapvalues" -> table.mapValues((k,v) -> v.equals("!null-output") ? null : (long)(k.length()+v.length()),
+                        Materialized.with(Serdes.String(), Serdes.Long()))
+                        .toStream().mapValues(v -> v == null ? null : v.toString()).to("out", produced);
+                default -> throw new IllegalArgumentException("unknown table scenario: " + scenario);
+            }
         } else {
             var source = b.stream("in", strings);
             switch (scenario) {
@@ -56,6 +64,10 @@ public final class Oracle {
                 case "join" -> source.join(table, (a,c) -> a + ":" + c).to("out", produced);
                 case "join-null" -> source.join(table, (a,c) -> a.equals("!null-output") ? null : a + ":" + c).to("out", produced);
                 case "left-join" -> source.leftJoin(table, (a,c) -> a.equals("!null-output") ? null : a + ":" + (c == null ? "missing" : c)).to("out", produced);
+                case "table-transform-join" -> source.leftJoin(
+                        table.filter((k,v) -> !v.isEmpty(), Materialized.as("filtered"))
+                                .mapValues(v -> v.equals("!null-output") ? null : v + "!", Materialized.as("mapped")),
+                        (a,c) -> a + ":" + (c == null ? "missing" : c)).to("out", produced);
                 case "window" -> source.groupByKey()
                         .windowedBy(TimeWindows.ofSizeAndGrace(Duration.ofMillis(10), Duration.ofMillis(5)))
                         .count(Materialized.as("windows")).toStream()
@@ -81,8 +93,8 @@ public final class Oracle {
         try (var driver = new TopologyTestDriver(b.build(), props)) {
             HashMap<String, TestInputTopic<String,String>> inputs = new HashMap<>();
             for (String topic : scenario.equals("merge") ? List.of("in", "right")
-                    : scenario.equals("join") || scenario.equals("join-null") || scenario.equals("left-join") ? List.of("table", "in")
-                    : scenario.equals("table") ? List.of("table") : List.of("in")) {
+                    : scenario.equals("join") || scenario.equals("join-null") || scenario.equals("left-join") || scenario.equals("table-transform-join") ? List.of("table", "in")
+                    : scenario.equals("table") || scenario.startsWith("table-") ? List.of("table") : List.of("in")) {
                 inputs.put(topic, driver.createInputTopic(topic, new StringSerializer(), new StringSerializer()));
             }
             var output = driver.createOutputTopic("out", new StringDeserializer(), new StringDeserializer());
