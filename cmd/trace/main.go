@@ -122,6 +122,33 @@ func run() error {
 					return next(r)
 				}
 			}).To("out")
+		case "process-typed", "process-typed-fanout":
+			merged := stream.Merge(s, stream.Stream(b, "right", serde.String, serde.String), "merged")
+			numeric := stream.Process(merged, "numeric", serde.Int64, serde.Int64,
+				func(ctx processor.Context, next processor.Forward[int64, int64]) processor.Handler[string, string] {
+					return func(r record.Record[string, string]) error {
+						if !r.NullValue && r.Value == "!skip" {
+							return nil
+						}
+						meta, present := ctx.RecordMetadata()
+						if !present {
+							return fmt.Errorf("typed processor metadata unavailable")
+						}
+						out := record.Record[int64, int64]{Key: int64(len(r.Key)), Value: int64(len(r.Value)) + meta.Offset, Timestamp: r.Timestamp + 1, NullKey: r.NullKey, NullValue: r.NullValue}
+						if err := next(out); err != nil {
+							return err
+						}
+						if scenario == "process-typed-fanout" {
+							out.Value++
+							out.Timestamp++
+							return next(out)
+						}
+						return nil
+					}
+				})
+			stream.Map(numeric, "format", serde.String, serde.String, func(r record.Record[int64, int64]) record.Record[string, string] {
+				return record.Record[string, string]{Key: strconv.FormatInt(r.Key, 10), Value: strconv.FormatInt(r.Value, 10), Timestamp: r.Timestamp, NullKey: r.NullKey, NullValue: r.NullValue}
+			}).To("out")
 		case "count":
 			stream.Map(stream.Count(s, "counts").ToStream(), "format", serde.String, serde.String, func(r record.Record[string, int64]) record.Record[string, string] {
 				return record.Record[string, string]{Key: r.Key, Value: strconv.FormatInt(r.Value, 10), Timestamp: r.Timestamp}

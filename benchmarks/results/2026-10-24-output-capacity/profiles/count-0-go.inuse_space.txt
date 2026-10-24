@@ -1,0 +1,38 @@
+File: app
+Build ID: 30c98f60d26d69ec2bed37eeb0bf0bd9797391bb
+Type: inuse_space
+Time: 2026-10-24 09:52:16 UTC
+Showing nodes accounting for 1728.18kB, 100% of 1728.18kB total
+      flat  flat%   sum%        cum   cum%
+         0     0%     0%  1728.18kB   100%  runtime.main
+         0     0%     0%  1183.51kB 68.48%  github.com/SoraDaibu/kstream-go/adapters/kafka.(*groupBackend).CommitTasks
+         0     0%     0%  1183.51kB 68.48%  github.com/SoraDaibu/kstream-go/adapters/kafka.RunGroup
+         0     0%     0%  1183.51kB 68.48%  github.com/SoraDaibu/kstream-go/execution.(*Group).Process
+         0     0%     0%  1183.51kB 68.48%  github.com/twmb/franz-go/pkg/kgo.(*Client).Produce (inline)
+         0     0%     0%  1183.51kB 68.48%  github.com/twmb/franz-go/pkg/kgo.(*Client).ProduceSync
+         0     0%     0%  1183.51kB 68.48%  github.com/twmb/franz-go/pkg/kgo.(*Client).doPartitionRecord
+         0     0%     0%  1183.51kB 68.48%  github.com/twmb/franz-go/pkg/kgo.(*Client).partitionRecord
+         0     0%     0%  1183.51kB 68.48%  github.com/twmb/franz-go/pkg/kgo.(*Client).produce
+         0     0%     0%  1183.51kB 68.48%  github.com/twmb/franz-go/pkg/kgo.(*GroupTransactSession).ProduceSync
+ 1183.51kB 68.48% 68.48%  1183.51kB 68.48%  github.com/twmb/franz-go/pkg/kgo.(*recBatch).appendRecord
+         0     0% 68.48%  1183.51kB 68.48%  github.com/twmb/franz-go/pkg/kgo.(*recBatch).tryBuffer
+         0     0% 68.48%  1183.51kB 68.48%  github.com/twmb/franz-go/pkg/kgo.(*recBuf).bufferRecord
+         0     0% 68.48%  1183.51kB 68.48%  main.main
+         0     0% 68.48%  1183.51kB 68.48%  main.run
+         0     0% 68.48%   544.67kB 31.52%  google.golang.org/protobuf/internal/impl.(*MessageInfo).init (inline)
+         0     0% 68.48%   544.67kB 31.52%  google.golang.org/protobuf/internal/impl.(*MessageInfo).initOnce
+         0     0% 68.48%   544.67kB 31.52%  google.golang.org/protobuf/internal/impl.(*MessageInfo).makeKnownFieldsFunc
+         0     0% 68.48%   544.67kB 31.52%  google.golang.org/protobuf/internal/impl.(*MessageInfo).makeReflectFuncs
+         0     0% 68.48%   544.67kB 31.52%  google.golang.org/protobuf/internal/impl.(*messageState).ProtoMethods
+         0     0% 68.48%   544.67kB 31.52%  google.golang.org/protobuf/internal/impl.fieldInfoForList
+         0     0% 68.48%   544.67kB 31.52%  google.golang.org/protobuf/proto.Unmarshal
+         0     0% 68.48%   544.67kB 31.52%  google.golang.org/protobuf/proto.UnmarshalOptions.unmarshal
+         0     0% 68.48%   544.67kB 31.52%  google.golang.org/protobuf/proto.protoMethods (inline)
+         0     0% 68.48%   544.67kB 31.52%  google.golang.org/protobuf/reflect/protodesc.init.0
+         0     0% 68.48%   544.67kB 31.52%  reflect.(*rtype).ptrTo
+         0     0% 68.48%   544.67kB 31.52%  reflect.PointerTo (inline)
+         0     0% 68.48%   544.67kB 31.52%  reflect.PtrTo (inline)
+  544.67kB 31.52%   100%   544.67kB 31.52%  reflect.compiledTypelinks
+         0     0%   100%   544.67kB 31.52%  reflect.typesByString
+         0     0%   100%   544.67kB 31.52%  runtime.doInit (inline)
+         0     0%   100%   544.67kB 31.52%  runtime.doInit1

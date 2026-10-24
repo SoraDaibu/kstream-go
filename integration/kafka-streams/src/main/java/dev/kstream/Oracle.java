@@ -2,6 +2,7 @@ package dev.kstream;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Arrays;
@@ -64,6 +65,21 @@ public final class Oracle {
                         }
                     }).to("out", produced);
                 }
+                case "process-typed", "process-typed-fanout" -> source.merge(b.stream("right", strings))
+                        .process(() -> new ContextualProcessor<String,String,Long,Long>() {
+                            @Override public void process(Record<String,String> record) {
+                                if ("!skip".equals(record.value())) return;
+                                var meta = context().recordMetadata().orElseThrow();
+                                Long key = record.key() == null ? null : (long)record.key().getBytes(StandardCharsets.UTF_8).length;
+                                Long value = record.value() == null ? null : (long)record.value().getBytes(StandardCharsets.UTF_8).length + meta.offset();
+                                var out = new Record<Long,Long>(key, value, record.timestamp() + 1);
+                                context().forward(out);
+                                if (scenario.equals("process-typed-fanout")) {
+                                    context().forward(out.withValue(value == null ? null : value + 1).withTimestamp(record.timestamp() + 2));
+                                }
+                            }
+                        }).map((k,v) -> KeyValue.pair(k == null ? null : k.toString(), v == null ? null : v.toString()))
+                        .to("out", produced);
                 case "count" -> source.groupByKey().count(Materialized.as("counts"))
                         .toStream().mapValues(v -> v.toString()).to("out", produced);
                 case "reduce" -> source.groupByKey().reduce((a,v) -> v.equals("!delete") ? null : a + ":" + v,
@@ -104,7 +120,7 @@ public final class Oracle {
         props.put(StreamsConfig.STATE_DIR_CONFIG, state.toString());
         try (var driver = new TopologyTestDriver(b.build(), props)) {
             HashMap<String, TestInputTopic<String,String>> inputs = new HashMap<>();
-            for (String topic : scenario.equals("merge") || scenario.equals("metadata") || scenario.equals("metadata-fanout") ? List.of("in", "right")
+            for (String topic : scenario.equals("merge") || scenario.equals("metadata") || scenario.equals("metadata-fanout") || scenario.startsWith("process-typed") ? List.of("in", "right")
                     : scenario.equals("join") || scenario.equals("join-null") || scenario.equals("left-join") || scenario.equals("table-transform-join") ? List.of("table", "in")
                     : scenario.equals("table") || scenario.startsWith("table-") ? List.of("table") : List.of("in")) {
                 inputs.put(topic, driver.createInputTopic(topic, new StringSerializer(), new StringSerializer()));

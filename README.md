@@ -44,10 +44,22 @@ topology, err := b.Build()
 ```
 
 Go does not support methods with additional type parameters. Type-changing
-operations use package functions such as `stream.Map` and `stream.Join`;
+operations use package functions such as `stream.Map`, `stream.Process` and `stream.Join`;
 type-preserving operations use methods. Null keys and values have explicit flags
 in `record.Record[K,V]`; Go zero values are ordinary data. Source/sink/store
 boundaries use explicit codecs. Build freezes the builder.
+
+Custom processors also have typed input and output boundaries. A task creates
+each supplier once; forwarding uses synchronous calls through the graph.
+See the [Processor API](docs/processor-api.md) for source metadata and staged state.
+
+```mermaid
+flowchart LR
+    Input["KStream · input K, V"] --> Handler["Task-local Handler · K, V"]
+    Context["Context · staged stores and source metadata"] -.-> Handler
+    Handler --> Forward["Forward · output K2, V2"]
+    Forward --> Output["KStream · explicit output codecs"]
+```
 
 For the experimental Kafka group worker, a successful batch follows this path:
 

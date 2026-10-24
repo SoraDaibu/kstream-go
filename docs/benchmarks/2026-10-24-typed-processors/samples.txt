@@ -1,0 +1,26 @@
+goos: linux
+goarch: amd64
+pkg: github.com/SoraDaibu/kstream-go/stream
+cpu: AMD EPYC 9V74 80-Core Processor                
+BenchmarkTypedProcessorDispatch/batch=1/cross-type=false         	 1515651	       344.8 ns/op	     320 B/op	       3 allocs/op
+BenchmarkTypedProcessorDispatch/batch=1/cross-type=false         	 1749931	       332.8 ns/op	     320 B/op	       3 allocs/op
+BenchmarkTypedProcessorDispatch/batch=1/cross-type=false         	 1784781	       338.6 ns/op	     320 B/op	       3 allocs/op
+BenchmarkTypedProcessorDispatch/batch=1/cross-type=false         	 1822323	       331.2 ns/op	     320 B/op	       3 allocs/op
+BenchmarkTypedProcessorDispatch/batch=1/cross-type=false         	 1799102	       335.5 ns/op	     320 B/op	       3 allocs/op
+BenchmarkTypedProcessorDispatch/batch=1/cross-type=true          	 1740376	       328.0 ns/op	     320 B/op	       3 allocs/op
+BenchmarkTypedProcessorDispatch/batch=1/cross-type=true          	 1823341	       326.0 ns/op	     320 B/op	       3 allocs/op
+BenchmarkTypedProcessorDispatch/batch=1/cross-type=true          	 1789112	       334.1 ns/op	     320 B/op	       3 allocs/op
+BenchmarkTypedProcessorDispatch/batch=1/cross-type=true          	 1812637	       338.7 ns/op	     320 B/op	       3 allocs/op
+BenchmarkTypedProcessorDispatch/batch=1/cross-type=true          	 1769872	       339.0 ns/op	     320 B/op	       3 allocs/op
+BenchmarkTypedProcessorDispatch/batch=256/cross-type=false       	   34261	     17277 ns/op	     320 B/op	       3 allocs/op
+BenchmarkTypedProcessorDispatch/batch=256/cross-type=false       	   34260	     18293 ns/op	     320 B/op	       3 allocs/op
+BenchmarkTypedProcessorDispatch/batch=256/cross-type=false       	   33871	     17013 ns/op	     320 B/op	       3 allocs/op
+BenchmarkTypedProcessorDispatch/batch=256/cross-type=false       	   36624	     17613 ns/op	     320 B/op	       3 allocs/op
+BenchmarkTypedProcessorDispatch/batch=256/cross-type=false       	   33088	     17522 ns/op	     320 B/op	       3 allocs/op
+BenchmarkTypedProcessorDispatch/batch=256/cross-type=true        	   34072	     17732 ns/op	     320 B/op	       3 allocs/op
+BenchmarkTypedProcessorDispatch/batch=256/cross-type=true        	   33897	     17889 ns/op	     320 B/op	       3 allocs/op
+BenchmarkTypedProcessorDispatch/batch=256/cross-type=true        	   34670	     17700 ns/op	     320 B/op	       3 allocs/op
+BenchmarkTypedProcessorDispatch/batch=256/cross-type=true        	   33808	     17764 ns/op	     320 B/op	       3 allocs/op
+BenchmarkTypedProcessorDispatch/batch=256/cross-type=true        	   34302	     18306 ns/op	     320 B/op	       3 allocs/op
+PASS
+ok  	github.com/SoraDaibu/kstream-go/stream	17.249s

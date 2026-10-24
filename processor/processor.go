@@ -20,3 +20,9 @@ type Context interface {
 
 // Factory is invoked once per task, not once per record.
 type Factory[K, V any] func(Context, Forward[K, V]) Handler[K, V]
+
+// Supplier creates a processor whose input and output types can differ. It is
+// invoked once per task. Forward must be called synchronously from the returned
+// handler; neither it nor Context may be used concurrently or after the callback.
+// Returning a forwarding error aborts the current transaction.
+type Supplier[KIn, VIn, KOut, VOut any] func(Context, Forward[KOut, VOut]) Handler[KIn, VIn]
