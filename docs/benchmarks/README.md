@@ -1,5 +1,9 @@
 # Scheduling benchmarks
 
+The [broker comparison protocol](broker-comparison.md) measures verified
+transactional filter/count applications against Kafka Streams. Its hosted
+single-broker results remain exploratory and separate from production qualification.
+
 ADR 0003 is provisional. The [initial measured evaluation](2026-10-23/README.md)
 includes raw output and environment details. Its results vary with batch size;
 no production scheduling winner is claimed.

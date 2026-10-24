@@ -1,0 +1,62 @@
+{
+  "production_qualified": false,
+  "target_throughput_ratio": 2.5,
+  "scenarios": {
+    "filter": {
+      "paired_throughput_ratios": [
+        1.1182831902085548,
+        2.6779494183447516,
+        1.5364313737415436,
+        2.0573780720548847,
+        3.1134243760828455
+      ],
+      "median_throughput_ratio": 2.0573780720548847,
+      "exploratory_bootstrap_95pct": [
+        1.1182831902085548,
+        3.1134243760828455
+      ],
+      "go": {
+        "median_records_per_second": 307678.0470515023,
+        "median_p99_latency_ms": 459.44296,
+        "median_peak_rss_kib": 77844,
+        "median_observed_cpu_ns": 280000000,
+        "median_source_produce_fraction": 0.33326936399057083
+      },
+      "kafka": {
+        "median_records_per_second": 172918.00127481893,
+        "median_p99_latency_ms": 966.514977,
+        "median_peak_rss_kib": 136368,
+        "median_observed_cpu_ns": 1070000000,
+        "median_source_produce_fraction": 0.1346546693489207
+      }
+    },
+    "count": {
+      "paired_throughput_ratios": [
+        6.741730713405289,
+        7.678806584531614,
+        6.897351356992247,
+        7.177644739871135,
+        6.665461440522263
+      ],
+      "median_throughput_ratio": 6.897351356992247,
+      "exploratory_bootstrap_95pct": [
+        6.665461440522263,
+        7.678806584531614
+      ],
+      "go": {
+        "median_records_per_second": 516226.4478523168,
+        "median_p99_latency_ms": 286.790244,
+        "median_peak_rss_kib": 61504,
+        "median_observed_cpu_ns": 280000000,
+        "median_source_produce_fraction": 0.3804844303718893
+      },
+      "kafka": {
+        "median_records_per_second": 75108.95177798558,
+        "median_p99_latency_ms": 2429.443364,
+        "median_peak_rss_kib": 187036,
+        "median_observed_cpu_ns": 2630000000,
+        "median_source_produce_fraction": 0.04569351783186244
+      }
+    }
+  }
+}
