@@ -272,3 +272,27 @@ input rows. The new Java public split/branch scenarios check overlapping
 predicates, first-match order, null/empty input and dropped/catch-all routing.
 Go tests additionally verify unmatched offset progress across recovery and
 transaction rollback spanning different selected branches.
+
+## Windowed reduce cycle
+
+Source `908680e75a4f99703a53a04242122980f4e94ce4` passed
+[Go/race/layer and all 720 reference comparisons](https://github.com/SoraDaibu/kstream-go/actions/runs/40085730734),
+[persistent state](https://github.com/SoraDaibu/kstream-go/actions/runs/40085730760)
+and all four [broker fault suites](https://github.com/SoraDaibu/kstream-go/actions/runs/40085730740).
+Thirty scenarios compare 9,443 inputs. Three windowed-reduce traces add tumbling,
+divisible/uneven hopping windows, nullable inputs/results, aggregate timestamp
+lifetimes and grace boundaries across all store/batch/commit/capacity settings.
+
+The first reference run found that windowed reduce accepts null values: a first
+null emits a tombstone and advances the clock; an existing aggregate passes null
+to the reducer. The implementation/API were corrected with an explicit input-null
+flag and a [six-row regression fixture](../integration/fixtures/window-reduce-null-input.json).
+Null keys still skip without advancing the clock. This deliberately preserves
+Kafka's observed difference from unwindowed reduce rather than assuming shared
+null policy across the DSL. Go tests additionally cover recovery of a clock whose
+null-valued aggregate row is absent, aborted fanout, and bounded derived indexes.
+
+[Count regression samples](benchmarks/2026-10-24-windowed-reduce/README.md)
+retain the rejected shared-lifecycle timing regression and final clock-cache
+revision. Count's state format is unchanged; its benchmark removes one allocation
+per input after caching the operator-owned durable clock.

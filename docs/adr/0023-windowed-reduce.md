@@ -1,6 +1,7 @@
 # ADR 0023: Time-windowed reduce and shared window lifecycle
 
-Status: accepted for implementation; independent reference validation required.
+Status: accepted; all 720 independent reference comparisons passed at source
+`908680e75a4f99703a53a04242122980f4e94ce4`.
 
 Extend tumbling and hopping windows from counts to typed reduce. Add
 WindowedReduce and HoppingWindowedReduce, returning typed window-key update

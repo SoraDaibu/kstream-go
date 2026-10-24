@@ -147,7 +147,7 @@ func (b *groupBackend) CommitTasks(ctx context.Context, transactions []execution
 		}
 	}
 	// Fresh arrays own all record structs for this call. Do not reuse them after
-	// ProduceSync: client hooks/results can retain individual record pointers.
+	// produce completion: client hooks can retain individual record pointers.
 	records := make([]kgo.Record, rowCount)
 	rows := make([]*kgo.Record, 0, rowCount)
 	appendRow := func(row kgo.Record) {
@@ -179,7 +179,7 @@ func (b *groupBackend) CommitTasks(ctx context.Context, transactions []execution
 		}
 	}
 	if len(rows) > 0 {
-		if err := b.session.ProduceSync(ctx, rows...).FirstErr(); err != nil {
+		if err := produceAll(ctx, b.session, rows); err != nil {
 			return b.abort(ctx, fenceError(err))
 		}
 	}

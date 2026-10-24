@@ -38,6 +38,14 @@ checkpoint using read-committed isolation. Feed each returned bounded slice to
 input, processing or commit error. The task ID and application ID must remain stable across
 restarts, and source ownership must be externally controlled.
 
+Transaction production waits for every record's completion before committing or
+aborting. The real client's public Produce API uses one completion callback and
+retains only the first error, avoiding a result list proportional to the output
+batch. Fresh record arrays/payload lifetimes are unchanged. A custom injected
+session exposing only ProduceSync keeps that compatibility path. An optional
+Produce implementation must complete each submitted callback exactly once,
+including cancellation/failure; concurrent callbacks are supported.
+
 ## Boundaries
 
 Fixed-assignment input positions are stored atomically in the application's
