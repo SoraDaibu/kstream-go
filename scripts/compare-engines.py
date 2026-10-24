@@ -14,12 +14,13 @@ out = Path(directory); out.mkdir(parents=True, exist_ok=True)
 records = int(os.getenv('KSTREAM_COMPARE_RECORDS', '200000'))
 warmup = int(os.getenv('KSTREAM_COMPARE_WARMUP', '100000'))
 trials = int(os.getenv('KSTREAM_COMPARE_TRIALS', '5'))
+scenarios = ['filter', 'count', 'reduce', 'aggregate']
 if records < 1 or warmup < 0 or trials < 5:
     raise SystemExit('positive records, nonnegative warmup and >=5 trials required')
 manifest = {'reference': 'Kafka Streams 3.9.1 TopologyTestDriver', 'store': 'in-memory',
             'durability': 'none', 'input_keys': 64, 'value': 'value', 'records': records,
             'warmup_records': warmup, 'trials': trials, 'cpus': 1, 'transaction_batch': 1,
-            'production_qualified': False,
+            'scenarios': scenarios, 'production_qualified': False,
             'limitation': 'Different in-process drivers; no brokers, persistent stores, EOS or tail-latency qualification.'}
 (out / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
 env = dict(os.environ, GOMAXPROCS='1', GOMEMLIMIT='512MiB')
@@ -27,7 +28,7 @@ commands = {'go': [binary], 'kafka': ['java', '-XX:ActiveProcessorCount=1', '-Xm
 samples = []
 with (out / 'samples.csv').open('w') as f:
     writer = csv.writer(f, lineterminator="\n"); writer.writerow(['engine','scenario','records','nanos','checksum','rss_kib','trial'])
-    for scenario in ['filter', 'count']:
+    for scenario in scenarios:
         for trial in range(trials):
             checksums = []
             order = ['go','kafka'] if trial % 2 == 0 else ['kafka','go']
@@ -46,7 +47,7 @@ with (out / 'samples.csv').open('w') as f:
                 raise RuntimeError('output checksum mismatch for ' + scenario)
 summary = {'production_qualified': False, 'target_ratio': 2.5, 'scenarios': {}}
 rng = random.Random(73019)
-for scenario in ['filter','count']:
+for scenario in scenarios:
     by = {(r['engine'],r['trial']):r for r in samples if r['scenario']==scenario}
     ratios = [by['kafka',i]['nanos']/by['go',i]['nanos'] for i in range(trials)]
     bootstrap = sorted(statistics.median(rng.choices(ratios,k=trials)) for _ in range(10000))

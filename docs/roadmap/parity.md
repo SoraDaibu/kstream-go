@@ -8,7 +8,7 @@ needs independent semantics, recovery and integration coverage before completion
 |---|---|---|
 | Source/sink codecs, nulls, timestamps | Partial | Headers/metadata, timestamp extractors, serde failure policies, custom partitioners |
 | KStream filter/map | Partial: filter/filterNot, map/mapValues, flatMap/flatMapValues, selectKey, merge, peek/foreach | Split/branch, print, richer metadata/error policies; broader reference coverage |
-| KStream aggregation | Partial | groupBy/groupByKey exchange plans, aggregate, reduce, count and timestamp propagation |
+| KStream aggregation | Partial: groupByKey, count, reduce, typed aggregate and timestamp propagation | groupBy broker exchange plans, caching, window aggregates and broader reference coverage |
 | KTable | Partial | filter/mapValues, table aggregations/retractions, toStream/selectKey, caching and suppression |
 | Stream-table joins | Partial | left joins, versioned table lookup, co-partitioning validation |
 | Stream-stream joins | Missing | inner/left/outer, event-time bounds, grace, delayed unmatched results, duplicates and retention |

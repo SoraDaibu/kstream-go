@@ -20,7 +20,7 @@ state and infrastructure adapters. No Java source or class hierarchy is ported.
 ```go
 b := stream.NewStreamsBuilder()
 words := stream.Stream(b, "words", serde.String, serde.String)
-counts := stream.Count(words, "counts")
+counts := words.GroupByKey().Count("counts")
 counts.ToStream().To("counts-out")
 topology, err := b.Build()
 ```
@@ -53,6 +53,9 @@ experimental fixed-assignment adapter; see its [deployment boundaries](adapters/
   merge, observers, typed custom processors and sinks.
 - `KTable`: source upserts, tombstone deletes, grouped counts and stream-triggered
   inner joins against current table state.
+- `KGroupedStream`: `GroupByKey`, count, reduce, and type-changing aggregate with
+  explicit nullable initialization/results and aggregate timestamps. See
+  [grouped aggregation](docs/grouped-aggregation.md).
 - Event-time tumbling counts with half-open windows, grace, aggregate timestamps,
   operator-local stream-time, and retention of open windows.
 - Partition tasks with independent state, committed changelog recovery, offset

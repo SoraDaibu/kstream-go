@@ -71,3 +71,20 @@ complete multi-topic checkpoints, tombstones versus empty values, producer
 fencing, independent partition identities, and source resumption. This is a
 single-broker fixture and an explicit-assignment checkpoint protocol, not
 consumer-group EOS v2 or a production fault-tolerance qualification.
+
+## Shared persistent-state cycle
+
+Commit `46c3879c56a1e5ca3036d0053e1ca8ef465ad45a` passed
+[Go/race/layer and differential CI](https://github.com/SoraDaibu/kstream-go/actions/runs/40051030760),
+[persistent-state integration](https://github.com/SoraDaibu/kstream-go/actions/runs/40051030772),
+[Kafka recovery with persistent caches](https://github.com/SoraDaibu/kstream-go/actions/runs/40051030770),
+and the exploratory comparison's output-checksum gate. Ten oracle scenarios each
+run at three batch sizes with both memory and Pebble: 60 exact trace comparisons.
+Namespace exclusivity, reopen durability, owned bytes, empty/tombstone values,
+ignored read errors, and failed local apply after a successful backend commit
+have regression coverage. The full race suite and vet also passed locally.
+
+This adds persistent key-value stores, not a complete state subsystem. Restore
+still materializes a full backend snapshot in RAM; streamed restoration, validated
+cache checkpoint reuse, specialized stores and full production qualification
+remain open.

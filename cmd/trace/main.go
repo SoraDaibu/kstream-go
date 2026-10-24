@@ -87,6 +87,22 @@ func run() error {
 			stream.Map(stream.Count(s, "counts").ToStream(), "format", serde.String, serde.String, func(r record.Record[string, int64]) record.Record[string, string] {
 				return record.Record[string, string]{Key: r.Key, Value: strconv.FormatInt(r.Value, 10), Timestamp: r.Timestamp}
 			}).To("out")
+		case "reduce":
+			s.GroupByKey().Reduce("reduced", func(a, v string) (string, bool) {
+				return a + ":" + v, v == "!delete"
+			}).ToStream().To("out")
+		case "aggregate", "aggregate-null":
+			aggregated := stream.Aggregate(s.GroupByKey(), "aggregated", serde.Int64,
+				func() (int64, bool) { return 10, scenario == "aggregate-null" },
+				func(k, v string, old int64, oldNull bool) (int64, bool) {
+					if oldNull {
+						old = 1000
+					}
+					return old + int64(len(k)+len(v)), v == "!delete"
+				})
+			stream.MapValues(aggregated.ToStream(), "format", serde.String, func(v int64, null bool) (string, bool) {
+				return strconv.FormatInt(v, 10), null
+			}).To("out")
 		case "join":
 			stream.Join(s, table, "join", serde.String, func(a, c string) string { return a + ":" + c }).To("out")
 		case "window":
