@@ -9,11 +9,14 @@ import (
 )
 
 type Context struct {
-	Task     *execution.Task
-	compiled map[any]any
+	Task          *execution.Task
+	ApplicationID string
+	compiled      map[any]any
 }
 
-func New(task *execution.Task) *Context { return &Context{Task: task, compiled: make(map[any]any)} }
+func New(task *execution.Task, application string) *Context {
+	return &Context{Task: task, ApplicationID: application, compiled: make(map[any]any)}
+}
 
 type Port[K, V any] struct {
 	subscribers []func(*Context) processor.Handler[K, V]

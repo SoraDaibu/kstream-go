@@ -30,9 +30,6 @@ func New(nodes []Node) (Plan, error) {
 				return Plan{}, fmt.Errorf("unknown parent %q", p)
 			}
 		}
-		if n.Kind == "repartition" {
-			return Plan{}, fmt.Errorf("repartition %q requires an unimplemented Kafka exchange adapter", n.Name)
-		}
 		if n.Store != "" {
 			if stores[n.Store] {
 				return Plan{}, fmt.Errorf("duplicate store %q", n.Store)

@@ -27,7 +27,13 @@ type Backend struct {
 	tasks map[identity]*entry
 }
 
-func New() *Backend                 { return &Backend{tasks: make(map[identity]*entry)} }
+func New() *Backend { return &Backend{tasks: make(map[identity]*entry)} }
+
+// ValidateRepartitionTopics accepts explicit caller-driven transport in this
+// model. The caller must route committed exchange outputs, assign destination
+// partitions/offsets, and deliver them separately; no records are auto-forwarded.
+func (*Backend) ValidateRepartitionTopics([]string) error { return nil }
+
 func key(s execution.Spec) identity { return identity{s.ApplicationID, s.ID, s.Partition} }
 func (b *Backend) Open(ctx context.Context, s execution.Spec) (uint64, execution.Snapshot, error) {
 	restored := make(state.Image)

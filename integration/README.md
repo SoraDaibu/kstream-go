@@ -10,8 +10,8 @@ compare exact output topic/key/value/timestamp rows. Go runs transaction batch
 sizes 1, 32 and 256 against the same Java output; batching must preserve every
 record update and event-time result. Each batch size runs both memory and Pebble
 task stores, using both independent and grouped task commits, with output capacity
-hints 0 and 256. This configures 864
-exact trace comparisons across thirty-six scenarios. `~` represents null; empty
+hints 0 and 256. This configures 912
+exact trace comparisons across thirty-eight scenarios. `~` represents null; empty
 fields represent non-null empty strings. The fixed boundary cases are followed
 by 300 generated rows with seed 73019 per scenario. Caching is disabled to make
 update traces observable. Scenarios cover ordered first-match branching with and without catch-all routes, filter/filterNot, null-aware mapValues, flatMap, flatMapValues,
@@ -39,3 +39,8 @@ Forced compaction and broader network/coordinator failures remain open gates.
 
 Operator-local versus unrelated-source stream-time is also tested in Go. No
 results are claimed until the Java and Go programs have actually run successfully.
+
+Explicit repartition traces compare committed exchange delivery and changed-key
+grouping with the public Java repartition API. The Go model drains only committed
+exchange outputs into a separate processing transaction; real Kafka tests cover
+physical routing, restart, aborted exchange visibility and actual group offsets.

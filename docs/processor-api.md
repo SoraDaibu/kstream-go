@@ -43,7 +43,7 @@ state and input offsets and poisons the task until it is restored.
 
 The package function always invalidates key partitioning, including the example
 above, which copies keys. Downstream key-local grouping/joins reject it until
-an actual repartition exchange is implemented. For a value-only transform with
+an explicit broker repartition boundary is applied. For a value-only transform with
 preserved partitioning, use MapValues. No fixed-key custom Processor API exists
 yet. Output codecs are explicit; numeric zero is data, and NullValue=true is a
 tombstone independent of the Go value field.

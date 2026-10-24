@@ -36,5 +36,5 @@ The result is a KTable supporting ToStream and stream-triggered inner/left looku
 joins, including nullable results. State remains task-local, staged transactionally and restored from the
 committed backend with its timestamp. This does not implement retraction-based
 KTable aggregation. GroupByKey after a key-changing operation is rejected until
-a real repartition exchange exists; it cannot repair partition ownership by
+an explicit broker repartition boundary is applied; it cannot repair partition ownership by
 merely changing an in-memory map key.

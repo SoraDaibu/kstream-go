@@ -52,7 +52,7 @@ Fixed-assignment input positions are stored atomically in the application's
 compacted changelog. Consumer-group offset transactions and eager assignment are
 provided by the separate RunGroup API. Standby tasks, local checkpoint
 reuse/migration, restore-marker garbage collection, automatic topic provisioning
-and distributed repartition subtopologies remain separate work. No production qualification is
+and heterogeneous repartition stage scheduling remain separate work. No production qualification is
 claimed from the single-broker integration fixture.
 Optional Pebble task stores are covered by the integration suite, but this is
 not yet a complete Kafka Streams state subsystem.
@@ -62,3 +62,8 @@ recovery, replay suppression, aborted-record isolation, multi-topic checkpoints,
 tombstones/empty values, stale-producer fencing, partition identity and explicit
 input resumption. Tests require `KSTREAM_KAFKA_BROKERS` and the three documented
 `kstream-test-*` topics; ordinary unit tests skip broker-specific cases otherwise.
+
+Explicit equal-count [broker repartition exchanges](../../docs/repartition.md)
+require Config.RepartitionTopics, all derived input subscriptions and delete-topic
+policy validation. Unknown backend wrappers must forward the execution transport
+capability before a repartition topology can open a task.

@@ -2,6 +2,11 @@
 
 Status: Accepted for the experimental core; production compatibility remains gated.
 
+This records the initial v0 scope. Later ADRs and the current compatibility
+matrix supersede its original unavailable-feature list. In particular, ADR 0026
+adds explicit broker exchanges with manual provisioning/equal-count workers and
+a tested partition-wide custom processor clock boundary across stages.
+
 ## Context
 
 Apache Kafka Streams is the semantic reference, not an implementation template.

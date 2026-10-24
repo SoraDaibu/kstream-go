@@ -34,6 +34,9 @@ type Config struct {
 	// isolation levels and changelog partitioning are enforced after these options.
 	Options           []kgo.Opt
 	OutputPartitioner kgo.Partitioner
+	// RepartitionTopics are explicit broker exchanges. Their routing always uses
+	// Kafka key hashing, independently of ordinary OutputPartitioner settings.
+	RepartitionTopics []string
 }
 type Backend struct {
 	mu                     sync.Mutex
@@ -69,6 +72,14 @@ func New(config Config) (*Backend, error) {
 	}
 	config.Brokers = append([]string(nil), config.Brokers...)
 	config.Options = append([]kgo.Opt(nil), config.Options...)
+	config.RepartitionTopics = append([]string(nil), config.RepartitionTopics...)
+	seen := make(map[string]bool, len(config.RepartitionTopics))
+	for _, topic := range config.RepartitionTopics {
+		if topic == "" || topic == config.ChangelogTopic || seen[topic] {
+			return nil, errors.New("repartition topics must be unique, nonempty and separate from changelog")
+		}
+		seen[topic] = true
+	}
 	return &Backend{config: config}, nil
 }
 func (b *Backend) options(extra ...kgo.Opt) []kgo.Opt {
@@ -97,11 +108,28 @@ func fenceError(err error) error {
 type topicPartitioner struct {
 	changelog string
 	output    kgo.Partitioner
+	exchanges map[string]bool
+	keyed     kgo.Partitioner
+}
+
+func newTopicPartitioner(config Config, output kgo.Partitioner) topicPartitioner {
+	p := topicPartitioner{changelog: config.ChangelogTopic, output: output}
+	if len(config.RepartitionTopics) > 0 {
+		p.exchanges = make(map[string]bool, len(config.RepartitionTopics))
+		for _, topic := range config.RepartitionTopics {
+			p.exchanges[topic] = true
+		}
+		p.keyed = kgo.StickyKeyPartitioner(nil)
+	}
+	return p
 }
 
 func (p topicPartitioner) ForTopic(topic string) kgo.TopicPartitioner {
 	if topic == p.changelog {
 		return kgo.ManualPartitioner().ForTopic(topic)
+	}
+	if p.exchanges[topic] {
+		return p.keyed.ForTopic(topic)
 	}
 	return p.output.ForTopic(topic)
 }
@@ -147,7 +175,7 @@ func (b *Backend) OpenInto(ctx context.Context, s execution.Spec, sink execution
 	if output == nil {
 		output = kgo.UniformBytesPartitioner(64<<10, true, true, nil)
 	}
-	producer, err := kgo.NewClient(b.options(kgo.TransactionalID(transactionID(s)), kgo.RequiredAcks(kgo.AllISRAcks()), kgo.RecordPartitioner(topicPartitioner{b.config.ChangelogTopic, output}))...)
+	producer, err := kgo.NewClient(b.options(kgo.TransactionalID(transactionID(s)), kgo.RequiredAcks(kgo.AllISRAcks()), kgo.RecordPartitioner(newTopicPartitioner(b.config, output)))...)
 	if err != nil {
 		return 0, execution.Checkpoint{}, err
 	}
@@ -157,6 +185,9 @@ func (b *Backend) OpenInto(ctx context.Context, s execution.Spec, sink execution
 			producer.Close()
 		}
 	}()
+	if err := validateExchangePolicies(ctx, producer, b.config.RepartitionTopics); err != nil {
+		return 0, execution.Checkpoint{}, err
+	}
 	token := make([]byte, 16)
 	if _, err = rand.Read(token); err != nil {
 		return 0, execution.Checkpoint{}, err
