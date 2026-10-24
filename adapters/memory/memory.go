@@ -70,7 +70,7 @@ func (b *Backend) OpenInto(ctx context.Context, s execution.Spec, sink execution
 		if end > len(e.log) {
 			end = len(e.log)
 		}
-		if err := sink(e.log[start:end]); err != nil {
+		if err := sink(e.log[start:end:end]); err != nil {
 			return 0, execution.Checkpoint{}, err
 		}
 	}

@@ -64,16 +64,26 @@ func (b *StreamsBuilder) Build() (Topology, error) {
 func (t Topology) Describe() string    { return t.plan.Describe() }
 func (t Topology) Plan() topology.Plan { return t.plan }
 func (t Topology) NewTask(ctx context.Context, s execution.Spec, backend execution.Backend, options ...execution.Option) (*execution.Task, error) {
+	if len(t.sources) == 0 {
+		return nil, errors.New("task requires a built topology with sources")
+	}
 	task, err := execution.New(ctx, s, backend, options...)
 	if err != nil {
 		return nil, err
 	}
+	initialized := false
+	defer func() {
+		if !initialized {
+			_ = task.Close()
+		}
+	}()
 	compiled := graph.New(task)
 	for _, source := range t.sources {
 		if err := source(compiled); err != nil {
 			return nil, err
 		}
 	}
+	initialized = true
 	return task, nil
 }
 
