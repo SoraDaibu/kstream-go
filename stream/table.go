@@ -95,7 +95,11 @@ func Count[K, V any](s KStream[K, V], store string) KTable[K, int64] {
 			}
 			count := int64(0)
 			timestamp := r.Timestamp
-			if previous, ok := task.StoreGet(store, string(key)); ok {
+			previous, ok, err := task.StoreGet(store, string(key))
+			if err != nil {
+				return err
+			}
+			if ok {
 				var prior int64
 				count, prior, err = decodeAggregate(previous)
 				if err != nil {
@@ -144,7 +148,10 @@ func Join[K, L, R, O any](s KStream[K, L], table KTable[K, R], name string, valu
 			if key == nil {
 				return errors.New("non-null key encoded as nil")
 			}
-			stored, ok := task.StoreGet(table.store, string(key))
+			stored, ok, err := task.StoreGet(table.store, string(key))
+			if err != nil {
+				return err
+			}
 			if !ok {
 				return nil
 			}

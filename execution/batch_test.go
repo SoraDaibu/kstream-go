@@ -96,7 +96,11 @@ func TestBatchPreservesClockAndCrossTopicStateOrder(t *testing.T) {
 	}
 	if err = task.Register("events", func(r record.Bytes) error {
 		clocks = append(clocks, task.StreamTime())
-		if v, ok := task.StoreGet("lookup", string(r.Key)); ok {
+		v, ok, err := task.StoreGet("lookup", string(r.Key))
+		if err != nil {
+			return err
+		}
+		if ok {
 			task.Emit(record.Bytes{Topic: "out", Key: r.Key, Value: v})
 		}
 		return nil
@@ -158,7 +162,7 @@ func TestBatchFailureAndCancellationPublishNothing(t *testing.T) {
 			if backend.commits != 0 || len(log.Outputs(spec)) != 0 {
 				t.Fatal("aborted batch escaped")
 			}
-			if _, ok := task.StoreGet("state", "a"); ok {
+			if _, ok, _ := task.StoreGet("state", "a"); ok {
 				t.Fatal("aborted local state escaped")
 			}
 			if err = task.Process(ctx, record.Bytes{Topic: "in"}); !errors.Is(err, execution.ErrPoisoned) {
@@ -231,7 +235,10 @@ func TestBatchOverlayMatchesIndependentMapAcrossWritesDeletesAndScans(t *testing
 	steps := 0
 	if err = task.Register("in", func(r record.Bytes) error {
 		key := string(r.Key)
-		got, exists := task.StoreGet("state", key)
+		got, exists, err := task.StoreGet("state", key)
+		if err != nil {
+			return err
+		}
 		want, wantExists := expected[key]
 		if exists != wantExists || string(got) != want {
 			return errors.New("read-your-writes diverged from reference map")

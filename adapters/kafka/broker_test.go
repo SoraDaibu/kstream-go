@@ -5,11 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
 	"time"
 
+	persistent "github.com/SoraDaibu/kstream-go/adapters/pebble"
 	"github.com/SoraDaibu/kstream-go/execution"
 	"github.com/SoraDaibu/kstream-go/record"
 	"github.com/SoraDaibu/kstream-go/serde"
@@ -57,9 +59,36 @@ func clientFor(t *testing.T, config Config, opts ...kgo.Opt) *kgo.Client {
 	return c
 }
 
+func brokerStoreOptions(t *testing.T) []execution.Option {
+	t.Helper()
+	directory := os.Getenv("KSTREAM_KAFKA_STATE_DIR")
+	if directory == "" {
+		return nil
+	}
+	engine, err := persistent.Open(filepath.Join(directory, unique("engine")), persistent.Config{SyncWrites: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := engine.Close(); err != nil {
+			t.Error(err)
+		}
+	})
+	return []execution.Option{execution.WithStoreFactory(engine.Task)}
+}
+func ownTask(t *testing.T, task *execution.Task) {
+	t.Helper()
+	t.Cleanup(func() {
+		if err := task.Close(); err != nil {
+			t.Error(err)
+		}
+	})
+}
+
 func TestBrokerRecoveryReplayAndReadCommitted(t *testing.T) {
 	cfg := brokerConfig(t)
 	ctx := brokerContext(t)
+	options := brokerStoreOptions(t)
 	id := unique("recovery")
 	spec := execution.Spec{ApplicationID: id, ID: "0"}
 	builder := stream.NewStreamsBuilder()
@@ -69,10 +98,11 @@ func TestBrokerRecoveryReplayAndReadCommitted(t *testing.T) {
 		t.Fatal(err)
 	}
 	first := backendFor(t, cfg)
-	task, err := plan.NewTask(ctx, spec, first)
+	task, err := plan.NewTask(ctx, spec, first, options...)
 	if err != nil {
 		t.Fatal(err)
 	}
+	ownTask(t, task)
 	now := time.Now().UnixMilli()
 	rows := []record.Bytes{{Topic: "in", Offset: 0, Timestamp: now, Key: []byte(id), Value: []byte("x")}, {Topic: "in", Offset: 1, Timestamp: now + 1, Key: []byte(id), Value: []byte("x")}}
 	if err = task.ProcessBatch(ctx, rows); err != nil {
@@ -90,12 +120,16 @@ func TestBrokerRecoveryReplayAndReadCommitted(t *testing.T) {
 	if err = aborted.EndTransaction(ctx, kgo.TryAbort); err != nil {
 		t.Fatal(err)
 	}
+	if err = task.Close(); err != nil {
+		t.Fatal(err)
+	}
 	first.Close()
 	restored := backendFor(t, cfg)
-	task, err = plan.NewTask(ctx, spec, restored)
+	task, err = plan.NewTask(ctx, spec, restored, options...)
 	if err != nil {
 		t.Fatal(err)
 	}
+	ownTask(t, task)
 	if err = task.ProcessBatch(ctx, rows); err != nil {
 		t.Fatal(err)
 	}
@@ -194,6 +228,7 @@ func TestBrokerFencesOldOwnerAndSeparatesPartitions(t *testing.T) {
 func TestBrokerExplicitInputResumesAtCommittedCheckpoint(t *testing.T) {
 	cfg := brokerConfig(t)
 	ctx := brokerContext(t)
+	options := brokerStoreOptions(t)
 	id := unique("input")
 	spec := execution.Spec{ApplicationID: id, ID: "0"}
 	producer := clientFor(t, cfg, kgo.RecordPartitioner(kgo.ManualPartitioner()))
@@ -201,7 +236,7 @@ func TestBrokerExplicitInputResumesAtCommittedCheckpoint(t *testing.T) {
 		t.Fatal(err)
 	}
 	setup := func(b *Backend) *execution.Task {
-		task, err := execution.New(ctx, spec, b)
+		task, err := execution.New(ctx, spec, b, options...)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -211,6 +246,7 @@ func TestBrokerExplicitInputResumesAtCommittedCheckpoint(t *testing.T) {
 		}); err != nil {
 			t.Fatal(err)
 		}
+		ownTask(t, task)
 		return task
 	}
 	b := backendFor(t, cfg)
@@ -231,6 +267,9 @@ func TestBrokerExplicitInputResumesAtCommittedCheckpoint(t *testing.T) {
 	}
 	offset := rows[0].Offset
 	input.Close()
+	if err = task.Close(); err != nil {
+		t.Fatal(err)
+	}
 	b.Close()
 	b = backendFor(t, cfg)
 	task = setup(b)

@@ -15,6 +15,7 @@ import (
 var ErrFenced = errors.New("task generation fenced")
 var ErrPoisoned = errors.New("task failed; restore a new incarnation")
 var ErrConcurrent = errors.New("concurrent task access")
+var ErrClosed = errors.New("task closed")
 
 type Spec struct {
 	ApplicationID, ID string
@@ -42,34 +43,80 @@ type Backend interface {
 type stateLocation struct{ store, key string }
 
 type Task struct {
-	spec         Spec
-	backend      Backend
-	generation   uint64
-	image        state.Image
-	offsets      map[string]int64
-	streamTime   int64
-	handlers     map[string]func(record.Bytes) error
-	pending      *Transaction
-	pendingIndex map[stateLocation]int
-	active       atomic.Bool
-	poisoned     bool
+	spec              Spec
+	backend           Backend
+	generation        uint64
+	store             state.Store
+	offsets           map[string]int64
+	streamTime        int64
+	handlers          map[string]func(record.Bytes) error
+	pending           *Transaction
+	pendingIndex      map[stateLocation]int
+	active            atomic.Bool
+	poisoned          bool
+	closed            bool
+	pendingStoreError error
 }
 
-func New(ctx context.Context, s Spec, b Backend) (*Task, error) {
+func New(ctx context.Context, s Spec, b Backend, options ...Option) (*Task, error) {
 	if b == nil || s.ApplicationID == "" || s.ID == "" || s.Partition < 0 {
 		return nil, errors.New("application, task ID, nonnegative partition and backend required")
 	}
-	g, snapshot, err := b.Open(ctx, s)
+	config := taskConfig{store: func(Spec) (state.Store, error) { return state.NewMemory(), nil }}
+	for _, option := range options {
+		if option == nil {
+			return nil, errors.New("nil task option")
+		}
+		if err := option(&config); err != nil {
+			return nil, err
+		}
+	}
+	storage, err := config.store(s)
 	if err != nil {
 		return nil, err
 	}
-	if snapshot.State == nil {
-		snapshot.State = make(state.Image)
+	if storage == nil {
+		return nil, errors.New("store factory returned nil")
 	}
-	if snapshot.NextOffsets == nil {
-		snapshot.NextOffsets = make(map[string]int64)
+	initialized := false
+	defer func() {
+		if !initialized {
+			_ = storage.Close()
+		}
+	}()
+	generation, snapshot, err := b.Open(ctx, s)
+	if err != nil {
+		return nil, err
 	}
-	return &Task{spec: s, backend: b, generation: g, image: snapshot.State.Clone(), offsets: cloneOffsets(snapshot.NextOffsets), streamTime: snapshot.StreamTime, handlers: make(map[string]func(record.Bytes) error)}, nil
+	if err = storage.Reset(); err != nil {
+		return nil, err
+	}
+	var mutations []state.Mutation
+	for store, entries := range snapshot.State {
+		for key, value := range entries {
+			mutations = append(mutations, state.Mutation{Store: store, Key: key, Value: value})
+		}
+	}
+	if err = storage.ApplyBatch(mutations); err != nil {
+		return nil, err
+	}
+	task := &Task{spec: s, backend: b, generation: generation, store: storage, offsets: cloneOffsets(snapshot.NextOffsets), streamTime: snapshot.StreamTime, handlers: make(map[string]func(record.Bytes) error)}
+	initialized = true
+	return task, nil
+}
+
+// Close releases task-local state. Stop processing first; an active task cannot
+// be closed concurrently. The caller retains ownership of the shared backend.
+func (t *Task) Close() error {
+	if !t.active.CompareAndSwap(false, true) {
+		return ErrConcurrent
+	}
+	defer t.active.Store(false)
+	if t.closed {
+		return nil
+	}
+	t.closed = true
+	return t.store.Close()
 }
 func cloneOffsets(m map[string]int64) map[string]int64 {
 	c := make(map[string]int64, len(m))
@@ -103,6 +150,9 @@ func (t *Task) ProcessBatch(ctx context.Context, records []record.Bytes) (err er
 		return ErrConcurrent
 	}
 	defer t.active.Store(false)
+	if t.closed {
+		return ErrClosed
+	}
 	if t.poisoned {
 		return ErrPoisoned
 	}
@@ -127,6 +177,7 @@ func (t *Task) ProcessBatch(ctx context.Context, records []record.Bytes) (err er
 	defer func() {
 		t.pending = nil
 		t.pendingIndex = nil
+		t.pendingStoreError = nil
 		if p := recover(); p != nil {
 			t.poisoned = true
 			panic(p)
@@ -155,6 +206,9 @@ func (t *Task) ProcessBatch(ctx context.Context, records []record.Bytes) (err er
 		if err = t.handlers[r.Topic](r); err != nil {
 			return err
 		}
+		if t.pendingStoreError != nil {
+			return t.pendingStoreError
+		}
 		tx.NextOffsets[r.Topic] = r.Offset + 1
 	}
 	if len(tx.NextOffsets) == 0 {
@@ -163,8 +217,8 @@ func (t *Task) ProcessBatch(ctx context.Context, records []record.Bytes) (err er
 	if err = t.backend.Commit(ctx, t.spec, t.generation, tx); err != nil {
 		return err
 	}
-	for _, m := range tx.Mutations {
-		t.image.Apply(m)
+	if err = t.store.ApplyBatch(tx.Mutations); err != nil {
+		return fmt.Errorf("backend committed but local state apply failed; restore task: %w", err)
 	}
 	for topic, offset := range tx.NextOffsets {
 		t.offsets[topic] = offset
@@ -199,15 +253,30 @@ func (t *Task) mutationIndex(store, key string) (int, bool) {
 	}
 	return 0, false
 }
-func (t *Task) StoreGet(store, key string) ([]byte, bool) {
+func (t *Task) storeError(err error) error {
+	if err != nil && t.pending != nil && t.pendingStoreError == nil {
+		t.pendingStoreError = err
+	}
+	return err
+}
+func (t *Task) StoreGet(store, key string) ([]byte, bool, error) {
+	if t.closed {
+		return nil, false, ErrClosed
+	}
+	if t.poisoned {
+		return nil, false, ErrPoisoned
+	}
+	if t.pendingStoreError != nil {
+		return nil, false, t.pendingStoreError
+	}
 	if t.pending != nil {
 		if i, ok := t.mutationIndex(store, key); ok {
 			value := t.pending.Mutations[i].Value
-			return record.CloneBytes(value), value != nil
+			return record.CloneBytes(value), value != nil, nil
 		}
 	}
-	v, ok := t.image[store][key]
-	return record.CloneBytes(v), ok
+	value, ok, err := t.store.Get(store, key)
+	return value, ok, t.storeError(err)
 }
 func (t *Task) StorePut(store, key string, value []byte) {
 	t.requirePending()
@@ -226,25 +295,35 @@ func (t *Task) StorePut(store, key string, value []byte) {
 	}
 	t.pending.Mutations = append(t.pending.Mutations, state.Mutation{Store: store, Key: key, Value: record.CloneBytes(value)})
 }
-func (t *Task) StoreScan(store string, visit func(string, []byte)) {
+func (t *Task) StoreScan(store string, visit func(string, []byte)) error {
+	if t.closed {
+		return ErrClosed
+	}
+	if t.poisoned {
+		return ErrPoisoned
+	}
+	if t.pendingStoreError != nil {
+		return t.pendingStoreError
+	}
 	entries := make(map[string][]byte)
-	for k, v := range t.image[store] {
-		entries[k] = v
+	if err := t.store.Scan(store, func(key string, value []byte) { entries[key] = value }); err != nil {
+		return t.storeError(err)
 	}
 	if t.pending != nil {
-		for _, m := range t.pending.Mutations {
-			if m.Store == store {
-				if m.Value == nil {
-					delete(entries, m.Key)
+		for _, mutation := range t.pending.Mutations {
+			if mutation.Store == store {
+				if mutation.Value == nil {
+					delete(entries, mutation.Key)
 				} else {
-					entries[m.Key] = m.Value
+					entries[mutation.Key] = record.CloneBytes(mutation.Value)
 				}
 			}
 		}
 	}
-	for k, v := range entries {
-		visit(k, record.CloneBytes(v))
+	for key, value := range entries {
+		visit(key, value)
 	}
+	return nil
 }
 func (t *Task) Emit(r record.Bytes) {
 	t.requirePending()

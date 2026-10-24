@@ -288,7 +288,7 @@ func TestBranchFailureAbortsEarlierOutputAndState(t *testing.T) {
 	if len(backend.Outputs(spec())) != 0 {
 		t.Fatal("earlier branch output escaped aborted transaction")
 	}
-	if _, ok := a.StoreGet("count", "a"); ok {
+	if _, ok, _ := a.StoreGet("count", "a"); ok {
 		t.Fatal("earlier branch state escaped aborted transaction")
 	}
 }

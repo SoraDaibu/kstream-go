@@ -1,0 +1,30 @@
+name: Persistent state integration
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  storage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.12'
+          cache: false
+      - name: Resolve and export verified storage dependencies
+        run: |
+          go mod tidy
+          go mod verify
+          mkdir -p /tmp/kstream-storage-export
+          cp go.mod go.sum /tmp/kstream-storage-export/
+          tar -C "$(go env GOMODCACHE)" --exclude='*.zip' --exclude='*/testdata' -czf /tmp/kstream-storage-export/module-cache.tar.gz .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: storage-module-cache
+          path: /tmp/kstream-storage-export
+          compression-level: 0
+      - name: Validate persistent state and failure boundaries
+        run: go test -race -v -count=1 ./state ./execution ./adapters/pebble

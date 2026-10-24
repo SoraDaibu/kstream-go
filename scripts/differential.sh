@@ -18,6 +18,8 @@ for scenario in filter filter-not mapvalues flatmap flatmapvalues merge count ta
   for batch in 1 32 256; do
     KSTREAM_BATCH_SIZE=$batch "$work/trace" "$scenario" "$work/$scenario.tsv" > "$work/$scenario.go.tsv"
     diff -u "$work/$scenario.java.tsv" "$work/$scenario.go.tsv"
+    KSTREAM_STATE_DIR="$work/state-$scenario-$batch" KSTREAM_BATCH_SIZE=$batch "$work/trace" "$scenario" "$work/$scenario.tsv" > "$work/$scenario.pebble.tsv"
+    diff -u "$work/$scenario.java.tsv" "$work/$scenario.pebble.tsv"
   done
-  echo "PASS: $scenario (seed 73019; transaction batches 1,32,256)"
+  echo "PASS: $scenario (seed 73019; transaction batches 1,32,256; memory and Pebble stores)"
 done

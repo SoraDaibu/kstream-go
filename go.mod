@@ -9,3 +9,5 @@ require (
 	github.com/pierrec/lz4/v4 v4.1.22 // indirect
 	github.com/twmb/franz-go/pkg/kmsg v1.9.0 // indirect
 )
+
+require github.com/cockroachdb/pebble v1.1.5

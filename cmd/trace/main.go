@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/SoraDaibu/kstream-go/adapters/memory"
+	persistent "github.com/SoraDaibu/kstream-go/adapters/pebble"
 	"github.com/SoraDaibu/kstream-go/execution"
 	"github.com/SoraDaibu/kstream-go/processor"
 	"github.com/SoraDaibu/kstream-go/record"
@@ -103,10 +104,20 @@ func run() error {
 	backend := memory.New()
 	id := execution.Spec{ApplicationID: "oracle", ID: "0"}
 	ctx := context.Background()
-	task, err := p.NewTask(ctx, id, backend)
+	var options []execution.Option
+	if directory := os.Getenv("KSTREAM_STATE_DIR"); directory != "" {
+		engine, err := persistent.Open(directory, persistent.Config{SyncWrites: true})
+		if err != nil {
+			return err
+		}
+		defer engine.Close()
+		options = append(options, execution.WithStoreFactory(engine.Task))
+	}
+	task, err := p.NewTask(ctx, id, backend, options...)
 	if err != nil {
 		return err
 	}
+	defer task.Close()
 	file, err := os.Open(os.Args[2])
 	if err != nil {
 		return err
