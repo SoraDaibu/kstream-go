@@ -46,6 +46,13 @@ public final class Oracle {
                 case "merge" -> source.merge(b.stream("right",strings)).to("out", produced);
                 case "count" -> source.groupByKey().count(Materialized.as("counts"))
                         .toStream().mapValues(v -> v.toString()).to("out", produced);
+                case "reduce" -> source.groupByKey().reduce((a,v) -> v.equals("!delete") ? null : a + ":" + v,
+                        Materialized.as("reduced")).toStream().to("out", produced);
+                case "aggregate", "aggregate-null" -> source.groupByKey().aggregate(
+                        () -> scenario.equals("aggregate-null") ? null : 10L,
+                        (k,v,a) -> v.equals("!delete") ? null : (a == null ? 1000L : a) + k.length() + v.length(),
+                        Materialized.with(Serdes.String(), Serdes.Long()))
+                        .toStream().mapValues(v -> v == null ? null : v.toString()).to("out", produced);
                 case "join" -> source.join(table, (a,c) -> a + ":" + c).to("out", produced);
                 case "window" -> source.groupByKey()
                         .windowedBy(TimeWindows.ofSizeAndGrace(Duration.ofMillis(10), Duration.ofMillis(5)))

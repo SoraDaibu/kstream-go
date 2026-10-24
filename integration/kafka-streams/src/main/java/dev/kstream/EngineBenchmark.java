@@ -34,9 +34,19 @@ public final class EngineBenchmark {
         String scenario = args[0]; int n = Integer.parseInt(args[1]); int warmup = Integer.parseInt(args[2]);
         StreamsBuilder builder = new StreamsBuilder();
         var source = builder.stream("in", Consumed.with(Serdes.String(), Serdes.String()));
-        boolean count = scenario.equals("count");
-        if (count) {
+        boolean numeric = !scenario.equals("filter");
+        if (scenario.equals("count")) {
             source.groupByKey().count(Materialized.<String,Long>as(Stores.inMemoryKeyValueStore("counts"))
+                    .withKeySerde(Serdes.String()).withValueSerde(Serdes.Long()).withCachingDisabled().withLoggingDisabled())
+                    .toStream().to("out", Produced.with(Serdes.String(), Serdes.Long()));
+        } else if (scenario.equals("reduce")) {
+            source.mapValues(v -> (long)v.length()).groupByKey()
+                    .reduce(Long::sum, Materialized.<String,Long>as(Stores.inMemoryKeyValueStore("sums"))
+                    .withKeySerde(Serdes.String()).withValueSerde(Serdes.Long()).withCachingDisabled().withLoggingDisabled())
+                    .toStream().to("out", Produced.with(Serdes.String(), Serdes.Long()));
+        } else if (scenario.equals("aggregate")) {
+            source.groupByKey().aggregate(() -> 0L, (k,v,a) -> a + v.length(),
+                    Materialized.<String,Long>as(Stores.inMemoryKeyValueStore("sums"))
                     .withKeySerde(Serdes.String()).withValueSerde(Serdes.Long()).withCachingDisabled().withLoggingDisabled())
                     .toStream().to("out", Produced.with(Serdes.String(), Serdes.Long()));
         } else if (scenario.equals("filter")) {
@@ -51,14 +61,14 @@ public final class EngineBenchmark {
         Path state = Files.createTempDirectory("kstream-benchmark-");p.put(StreamsConfig.STATE_DIR_CONFIG, state.toString());
         try (var driver = new TopologyTestDriver(builder.build(),p)) {
             TestInputTopic<String,String> input=driver.createInputTopic("in",new StringSerializer(),new StringSerializer());
-            TestOutputTopic<String,String> strings=count?null:driver.createOutputTopic("out",new StringDeserializer(),new StringDeserializer());
-            TestOutputTopic<String,Long> longs=count?driver.createOutputTopic("out",new StringDeserializer(),new LongDeserializer()):null;
+            TestOutputTopic<String,String> strings=numeric?null:driver.createOutputTopic("out",new StringDeserializer(),new StringDeserializer());
+            TestOutputTopic<String,Long> longs=numeric?driver.createOutputTopic("out",new StringDeserializer(),new LongDeserializer()):null;
             String[] keys=new String[64];for(int i=0;i<keys.length;i++)keys[i]=Integer.toString(i);
             long start=0;
             for(int i=0;i<warmup+n;i++) {
                 if(i==warmup){sum=-3750763034362895579L;start=System.nanoTime();}
                 input.pipeInput(keys[i%64],"value",(long)i);
-                if(count){var r=longs.readRecord();hashText(r.key());hashLong(r.value());}
+                if(numeric){var r=longs.readRecord();hashText(r.key());hashLong(r.value());}
                 else{var r=strings.readRecord();hashText(r.key());hashText(r.value());}
             }
             long elapsed=System.nanoTime()-start;

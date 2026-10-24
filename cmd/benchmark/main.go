@@ -20,8 +20,8 @@ const seed uint64 = 14695981039346656037
 const prime uint64 = 1099511628211
 
 type checksumBackend struct {
-	sum   uint64
-	count bool
+	sum     uint64
+	numeric bool
 }
 
 func (b *checksumBackend) Open(context.Context, execution.Spec) (uint64, execution.Snapshot, error) {
@@ -41,7 +41,7 @@ func (b *checksumBackend) Commit(_ context.Context, _ execution.Spec, _ uint64, 
 			return err
 		}
 		b.text(key)
-		if b.count {
+		if b.numeric {
 			v, err := serde.Int64.Decode(r.Value)
 			if err != nil {
 				return err
@@ -75,7 +75,7 @@ func rss() int64 {
 }
 func run() error {
 	if len(os.Args) != 4 {
-		return fmt.Errorf("usage: benchmark filter|count records warmup")
+		return fmt.Errorf("usage: benchmark filter|count|reduce|aggregate records warmup")
 	}
 	scenario := os.Args[1]
 	n, err := strconv.Atoi(os.Args[2])
@@ -93,6 +93,12 @@ func run() error {
 		s.Filter("nonempty", func(r record.Record[string, string]) bool { return !r.NullValue && r.Value != "" }).To("out")
 	case "count":
 		stream.Count(s, "counts").ToStream().To("out")
+	case "reduce":
+		values := stream.MapValues(s, "length", serde.Int64, func(v string, _ bool) (int64, bool) { return int64(len(v)), false })
+		values.GroupByKey().Reduce("sums", func(a, v int64) (int64, bool) { return a + v, false }).ToStream().To("out")
+	case "aggregate":
+		stream.Aggregate(s.GroupByKey(), "sums", serde.Int64, func() (int64, bool) { return 0, false },
+			func(_ string, v string, a int64, _ bool) (int64, bool) { return a + int64(len(v)), false }).ToStream().To("out")
 	default:
 		return fmt.Errorf("unknown scenario")
 	}
@@ -100,12 +106,13 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	backend := &checksumBackend{sum: seed, count: scenario == "count"}
+	backend := &checksumBackend{sum: seed, numeric: scenario != "filter"}
 	ctx := context.Background()
 	task, err := plan.NewTask(ctx, execution.Spec{ApplicationID: "benchmark", ID: "0"}, backend)
 	if err != nil {
 		return err
 	}
+	defer task.Close()
 	keys := make([][]byte, 64)
 	for i := range keys {
 		keys[i] = []byte(strconv.Itoa(i))

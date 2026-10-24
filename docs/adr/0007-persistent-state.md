@@ -1,6 +1,6 @@
 # ADR 0007: Task-owned stores on a shared persistent engine
 
-Status: Implementation in progress; production restoration/performance gated.
+Status: Accepted for the experimental adapter; production restoration/performance gated.
 
 ## Context and decision
 

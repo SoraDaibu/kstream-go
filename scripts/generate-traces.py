@@ -8,8 +8,15 @@ base = [("in", 0, "a", "one"), ("in", 9, "a", "two"), ("in", 10, "b", "x"),
         ("in", 14, "a", "x"), ("in", 8, "a", "late"), ("in", 15, "b", "clock"),
         ("in", 9, "a", "closed"), ("in", 20, "~", "null-key"),
         ("in", 21, "a", "~"), ("in", 22, "", "")]
-for scenario in ("filter", "filter-not", "mapvalues", "flatmap", "flatmapvalues", "merge", "count", "window", "table", "join"):
+for scenario in ("filter", "filter-not", "mapvalues", "flatmap", "flatmapvalues", "merge", "count", "reduce", "aggregate", "aggregate-null", "window", "table", "join"):
     rows = list(base)
+    if scenario in ("reduce", "aggregate", "aggregate-null"):
+        # Deletion/reinitialization must reset the aggregate timestamp lifetime.
+        # Reduce uses a first value directly, even if the reducer would delete it.
+        rows = [("in", 100, "reset", "first"), ("in", 20, "reset", "!delete"),
+                ("in", 5, "reset", "new"), ("in", 2, "reset", "old"),
+                ("in", 110, "absent", "!delete"), ("in", 1, "absent", "!delete"),
+                ("in", 2, "absent", "")] + rows
     if scenario == "table": rows = [("table", ts, k, v) for _, ts, k, v in base]
     if scenario == "join":
         rows = [("table", 0, "a", "A"), ("in", 1, "a", "one"),
@@ -28,6 +35,8 @@ for scenario in ("filter", "filter-not", "mapvalues", "flatmap", "flatmapvalues"
         timestamp = max(0, clock - rng.randrange(0, 25))
         key = rng.choice(["a", "b", "c", "", "~"])
         value = rng.choice(["one", "two", "", "~"])
+        if scenario in ("reduce", "aggregate", "aggregate-null"):
+            value = rng.choice(["one", "two", "", "~", "!delete"])
         topic = "table" if scenario == "table" else "in"
         if scenario == "join": topic = rng.choice(["table", "in"])
         if scenario == "merge": topic = rng.choice(["in", "right"])
