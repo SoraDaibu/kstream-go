@@ -43,3 +43,11 @@ strategies on one and four CPUs. Bounded workers had lower overhead for small
 batches; per-task scheduling was faster for larger batches on that runner.
 Keep bounded mode as the initial default for its concurrency limit, while the
 production decision remains open pending live-stream and broker-backed evidence.
+
+
+The [Go 1.27.3 follow-up](../benchmarks/2026-10-24-scheduling-go127/README.md)
+retains five samples per case on one and three allowed logical CPUs. Bounded
+workers have lower overhead for one-record lanes; larger lanes remain mixed,
+including cases favoring per-task goroutines. Run commits every record separately;
+these are records per lane, not a transactional batch-size comparison. The
+provisional bounded default and open live-stream qualification remain unchanged.

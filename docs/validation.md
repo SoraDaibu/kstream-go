@@ -353,3 +353,14 @@ The repartition Kafka suite also runs a live Java EOS v2 clock check. Committed
 acknowledgments establish that upstream/unrelated time reached 10000 before
 sending a late t=3 event; its downstream clock must remain 9. One thread and one
 partition co-locate both tasks while preserving their logical clock ownership.
+
+
+The retained [current broker evidence](../benchmarks/results/2026-10-24-repartition-clocks/README.md)
+includes both source revisions' complete comparison/profile archives, verified
+against Actions SHA256 digests. Filter medians are 2.089× and 2.205×, below the
+2.5× target; count medians are 6.887× and 7.002×. This prevents the earlier
+favorable filter median from becoming the only retained result. The separate
+[Go 1.27.3 scheduling report](benchmarks/2026-10-24-scheduling-go127/README.md)
+retains five samples per case on one and three CPUs, with mixed larger-lane
+results and explicit one-record transaction boundaries. Neither experiment
+qualifies the broader production target.

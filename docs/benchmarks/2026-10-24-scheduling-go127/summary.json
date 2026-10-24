@@ -1,0 +1,252 @@
+[
+  "gomaxprocs-1.txt",
+  {
+    "tasks": 8,
+    "records_per_lane": 1,
+    "work": 0,
+    "per_task_ns": 10782.0,
+    "bounded": [
+      {
+        "workers": 1,
+        "ns": 6191.0,
+        "time_vs_per_task": 0.574
+      }
+    ]
+  },
+  {
+    "tasks": 8,
+    "records_per_lane": 1,
+    "work": 128,
+    "per_task_ns": 11302.0,
+    "bounded": [
+      {
+        "workers": 1,
+        "ns": 7104.0,
+        "time_vs_per_task": 0.629
+      }
+    ]
+  },
+  {
+    "tasks": 8,
+    "records_per_lane": 256,
+    "work": 0,
+    "per_task_ns": 501075.0,
+    "bounded": [
+      {
+        "workers": 1,
+        "ns": 485797.0,
+        "time_vs_per_task": 0.97
+      }
+    ]
+  },
+  {
+    "tasks": 8,
+    "records_per_lane": 256,
+    "work": 128,
+    "per_task_ns": 763383.0,
+    "bounded": [
+      {
+        "workers": 1,
+        "ns": 812150.0,
+        "time_vs_per_task": 1.064
+      }
+    ]
+  },
+  {
+    "tasks": 256,
+    "records_per_lane": 1,
+    "work": 0,
+    "per_task_ns": 340402.0,
+    "bounded": [
+      {
+        "workers": 1,
+        "ns": 152830.0,
+        "time_vs_per_task": 0.449
+      }
+    ]
+  },
+  {
+    "tasks": 256,
+    "records_per_lane": 1,
+    "work": 128,
+    "per_task_ns": 372479.0,
+    "bounded": [
+      {
+        "workers": 1,
+        "ns": 185161.0,
+        "time_vs_per_task": 0.497
+      }
+    ]
+  },
+  {
+    "tasks": 256,
+    "records_per_lane": 256,
+    "work": 0,
+    "per_task_ns": 22666422.0,
+    "bounded": [
+      {
+        "workers": 1,
+        "ns": 24025712.0,
+        "time_vs_per_task": 1.06
+      }
+    ]
+  },
+  {
+    "tasks": 256,
+    "records_per_lane": 256,
+    "work": 128,
+    "per_task_ns": 33081799.0,
+    "bounded": [
+      {
+        "workers": 1,
+        "ns": 32264385.0,
+        "time_vs_per_task": 0.975
+      }
+    ]
+  },
+  "gomaxprocs-3.txt",
+  {
+    "tasks": 8,
+    "records_per_lane": 1,
+    "work": 0,
+    "per_task_ns": 13849.0,
+    "bounded": [
+      {
+        "workers": 1,
+        "ns": 7446.0,
+        "time_vs_per_task": 0.538
+      },
+      {
+        "workers": 3,
+        "ns": 8865.0,
+        "time_vs_per_task": 0.64
+      }
+    ]
+  },
+  {
+    "tasks": 8,
+    "records_per_lane": 1,
+    "work": 128,
+    "per_task_ns": 14492.0,
+    "bounded": [
+      {
+        "workers": 1,
+        "ns": 8852.0,
+        "time_vs_per_task": 0.611
+      },
+      {
+        "workers": 3,
+        "ns": 8810.0,
+        "time_vs_per_task": 0.608
+      }
+    ]
+  },
+  {
+    "tasks": 8,
+    "records_per_lane": 256,
+    "work": 0,
+    "per_task_ns": 462937.0,
+    "bounded": [
+      {
+        "workers": 1,
+        "ns": 609850.0,
+        "time_vs_per_task": 1.317
+      },
+      {
+        "workers": 3,
+        "ns": 444672.0,
+        "time_vs_per_task": 0.961
+      }
+    ]
+  },
+  {
+    "tasks": 8,
+    "records_per_lane": 256,
+    "work": 128,
+    "per_task_ns": 510418.0,
+    "bounded": [
+      {
+        "workers": 1,
+        "ns": 882661.0,
+        "time_vs_per_task": 1.729
+      },
+      {
+        "workers": 3,
+        "ns": 653126.0,
+        "time_vs_per_task": 1.28
+      }
+    ]
+  },
+  {
+    "tasks": 256,
+    "records_per_lane": 1,
+    "work": 0,
+    "per_task_ns": 307801.0,
+    "bounded": [
+      {
+        "workers": 1,
+        "ns": 189956.0,
+        "time_vs_per_task": 0.617
+      },
+      {
+        "workers": 3,
+        "ns": 201589.0,
+        "time_vs_per_task": 0.655
+      }
+    ]
+  },
+  {
+    "tasks": 256,
+    "records_per_lane": 1,
+    "work": 128,
+    "per_task_ns": 369775.0,
+    "bounded": [
+      {
+        "workers": 1,
+        "ns": 224055.0,
+        "time_vs_per_task": 0.606
+      },
+      {
+        "workers": 3,
+        "ns": 237430.0,
+        "time_vs_per_task": 0.642
+      }
+    ]
+  },
+  {
+    "tasks": 256,
+    "records_per_lane": 256,
+    "work": 0,
+    "per_task_ns": 13913997.0,
+    "bounded": [
+      {
+        "workers": 1,
+        "ns": 20756542.0,
+        "time_vs_per_task": 1.492
+      },
+      {
+        "workers": 3,
+        "ns": 17961150.0,
+        "time_vs_per_task": 1.291
+      }
+    ]
+  },
+  {
+    "tasks": 256,
+    "records_per_lane": 256,
+    "work": 128,
+    "per_task_ns": 21783135.0,
+    "bounded": [
+      {
+        "workers": 1,
+        "ns": 32596650.0,
+        "time_vs_per_task": 1.496
+      },
+      {
+        "workers": 3,
+        "ns": 18948739.0,
+        "time_vs_per_task": 0.87
+      }
+    ]
+  }
+]
