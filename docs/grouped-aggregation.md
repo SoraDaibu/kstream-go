@@ -32,8 +32,8 @@ update. After deletion, a new lifetime starts at the next record's timestamp.
 Every update is emitted; caching and suppression are not implemented. Callbacks
 must be deterministic and must not mutate shared values outside task ownership.
 
-The result is a KTable supporting ToStream and stream-triggered inner lookup
-joins. State remains task-local, staged transactionally and restored from the
+The result is a KTable supporting ToStream and stream-triggered inner/left lookup
+joins, including nullable results. State remains task-local, staged transactionally and restored from the
 committed backend with its timestamp. This does not implement retraction-based
 KTable aggregation. GroupByKey after a key-changing operation is rejected until
 a real repartition exchange exists; it cannot repair partition ownership by

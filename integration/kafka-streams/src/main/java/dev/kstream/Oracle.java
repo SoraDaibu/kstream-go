@@ -31,7 +31,7 @@ public final class Oracle {
         var strings = Consumed.with(Serdes.String(), Serdes.String());
         var produced = Produced.with(Serdes.String(), Serdes.String());
         // Declare the table before the stream to match the logical Go graph.
-        var table = scenario.equals("join") || scenario.equals("table")
+        var table = scenario.equals("join") || scenario.equals("join-null") || scenario.equals("left-join") || scenario.equals("table")
                 ? b.table("table", strings, Materialized.as("lookup")) : null;
         if (scenario.equals("table")) {
             table.toStream().to("out", produced);
@@ -54,6 +54,8 @@ public final class Oracle {
                         Materialized.with(Serdes.String(), Serdes.Long()))
                         .toStream().mapValues(v -> v == null ? null : v.toString()).to("out", produced);
                 case "join" -> source.join(table, (a,c) -> a + ":" + c).to("out", produced);
+                case "join-null" -> source.join(table, (a,c) -> a.equals("!null-output") ? null : a + ":" + c).to("out", produced);
+                case "left-join" -> source.leftJoin(table, (a,c) -> a.equals("!null-output") ? null : a + ":" + (c == null ? "missing" : c)).to("out", produced);
                 case "window" -> source.groupByKey()
                         .windowedBy(TimeWindows.ofSizeAndGrace(Duration.ofMillis(10), Duration.ofMillis(5)))
                         .count(Materialized.as("windows")).toStream()
@@ -73,7 +75,7 @@ public final class Oracle {
         try (var driver = new TopologyTestDriver(b.build(), props)) {
             HashMap<String, TestInputTopic<String,String>> inputs = new HashMap<>();
             for (String topic : scenario.equals("merge") ? List.of("in", "right")
-                    : scenario.equals("join") ? List.of("table", "in")
+                    : scenario.equals("join") || scenario.equals("join-null") || scenario.equals("left-join") ? List.of("table", "in")
                     : scenario.equals("table") ? List.of("table") : List.of("in")) {
                 inputs.put(topic, driver.createInputTopic(topic, new StringSerializer(), new StringSerializer()));
             }

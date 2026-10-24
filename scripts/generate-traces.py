@@ -8,7 +8,7 @@ base = [("in", 0, "a", "one"), ("in", 9, "a", "two"), ("in", 10, "b", "x"),
         ("in", 14, "a", "x"), ("in", 8, "a", "late"), ("in", 15, "b", "clock"),
         ("in", 9, "a", "closed"), ("in", 20, "~", "null-key"),
         ("in", 21, "a", "~"), ("in", 22, "", "")]
-for scenario in ("filter", "filter-not", "mapvalues", "flatmap", "flatmapvalues", "merge", "count", "reduce", "aggregate", "aggregate-null", "window", "table", "join"):
+for scenario in ("filter", "filter-not", "mapvalues", "flatmap", "flatmapvalues", "merge", "count", "reduce", "aggregate", "aggregate-null", "window", "table", "join", "join-null", "left-join"):
     rows = list(base)
     if scenario in ("reduce", "aggregate", "aggregate-null"):
         # Deletion/reinitialization must reset the aggregate timestamp lifetime.
@@ -18,11 +18,14 @@ for scenario in ("filter", "filter-not", "mapvalues", "flatmap", "flatmapvalues"
                 ("in", 110, "absent", "!delete"), ("in", 1, "absent", "!delete"),
                 ("in", 2, "absent", "")] + rows
     if scenario == "table": rows = [("table", ts, k, v) for _, ts, k, v in base]
-    if scenario == "join":
+    if scenario in ("join", "join-null", "left-join"):
         rows = [("table", 0, "a", "A"), ("in", 1, "a", "one"),
                 ("table", 2, "a", "~"), ("in", 3, "a", "missing"),
                 ("table", 4, "a", ""), ("in", 5, "a", "empty"),
                 ("table", 6, "~", "ignored"), ("in", 7, "~", "ignored")]
+        if scenario != "join":
+            rows += [("in", 8, "a", "!null-output"), ("in", 9, "missing", "!null-output"),
+                     ("in", 10, "a", "~"), ("table", 11, "", ""), ("in", 12, "", "empty-key")]
     if scenario == "window":
         # Regression: Kafka 3.9.1 counts a null value when the key is present.
         rows = [("in", 1, "null-value", "~"), ("in", 2, "null-value", "x")] + rows
@@ -38,7 +41,8 @@ for scenario in ("filter", "filter-not", "mapvalues", "flatmap", "flatmapvalues"
         if scenario in ("reduce", "aggregate", "aggregate-null"):
             value = rng.choice(["one", "two", "", "~", "!delete"])
         topic = "table" if scenario == "table" else "in"
-        if scenario == "join": topic = rng.choice(["table", "in"])
+        if scenario in ("join", "join-null", "left-join"): topic = rng.choice(["table", "in"])
+        if scenario in ("join-null", "left-join") and rng.randrange(5) == 0: value = "!null-output"
         if scenario == "merge": topic = rng.choice(["in", "right"])
         rows.append((topic, timestamp, key, value))
     (out / (scenario + ".tsv")).write_text("".join("\t".join(map(str,r)) + "\n" for r in rows))

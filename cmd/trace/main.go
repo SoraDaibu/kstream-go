@@ -41,7 +41,7 @@ func run() error {
 	scenario := os.Args[1]
 	b := stream.NewStreamsBuilder()
 	var table stream.KTable[string, string]
-	if scenario == "join" || scenario == "table" {
+	if scenario == "join" || scenario == "left-join" || scenario == "join-null" || scenario == "table" {
 		table = stream.Table(b, "table", "lookup", serde.String, serde.String)
 	}
 	if scenario == "table" {
@@ -105,6 +105,15 @@ func run() error {
 			}).To("out")
 		case "join":
 			stream.Join(s, table, "join", serde.String, func(a, c string) string { return a + ":" + c }).To("out")
+		case "join-null":
+			stream.JoinNullable(s, table, "join", serde.String, func(a, c string) (string, bool) { return a + ":" + c, a == "!null-output" }).To("out")
+		case "left-join":
+			stream.LeftJoin(s, table, "left", serde.String, func(a, c string, rightNull bool) (string, bool) {
+				if rightNull {
+					c = "missing"
+				}
+				return a + ":" + c, a == "!null-output"
+			}).To("out")
 		case "window":
 			stream.Map(stream.WindowedCount(s, "windows", window.Tumbling{Size: 10, Grace: 5}), "format-window", serde.String, serde.String, func(r record.Record[window.Key[string], int64]) record.Record[string, string] {
 				return record.Record[string, string]{Key: fmt.Sprintf("%s@%d:%d", r.Key.Key, r.Key.Start, r.Key.End), Value: strconv.FormatInt(r.Value, 10), Timestamp: r.Timestamp}

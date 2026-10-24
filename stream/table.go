@@ -123,6 +123,31 @@ func Count[K, V any](s KStream[K, V], store string) KTable[K, int64] {
 // Join performs a nonversioned stream-table inner join. Only stream arrivals emit.
 func Join[K, L, R, O any](s KStream[K, L], table KTable[K, R], name string, value serde.Codec[O], joiner func(L, R) O) KStream[K, O] {
 	s.builder.mutable()
+	if joiner == nil {
+		s.builder.fail(errors.New("join requires function"))
+	}
+	return joinTable(s, table, name, value, false, func(left L, right R, _ bool) (O, bool) { return joiner(left, right), false })
+}
+
+// JoinNullable is an inner join whose joiner returns (value, null). A null result
+// emits a Kafka null value; null stream keys/values and missing table rows skip.
+func JoinNullable[K, L, R, O any](s KStream[K, L], table KTable[K, R], name string, value serde.Codec[O], joiner func(L, R) (O, bool)) KStream[K, O] {
+	s.builder.mutable()
+	if joiner == nil {
+		s.builder.fail(errors.New("join requires function"))
+	}
+	return joinTable(s, table, name, value, false, func(left L, right R, _ bool) (O, bool) { return joiner(left, right) })
+}
+
+// LeftJoin performs current-value lookup and supplies rightNull for absent table
+// rows, including a null stream key. Null stream values skip. The joiner returns
+// (value, null), preserving ordinary Go zero values as non-null data.
+func LeftJoin[K, L, R, O any](s KStream[K, L], table KTable[K, R], name string, value serde.Codec[O], joiner func(left L, right R, rightNull bool) (O, bool)) KStream[K, O] {
+	return joinTable(s, table, name, value, true, joiner)
+}
+
+func joinTable[K, L, R, O any](s KStream[K, L], table KTable[K, R], name string, value serde.Codec[O], left bool, joiner func(L, R, bool) (O, bool)) KStream[K, O] {
+	s.builder.mutable()
 	if s.builder != table.updates.builder {
 		s.builder.fail(errors.New("join inputs must share a builder"))
 	}
@@ -133,33 +158,45 @@ func Join[K, L, R, O any](s KStream[K, L], table KTable[K, R], name string, valu
 		s.builder.fail(errors.New("join requires function and codec"))
 	}
 	p := &graph.Port[K, O]{}
-	s.builder.add(topology.Node{Name: name, Kind: "stream-table-join", Parents: []string{s.name, table.updates.name}})
+	kind := "stream-table-join"
+	if left {
+		kind = "stream-table-left-join"
+	}
+	s.builder.add(topology.Node{Name: name, Kind: kind, Parents: []string{s.name, table.updates.name}})
 	s.port.Subscribe(func(t *graph.Context) processor.Handler[K, L] {
 		task := t.Task
 		next := p.Compile(t)
 		return func(r record.Record[K, L]) error {
-			if r.NullKey || r.NullValue {
+			if r.NullValue || (r.NullKey && !left) {
 				return nil
 			}
-			key, err := table.updates.key.Encode(r.Key)
-			if err != nil {
-				return err
+			var right R
+			rightNull := true
+			if !r.NullKey {
+				key, err := table.updates.key.Encode(r.Key)
+				if err != nil {
+					return err
+				}
+				if key == nil {
+					return errors.New("non-null key encoded as nil")
+				}
+				stored, ok, err := task.StoreGet(table.store, string(key))
+				if err != nil {
+					return err
+				}
+				if ok {
+					right, err = table.lookup.Decode(stored)
+					if err != nil {
+						return err
+					}
+					rightNull = false
+				}
 			}
-			if key == nil {
-				return errors.New("non-null key encoded as nil")
-			}
-			stored, ok, err := task.StoreGet(table.store, string(key))
-			if err != nil {
-				return err
-			}
-			if !ok {
+			if rightNull && !left {
 				return nil
 			}
-			v, err := table.lookup.Decode(stored)
-			if err != nil {
-				return err
-			}
-			return next(record.Record[K, O]{Key: r.Key, Value: joiner(r.Value, v), Timestamp: r.Timestamp})
+			result, null := joiner(r.Value, right, rightNull)
+			return next(record.Record[K, O]{Key: r.Key, NullKey: r.NullKey, Value: result, NullValue: null, Timestamp: r.Timestamp})
 		}
 	})
 	return KStream[K, O]{s.builder, p, name, s.key, value, true}
