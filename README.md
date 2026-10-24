@@ -182,9 +182,19 @@ respect record immutability, and use task stores for recoverable state.
 
 Full Kafka Streams parity and a 2.5x production-throughput target are tracked in
 [the feature inventory](docs/roadmap/parity.md), [qualification rules](docs/roadmap/qualification.md)
-and [issue #3](https://github.com/SoraDaibu/kstream-go/issues/3). These targets are
-not achieved by the initial prototype. Exploratory comparisons and all remaining
+and [issue #3](https://github.com/SoraDaibu/kstream-go/issues/3). These targets remain
+unqualified. Exploratory comparisons and all remaining
 gaps remain visible. Package-layer rules are checked automatically in CI.
+
+Latest exploratory broker fixture medians (Go / Kafka Streams throughput):
+
+| Filter | Keyed count | Target per qualified workload |
+|---:|---:|---:|
+| 2.205× | 7.002× | ≥2.5× |
+
+Filter misses the target in both recent runs. These are small hosted filter/count
+fixtures, with full [samples, limits and original archives](benchmarks/results/2026-10-24-repartition-clocks/README.md).
+They do not benchmark repartition traffic or establish general performance parity.
 
 ## Design and validation
 

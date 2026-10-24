@@ -1,0 +1,17 @@
+{
+  "source": "156a4db82703f199d7e4009fcf715c034697119c",
+  "remote": "827c9cf0441d2b1f5561fb3212b735fd0d8f87d0",
+  "toolchain": "go1.27.3",
+  "affinity": [
+    0,
+    1,
+    2
+  ],
+  "gomaxprocs": [
+    1,
+    3
+  ],
+  "samples": 5,
+  "benchtime": "200ms",
+  "scope": "finite task lanes; one commit per record; task-private no-op backend; no broker, durability, live fairness or tail-latency qualification"
+}

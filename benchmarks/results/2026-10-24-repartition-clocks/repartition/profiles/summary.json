@@ -1,0 +1,8 @@
+{
+  "production_qualified": false,
+  "diagnostic_only": true,
+  "instrumented": true,
+  "verified_cases": 2,
+  "profile_scope": "whole process; startup, warmup, measurement and shutdown",
+  "heap_scope": "post-cleanup GC; alloc_space/alloc_objects cumulative, inuse_space not peak RSS"
+}

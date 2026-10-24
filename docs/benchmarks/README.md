@@ -6,7 +6,9 @@ single-broker results remain exploratory and separate from production qualificat
 
 ADR 0003 is provisional. The [initial measured evaluation](2026-10-23/README.md)
 includes raw output and environment details. Its results vary with batch size;
-no production scheduling winner is claimed.
+no production scheduling winner is claimed. The
+[Go 1.27.3 follow-up](2026-10-24-scheduling-go127/README.md) retains current
+raw measurements, including cases that favor per-task scheduling.
 
 ```sh
 go version
@@ -15,12 +17,13 @@ GOMAXPROCS=1 go test ./execution -run '^$' -bench BenchmarkSchedule -benchmem -c
 GOMAXPROCS=4 go test ./execution -run '^$' -bench BenchmarkSchedule -benchmem -count 5
 ```
 
-The matrix covers 8/256 tasks, 1/256 records per batch, zero/128 integer-mixing
+The matrix covers 8/256 tasks, 1/256 records per lane, zero/128 integer-mixing
 steps per record, worker counts 1/GOMAXPROCS, and both schedulers. Each iteration
 advances offsets so committed-input replay suppression cannot turn the benchmark
 into a no-op. Tasks and records are prepared outside the timed region; queueing,
 transaction coordination, offset assignment and scheduling are measured. A
-private no-op backend isolates scheduler/transaction overhead from the reference
+Run commits one record per transaction even for a 256-record lane; this matrix
+is not a transaction batching comparison. A private no-op backend isolates scheduler/transaction overhead from the reference
 backend's global mutex. It is explicitly not a durability benchmark.
 
 Record Go version, CPU, GOMAXPROCS, host load, commands and raw output; compare

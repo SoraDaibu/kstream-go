@@ -1,0 +1,38 @@
+[
+  {
+    "phase": "repartition",
+    "kind": "comparison",
+    "archive": "benchmarks/results/2026-10-24-repartition-clocks/repartition/comparison/original-artifact.zip",
+    "sha256": "24651af5eb5571b0ea4abdfc456b7b83ae5666c1b26e4c085fd0fdb1dc6bfa32",
+    "source": "5ab0e951a4ebf79d5998858d393c84012948adc6",
+    "run": 40102903514,
+    "artifact": 12564160232
+  },
+  {
+    "phase": "repartition",
+    "kind": "profiles",
+    "archive": "benchmarks/results/2026-10-24-repartition-clocks/repartition/profiles/original-artifact.zip",
+    "sha256": "043086379590236526c2c83d70cedfbc2aa0efe257cb28ae8a41d6b0e611bc07",
+    "source": "5ab0e951a4ebf79d5998858d393c84012948adc6",
+    "run": 40102903514,
+    "artifact": 12563548426
+  },
+  {
+    "phase": "scoped-clock",
+    "kind": "comparison",
+    "archive": "benchmarks/results/2026-10-24-repartition-clocks/scoped-clock/comparison/original-artifact.zip",
+    "sha256": "e6606add06f12b3a195c30bfc1683a99d3febefb1793d218e7cfbeba28f064b4",
+    "source": "827c9cf0441d2b1f5561fb3212b735fd0d8f87d0",
+    "run": 40104725468,
+    "artifact": 12564800223
+  },
+  {
+    "phase": "scoped-clock",
+    "kind": "profiles",
+    "archive": "benchmarks/results/2026-10-24-repartition-clocks/scoped-clock/profiles/original-artifact.zip",
+    "sha256": "2d91447b4441391f32566388bb76201b7f5cf841a51c424045f8e5320a74a54d",
+    "source": "827c9cf0441d2b1f5561fb3212b735fd0d8f87d0",
+    "run": 40104725468,
+    "artifact": 12563848023
+  }
+]
