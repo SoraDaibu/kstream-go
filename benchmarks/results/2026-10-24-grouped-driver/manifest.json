@@ -1,0 +1,20 @@
+{
+  "reference": "Kafka Streams 3.9.1 TopologyTestDriver",
+  "store": "in-memory",
+  "durability": "none",
+  "input_keys": 64,
+  "value": "value",
+  "records": 200000,
+  "warmup_records": 100000,
+  "trials": 5,
+  "cpus": 1,
+  "transaction_batch": 1,
+  "scenarios": [
+    "filter",
+    "count",
+    "reduce",
+    "aggregate"
+  ],
+  "production_qualified": false,
+  "limitation": "Different in-process drivers; no brokers, persistent stores, EOS or tail-latency qualification."
+}

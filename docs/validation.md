@@ -88,3 +88,15 @@ This adds persistent key-value stores, not a complete state subsystem. Restore
 still materializes a full backend snapshot in RAM; streamed restoration, validated
 cache checkpoint reuse, specialized stores and full production qualification
 remain open.
+
+## Grouped aggregation cycle
+
+Commit `d309947c199e0f0b0a5959eafce23b39083b01d0` passed
+[Go/race/layer and differential CI](https://github.com/SoraDaibu/kstream-go/actions/runs/40051651430),
+[persistent-state tests](https://github.com/SoraDaibu/kstream-go/actions/runs/40051651394),
+and [broker recovery](https://github.com/SoraDaibu/kstream-go/actions/runs/40051651501).
+Thirteen oracle scenarios run against both stores at batch sizes 1, 32 and 256:
+78 exact comparisons, including reduce, aggregate, nullable initialization,
+deletion/reinitialization and aggregate timestamp lifetimes. The expanded
+[paired driver comparison](../benchmarks/results/2026-10-24-grouped-driver/README.md)
+retains actual raw data and its nonproduction limits.

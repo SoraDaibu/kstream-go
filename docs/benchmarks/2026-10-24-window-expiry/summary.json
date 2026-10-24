@@ -1,0 +1,41 @@
+{
+  "production_qualified": false,
+  "workloads": {
+    "BenchmarkWindowExpiry/keys=64/size=1024": {
+      "before_median_ns": 20217.0,
+      "after_median_ns": 1534.0,
+      "before_median_bytes": 25129,
+      "after_median_bytes": 877,
+      "before_allocs": 151,
+      "after_allocs": 22,
+      "before_over_after_time": 13.179269882659714
+    },
+    "BenchmarkWindowExpiry/keys=64/size=1152921504606846976": {
+      "before_median_ns": 13779.0,
+      "after_median_ns": 1475.0,
+      "before_median_bytes": 14587,
+      "after_median_bytes": 864,
+      "before_allocs": 100,
+      "after_allocs": 22,
+      "before_over_after_time": 9.341694915254237
+    },
+    "BenchmarkWindowExpiry/keys=4096/size=1024": {
+      "before_median_ns": 568483.0,
+      "after_median_ns": 1991.0,
+      "before_median_bytes": 526882,
+      "after_median_bytes": 1357,
+      "before_allocs": 2772,
+      "after_allocs": 22,
+      "before_over_after_time": 285.52636865896534
+    },
+    "BenchmarkWindowExpiry/keys=4096/size=1152921504606846976": {
+      "before_median_ns": 857293.0,
+      "after_median_ns": 1407.0,
+      "before_median_bytes": 853322,
+      "after_median_bytes": 894,
+      "before_allocs": 4232,
+      "after_allocs": 22,
+      "before_over_after_time": 609.3056147832267
+    }
+  }
+}

@@ -1,0 +1,26 @@
+goos: linux
+goarch: amd64
+pkg: github.com/SoraDaibu/kstream-go/stream
+cpu: AMD EPYC 9V74 80-Core Processor                
+BenchmarkWindowExpiry/keys=64/size=1024         	    5000	     20268 ns/op	   25121 B/op	     151 allocs/op
+BenchmarkWindowExpiry/keys=64/size=1024         	    5000	     19913 ns/op	   25137 B/op	     151 allocs/op
+BenchmarkWindowExpiry/keys=64/size=1024         	    5000	     20212 ns/op	   25121 B/op	     151 allocs/op
+BenchmarkWindowExpiry/keys=64/size=1024         	    5000	     20217 ns/op	   25129 B/op	     151 allocs/op
+BenchmarkWindowExpiry/keys=64/size=1024         	    5000	     21278 ns/op	   25129 B/op	     151 allocs/op
+BenchmarkWindowExpiry/keys=64/size=1152921504606846976         	    5000	     14388 ns/op	   14579 B/op	     100 allocs/op
+BenchmarkWindowExpiry/keys=64/size=1152921504606846976         	    5000	     12894 ns/op	   14587 B/op	     100 allocs/op
+BenchmarkWindowExpiry/keys=64/size=1152921504606846976         	    5000	     14890 ns/op	   14587 B/op	     100 allocs/op
+BenchmarkWindowExpiry/keys=64/size=1152921504606846976         	    5000	     13779 ns/op	   14584 B/op	     100 allocs/op
+BenchmarkWindowExpiry/keys=64/size=1152921504606846976         	    5000	     13235 ns/op	   14596 B/op	     100 allocs/op
+BenchmarkWindowExpiry/keys=4096/size=1024                      	    5000	    572190 ns/op	  526877 B/op	    2772 allocs/op
+BenchmarkWindowExpiry/keys=4096/size=1024                      	    5000	    568483 ns/op	  526882 B/op	    2772 allocs/op
+BenchmarkWindowExpiry/keys=4096/size=1024                      	    5000	    569767 ns/op	  526901 B/op	    2772 allocs/op
+BenchmarkWindowExpiry/keys=4096/size=1024                      	    5000	    545581 ns/op	  526848 B/op	    2772 allocs/op
+BenchmarkWindowExpiry/keys=4096/size=1024                      	    5000	    543201 ns/op	  526966 B/op	    2772 allocs/op
+BenchmarkWindowExpiry/keys=4096/size=1152921504606846976       	    5000	    898326 ns/op	  853312 B/op	    4232 allocs/op
+BenchmarkWindowExpiry/keys=4096/size=1152921504606846976       	    5000	    871849 ns/op	  853339 B/op	    4232 allocs/op
+BenchmarkWindowExpiry/keys=4096/size=1152921504606846976       	    5000	    834877 ns/op	  853380 B/op	    4232 allocs/op
+BenchmarkWindowExpiry/keys=4096/size=1152921504606846976       	    5000	    857293 ns/op	  853314 B/op	    4232 allocs/op
+BenchmarkWindowExpiry/keys=4096/size=1152921504606846976       	    5000	    823146 ns/op	  853322 B/op	    4232 allocs/op
+PASS
+ok  	github.com/SoraDaibu/kstream-go/stream	36.435s
