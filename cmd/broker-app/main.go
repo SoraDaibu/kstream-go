@@ -34,7 +34,11 @@ func run() (err error) {
 	warmup := flag.Int64("warmup", 100000, "warmup record boundary for observation")
 	cpuProfile := flag.String("cpuprofile", "", "diagnostic whole-process CPU profile path")
 	heapProfile := flag.String("heapprofile", "", "diagnostic post-cleanup cumulative allocation profile path")
+	outputCapacity := flag.Int("output-capacity", 0, "initial transaction output capacity; zero keeps append growth")
 	flag.Parse()
+	if *outputCapacity < 0 || *outputCapacity > 65536 {
+		return errors.New("output capacity must be between 0 and 65536")
+	}
 	finishProfiles, err := startProfiles(*cpuProfile, *heapProfile)
 	if err != nil {
 		return err
@@ -69,7 +73,7 @@ func run() (err error) {
 	observation := batchObservation{Event: "batch_metrics", warmupLimit: *warmup}
 	config.OnBatch = observation.add
 	err = kafka.RunGroup(ctx, config, func(ctx context.Context, spec execution.Spec, backend execution.Backend) (*execution.Task, error) {
-		return plan.NewTask(ctx, spec, backend, execution.WithStoreFactory(engine.Task))
+		return plan.NewTask(ctx, spec, backend, execution.WithStoreFactory(engine.Task), execution.WithOutputCapacity(*outputCapacity))
 	})
 	if encodeErr := json.NewEncoder(os.Stdout).Encode(observation); encodeErr != nil {
 		err = errors.Join(err, encodeErr)

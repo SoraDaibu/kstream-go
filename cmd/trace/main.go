@@ -197,6 +197,13 @@ func run() error {
 		taskBackend = transactionGroup
 	}
 	var options []execution.Option
+	if raw := os.Getenv("KSTREAM_OUTPUT_CAPACITY"); raw != "" {
+		capacity, err := strconv.Atoi(raw)
+		if err != nil {
+			return fmt.Errorf("KSTREAM_OUTPUT_CAPACITY must be an integer: %w", err)
+		}
+		options = append(options, execution.WithOutputCapacity(capacity))
+	}
 	if directory := os.Getenv("KSTREAM_STATE_DIR"); directory != "" {
 		engine, err := persistent.Open(directory, persistent.Config{SyncWrites: true})
 		if err != nil {

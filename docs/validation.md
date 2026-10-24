@@ -211,3 +211,20 @@ with [persistent-state tests](https://github.com/SoraDaibu/kstream-go/actions/ru
 and all four [broker recovery/fault suites](https://github.com/SoraDaibu/kstream-go/actions/runs/40075877912)
 passing. Historical Go 1.23 measurements remain historical; new performance
 conclusions require the [current toolchain baseline](toolchain.md).
+
+## Processor source metadata cycle
+
+Source `6eddd0c8b8fc2bdfb660a48b5d4c185d9fa9d136` passed
+[Go/race/layer and differential CI](https://github.com/SoraDaibu/kstream-go/actions/runs/40080734208),
+[persistent state](https://github.com/SoraDaibu/kstream-go/actions/runs/40080734196),
+all four [broker fault suites](https://github.com/SoraDaibu/kstream-go/actions/runs/40080734187)
+and verified broker/profile workloads. Twenty-three scenarios compare 7,205
+inputs across stores, three batch sizes and both commit modes: 276 exact traces.
+New Processor API scenarios check source topic/partition/offset through merged
+topics and fanout. Go tests cover nonzero partitions, replay, initialization,
+commit scope and cleanup after errors, panics and owner exit.
+
+Metadata capture uses setup wrappers only for custom processors; raw runtime
+handlers opt in. A rejected slice-reference design added one per-record
+allocation. The final design preserves allocation counts, with retained
+[paired overhead measurements](benchmarks/2026-10-24-processor-metadata/README.md).
