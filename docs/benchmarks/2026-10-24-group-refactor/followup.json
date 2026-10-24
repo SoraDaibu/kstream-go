@@ -1,0 +1,62 @@
+[
+  {
+    "trial": 0,
+    "mode": "before",
+    "stdout": "goos: linux\ngoarch: amd64\npkg: github.com/SoraDaibu/kstream-go/execution\ncpu: AMD EPYC 9V74 80-Core Processor                \nBenchmarkTransactionBatch/stateful=false/batch=1024         \t   10000\t    174398 ns/op\t      1024 records/op\t  327216 B/op\t    5999 allocs/op\nPASS\n",
+    "stderr": ""
+  },
+  {
+    "trial": 0,
+    "mode": "after",
+    "stdout": "goos: linux\ngoarch: amd64\npkg: github.com/SoraDaibu/kstream-go/execution\ncpu: AMD EPYC 9V74 80-Core Processor                \nBenchmarkTransactionBatch/stateful=false/batch=1024         \t   10000\t    176660 ns/op\t      1024 records/op\t  327216 B/op\t    5999 allocs/op\nPASS\n",
+    "stderr": ""
+  },
+  {
+    "trial": 1,
+    "mode": "after",
+    "stdout": "goos: linux\ngoarch: amd64\npkg: github.com/SoraDaibu/kstream-go/execution\ncpu: AMD EPYC 9V74 80-Core Processor                \nBenchmarkTransactionBatch/stateful=false/batch=1024         \t   10000\t    169216 ns/op\t      1024 records/op\t  327216 B/op\t    5999 allocs/op\nPASS\n",
+    "stderr": ""
+  },
+  {
+    "trial": 1,
+    "mode": "before",
+    "stdout": "goos: linux\ngoarch: amd64\npkg: github.com/SoraDaibu/kstream-go/execution\ncpu: AMD EPYC 9V74 80-Core Processor                \nBenchmarkTransactionBatch/stateful=false/batch=1024         \t   10000\t    183506 ns/op\t      1024 records/op\t  327216 B/op\t    5999 allocs/op\nPASS\n",
+    "stderr": ""
+  },
+  {
+    "trial": 2,
+    "mode": "before",
+    "stdout": "goos: linux\ngoarch: amd64\npkg: github.com/SoraDaibu/kstream-go/execution\ncpu: AMD EPYC 9V74 80-Core Processor                \nBenchmarkTransactionBatch/stateful=false/batch=1024         \t   10000\t    168284 ns/op\t      1024 records/op\t  327216 B/op\t    5999 allocs/op\nPASS\n",
+    "stderr": ""
+  },
+  {
+    "trial": 2,
+    "mode": "after",
+    "stdout": "goos: linux\ngoarch: amd64\npkg: github.com/SoraDaibu/kstream-go/execution\ncpu: AMD EPYC 9V74 80-Core Processor                \nBenchmarkTransactionBatch/stateful=false/batch=1024         \t   10000\t    180765 ns/op\t      1024 records/op\t  327216 B/op\t    5999 allocs/op\nPASS\n",
+    "stderr": ""
+  },
+  {
+    "trial": 3,
+    "mode": "after",
+    "stdout": "goos: linux\ngoarch: amd64\npkg: github.com/SoraDaibu/kstream-go/execution\ncpu: AMD EPYC 9V74 80-Core Processor                \nBenchmarkTransactionBatch/stateful=false/batch=1024         \t   10000\t    179255 ns/op\t      1024 records/op\t  327216 B/op\t    5999 allocs/op\nPASS\n",
+    "stderr": ""
+  },
+  {
+    "trial": 3,
+    "mode": "before",
+    "stdout": "goos: linux\ngoarch: amd64\npkg: github.com/SoraDaibu/kstream-go/execution\ncpu: AMD EPYC 9V74 80-Core Processor                \nBenchmarkTransactionBatch/stateful=false/batch=1024         \t   10000\t    177208 ns/op\t      1024 records/op\t  327216 B/op\t    5999 allocs/op\nPASS\n",
+    "stderr": ""
+  },
+  {
+    "trial": 4,
+    "mode": "before",
+    "stdout": "goos: linux\ngoarch: amd64\npkg: github.com/SoraDaibu/kstream-go/execution\ncpu: AMD EPYC 9V74 80-Core Processor                \nBenchmarkTransactionBatch/stateful=false/batch=1024         \t   10000\t    171844 ns/op\t      1024 records/op\t  327216 B/op\t    5999 allocs/op\nPASS\n",
+    "stderr": ""
+  },
+  {
+    "trial": 4,
+    "mode": "after",
+    "stdout": "goos: linux\ngoarch: amd64\npkg: github.com/SoraDaibu/kstream-go/execution\ncpu: AMD EPYC 9V74 80-Core Processor                \nBenchmarkTransactionBatch/stateful=false/batch=1024         \t   10000\t    179766 ns/op\t      1024 records/op\t  327216 B/op\t    5999 allocs/op\nPASS\n",
+    "stderr": ""
+  }
+]

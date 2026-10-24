@@ -16,10 +16,12 @@ for scenario in filter filter-not mapvalues flatmap flatmapvalues merge count re
     -Dexec.mainClass=dev.kstream.Oracle \
     "-Dexec.args=$scenario $work/$scenario.tsv $work/$scenario.java.tsv"
   for batch in 1 32 256; do
-    KSTREAM_BATCH_SIZE=$batch "$work/trace" "$scenario" "$work/$scenario.tsv" > "$work/$scenario.go.tsv"
-    diff -u "$work/$scenario.java.tsv" "$work/$scenario.go.tsv"
-    KSTREAM_STATE_DIR="$work/state-$scenario-$batch" KSTREAM_BATCH_SIZE=$batch "$work/trace" "$scenario" "$work/$scenario.tsv" > "$work/$scenario.pebble.tsv"
-    diff -u "$work/$scenario.java.tsv" "$work/$scenario.pebble.tsv"
+    for group in 0 1; do
+      KSTREAM_TRANSACTION_GROUP=$group KSTREAM_BATCH_SIZE=$batch "$work/trace" "$scenario" "$work/$scenario.tsv" > "$work/$scenario.go.tsv"
+      diff -u "$work/$scenario.java.tsv" "$work/$scenario.go.tsv"
+      KSTREAM_TRANSACTION_GROUP=$group KSTREAM_STATE_DIR="$work/state-$scenario-$batch-$group" KSTREAM_BATCH_SIZE=$batch "$work/trace" "$scenario" "$work/$scenario.tsv" > "$work/$scenario.pebble.tsv"
+      diff -u "$work/$scenario.java.tsv" "$work/$scenario.pebble.tsv"
+    done
   done
-  echo "PASS: $scenario (seed 73019; transaction batches 1,32,256; memory and Pebble stores)"
+  echo "PASS: $scenario (seed 73019; batches 1,32,256; memory/Pebble; independent/group task commits)"
 done

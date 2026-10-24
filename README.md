@@ -72,6 +72,9 @@ experimental fixed-assignment adapter; see its [deployment boundaries](adapters/
   [design and limits](docs/adr/0007-persistent-state.md).
 - Bounded-worker and goroutine-per-task finite-batch schedulers and comparative
   benchmarks. No production winner is asserted before measurement.
+- Optional [atomic task groups](docs/task-groups.md) stage several partition tasks
+  before one durable decision. The memory model implements this contract;
+  Kafka consumer-group coordination remains separate work.
 
 Key-changing maps/processors require repartitioning before key-local operations.
 An explicit `Repartition` node is represented logically, and Build rejects it

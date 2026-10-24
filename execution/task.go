@@ -45,6 +45,7 @@ type stateLocation struct{ store, key string }
 type Task struct {
 	spec              Spec
 	backend           Backend
+	group             *Group
 	generation        uint64
 	store             state.Store
 	offsets           map[string]int64
@@ -87,37 +88,12 @@ func New(ctx context.Context, s Spec, b Backend, options ...Option) (*Task, erro
 	if err = storage.Reset(); err != nil {
 		return nil, err
 	}
-	var generation uint64
-	var checkpoint Checkpoint
-	if restorer, ok := b.(StreamingRestorer); ok {
-		generation, checkpoint, err = restorer.OpenInto(ctx, s, storage.ApplyBatch)
-	} else {
-		var snapshot Snapshot
-		generation, snapshot, err = b.Open(ctx, s)
-		if err == nil {
-			checkpoint = Checkpoint{NextOffsets: snapshot.NextOffsets, StreamTime: snapshot.StreamTime}
-			// The legacy backend already materialized its image, but bound the
-			// additional mutation scratch space while loading the task store.
-			mutations := make([]state.Mutation, 0, 256)
-			for store, entries := range snapshot.State {
-				for key, value := range entries {
-					mutations = append(mutations, state.Mutation{Store: store, Key: key, Value: value})
-					if len(mutations) == cap(mutations) {
-						if err = storage.ApplyBatch(mutations); err != nil {
-							return nil, err
-						}
-						clear(mutations)
-						mutations = mutations[:0]
-					}
-				}
-			}
-			err = storage.ApplyBatch(mutations)
-		}
-	}
+	generation, checkpoint, err := restoreBackend(ctx, s, b, storage.ApplyBatch)
 	if err != nil {
 		return nil, err
 	}
 	task := &Task{spec: s, backend: b, generation: generation, store: storage, offsets: cloneOffsets(checkpoint.NextOffsets), streamTime: checkpoint.StreamTime, handlers: make(map[string]func(record.Bytes) error)}
+	task.group, _ = b.(*Group)
 	initialized = true
 	return task, nil
 }
@@ -167,13 +143,34 @@ func (t *Task) ProcessBatch(ctx context.Context, records []record.Bytes) (err er
 		return ErrConcurrent
 	}
 	defer t.active.Store(false)
+	if err = t.validate(ctx, records); err != nil {
+		return err
+	}
+	if t.group != nil {
+		return ErrGroupRequired
+	}
+	defer t.finish(&err)
+	tx, err := t.stage(ctx, records)
+	if err != nil || len(tx.NextOffsets) == 0 {
+		return err
+	}
+	if err = t.backend.Commit(ctx, t.spec, t.generation, *tx); err != nil {
+		return err
+	}
+	if err = t.apply(tx); err != nil {
+		return err
+	}
+	t.publish(tx)
+	return nil
+}
+func (t *Task) validate(ctx context.Context, records []record.Bytes) error {
 	if t.closed {
 		return ErrClosed
 	}
 	if t.poisoned {
 		return ErrPoisoned
 	}
-	if err = ctx.Err(); err != nil {
+	if err := ctx.Err(); err != nil {
 		return err
 	}
 	// Validate all routing/metadata before invoking callbacks. Validation errors
@@ -189,23 +186,31 @@ func (t *Task) ProcessBatch(ctx context.Context, records []record.Bytes) (err er
 			return errors.New("invalid offset or negative timestamp")
 		}
 	}
+	return nil
+}
+
+func (t *Task) clearPending() {
+	t.pending = nil
+	t.pendingIndex = nil
+	t.pendingStoreError = nil
+}
+func (t *Task) finish(err *error) {
+	t.clearPending()
+	if p := recover(); p != nil {
+		t.poisoned = true
+		panic(p)
+	}
+	if *err != nil {
+		t.poisoned = true
+	}
+}
+
+func (t *Task) stage(ctx context.Context, records []record.Bytes) (*Transaction, error) {
 	tx := Transaction{StreamTime: t.streamTime}
 	t.pending = &tx
-	defer func() {
-		t.pending = nil
-		t.pendingIndex = nil
-		t.pendingStoreError = nil
-		if p := recover(); p != nil {
-			t.poisoned = true
-			panic(p)
-		}
-		if err != nil {
-			t.poisoned = true
-		}
-	}()
 	for _, r := range records {
-		if err = ctx.Err(); err != nil {
-			return err
+		if err := ctx.Err(); err != nil {
+			return nil, err
 		}
 		next, ok := tx.NextOffsets[r.Topic]
 		if !ok {
@@ -220,28 +225,27 @@ func (t *Task) ProcessBatch(ctx context.Context, records []record.Bytes) (err er
 		if r.Timestamp > tx.StreamTime {
 			tx.StreamTime = r.Timestamp
 		}
-		if err = t.handlers[r.Topic](r); err != nil {
-			return err
+		if err := t.handlers[r.Topic](r); err != nil {
+			return nil, err
 		}
 		if t.pendingStoreError != nil {
-			return t.pendingStoreError
+			return nil, t.pendingStoreError
 		}
 		tx.NextOffsets[r.Topic] = r.Offset + 1
 	}
-	if len(tx.NextOffsets) == 0 {
-		return nil
-	}
-	if err = t.backend.Commit(ctx, t.spec, t.generation, tx); err != nil {
-		return err
-	}
-	if err = t.store.ApplyBatch(tx.Mutations); err != nil {
+	return &tx, nil
+}
+func (t *Task) apply(tx *Transaction) error {
+	if err := t.store.ApplyBatch(tx.Mutations); err != nil {
 		return fmt.Errorf("backend committed but local state apply failed; restore task: %w", err)
 	}
+	return nil
+}
+func (t *Task) publish(tx *Transaction) {
 	for topic, offset := range tx.NextOffsets {
 		t.offsets[topic] = offset
 	}
 	t.streamTime = tx.StreamTime
-	return nil
 }
 func (t *Task) requirePending() {
 	if t.pending == nil {

@@ -90,6 +90,39 @@ func (b *Backend) Commit(ctx context.Context, s execution.Spec, g uint64, tx exe
 	if e == nil || e.generation != g {
 		return execution.ErrFenced
 	}
+	apply(e, tx)
+	return nil
+}
+
+// CommitTasks is an executable model of one atomic multi-task decision. Validate
+// all generations under the infrastructure lock before publishing any changes.
+func (b *Backend) CommitTasks(ctx context.Context, transactions []execution.TaskTransaction) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	seen := make(map[identity]bool, len(transactions))
+	for _, tx := range transactions {
+		id := key(tx.Spec)
+		if seen[id] {
+			return errors.New("duplicate transaction participant")
+		}
+		seen[id] = true
+		e := b.tasks[id]
+		if e == nil || e.generation != tx.Generation {
+			return execution.ErrFenced
+		}
+	}
+	for _, tx := range transactions {
+		apply(b.tasks[key(tx.Spec)], tx.Transaction)
+	}
+	return nil
+}
+
+var _ execution.AtomicBackend = (*Backend)(nil)
+
+func apply(e *entry, tx execution.Transaction) {
 	for _, m := range tx.Mutations {
 		m.Value = record.CloneBytes(m.Value)
 		e.log = append(e.log, m)
@@ -101,7 +134,6 @@ func (b *Backend) Commit(ctx context.Context, s execution.Spec, g uint64, tx exe
 		e.snapshot.NextOffsets[topic] = offset
 	}
 	e.snapshot.StreamTime = tx.StreamTime
-	return nil
 }
 func (b *Backend) Outputs(s execution.Spec) []record.Bytes {
 	b.mu.Lock()

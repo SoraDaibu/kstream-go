@@ -48,6 +48,11 @@ publishing the local overlay. Failure invalidates the incarnation; recovery open
 a fenced generation and replays committed changelogs/offsets. The prototype uses
 one input partition number per task, with any number of copartitioned topics.
 Task IDs and application IDs are stable caller-provided infrastructure identities.
+An execution.Group optionally stages several task batches before a single atomic
+backend decision, then applies all local caches before publishing checkpoints.
+The memory model validates every participant's generation before publication.
+This enables a future consumer-group coordinator; it does not itself implement
+Kafka group metadata, assignment or EOS v2. See [task groups](task-groups.md).
 
 ## Roadmap and acceptance gates
 

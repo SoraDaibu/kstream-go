@@ -25,3 +25,34 @@ type StreamingRestorer interface {
 	Backend
 	OpenInto(context.Context, Spec, RestoreSink) (uint64, Checkpoint, error)
 }
+
+func restoreBackend(ctx context.Context, spec Spec, backend Backend, sink RestoreSink) (uint64, Checkpoint, error) {
+	if restorer, ok := backend.(StreamingRestorer); ok {
+		return restorer.OpenInto(ctx, spec, sink)
+	}
+	generation, snapshot, err := backend.Open(ctx, spec)
+	if err != nil {
+		return 0, Checkpoint{}, err
+	}
+	// Legacy backends materialize an image, but additional mutation scratch
+	// space remains bounded while loading it into a task store.
+	mutations := make([]state.Mutation, 0, 256)
+	for store, entries := range snapshot.State {
+		for key, value := range entries {
+			mutations = append(mutations, state.Mutation{Store: store, Key: key, Value: value})
+			if len(mutations) == cap(mutations) {
+				if err := sink(mutations); err != nil {
+					return 0, Checkpoint{}, err
+				}
+				clear(mutations)
+				mutations = mutations[:0]
+			}
+		}
+	}
+	if len(mutations) > 0 {
+		if err := sink(mutations); err != nil {
+			return 0, Checkpoint{}, err
+		}
+	}
+	return generation, Checkpoint{NextOffsets: snapshot.NextOffsets, StreamTime: snapshot.StreamTime}, nil
+}
