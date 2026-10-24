@@ -1,6 +1,6 @@
 # ADR 0009: Derived task-local window expiry index
 
-Status: Proposed before implementation; benchmark and oracle gated.
+Status: Accepted for the experimental tumbling-count implementation after benchmark and oracle validation.
 
 The baseline tumbling count scans and copies the complete window store every
 time operator-local stream-time advances. With many retained keys, the cleanup

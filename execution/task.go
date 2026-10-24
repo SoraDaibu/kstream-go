@@ -84,23 +84,40 @@ func New(ctx context.Context, s Spec, b Backend, options ...Option) (*Task, erro
 			_ = storage.Close()
 		}
 	}()
-	generation, snapshot, err := b.Open(ctx, s)
-	if err != nil {
-		return nil, err
-	}
 	if err = storage.Reset(); err != nil {
 		return nil, err
 	}
-	var mutations []state.Mutation
-	for store, entries := range snapshot.State {
-		for key, value := range entries {
-			mutations = append(mutations, state.Mutation{Store: store, Key: key, Value: value})
+	var generation uint64
+	var checkpoint Checkpoint
+	if restorer, ok := b.(StreamingRestorer); ok {
+		generation, checkpoint, err = restorer.OpenInto(ctx, s, storage.ApplyBatch)
+	} else {
+		var snapshot Snapshot
+		generation, snapshot, err = b.Open(ctx, s)
+		if err == nil {
+			checkpoint = Checkpoint{NextOffsets: snapshot.NextOffsets, StreamTime: snapshot.StreamTime}
+			// The legacy backend already materialized its image, but bound the
+			// additional mutation scratch space while loading the task store.
+			mutations := make([]state.Mutation, 0, 256)
+			for store, entries := range snapshot.State {
+				for key, value := range entries {
+					mutations = append(mutations, state.Mutation{Store: store, Key: key, Value: value})
+					if len(mutations) == cap(mutations) {
+						if err = storage.ApplyBatch(mutations); err != nil {
+							return nil, err
+						}
+						clear(mutations)
+						mutations = mutations[:0]
+					}
+				}
+			}
+			err = storage.ApplyBatch(mutations)
 		}
 	}
-	if err = storage.ApplyBatch(mutations); err != nil {
+	if err != nil {
 		return nil, err
 	}
-	task := &Task{spec: s, backend: b, generation: generation, store: storage, offsets: cloneOffsets(snapshot.NextOffsets), streamTime: snapshot.StreamTime, handlers: make(map[string]func(record.Bytes) error)}
+	task := &Task{spec: s, backend: b, generation: generation, store: storage, offsets: cloneOffsets(checkpoint.NextOffsets), streamTime: checkpoint.StreamTime, handlers: make(map[string]func(record.Bytes) error)}
 	initialized = true
 	return task, nil
 }

@@ -21,9 +21,9 @@ needs independent semantics, recovery and integration coverage before completion
 | Partition runtime | Partial | backpressure, live fairness, pause/resume, idle partitions |
 | Kafka adapter | Partial: explicit input, transactions, fencing, changelogs | Consumer groups, assignment/rebalance, authentication/TLS failure coverage and production lifecycle |
 | Repartition | Rejected explicitly | broker exchanges, key serde/partitioner agreement, partition counts and recovery |
-| Changelogs/restore | Partial: Kafka read-committed prefix restore and compactable full checkpoints | Forced-compaction validation, snapshot acceleration, restore callbacks and standby tasks |
+| Changelogs/restore | Partial: Kafka read-committed prefix restore, bounded mutation batches and compactable full checkpoints | Forced-compaction validation, local checkpoint reuse, restore lifecycle callbacks and standby tasks |
 | Exactly-once | Partial: Kafka atomic output/changelog/input checkpoints for fixed assignment | Consumer-group offsets/EOS v2, real ambiguous-commit fault injection, kill/rebalance tests |
-| Persistent state | Partial: shared Pebble key-value namespaces, atomic batches, owned reads, explicit sync writes | streamed restore/cache checkpoint reuse, window/session/versioned stores, range queries, snapshots and retention |
+| Persistent state | Partial: shared Pebble key-value namespaces, streamed cache loads, atomic batches, owned reads, explicit sync writes | local checkpoint reuse, large-state qualification, window/session/versioned stores, range queries, snapshots and retention |
 | Interactive queries | Missing | task ownership discovery, local queries, consistency bounds, metadata and routing |
 | Runtime control/observability | Missing | lifecycle, error policies, metrics, lag, health and shutdown |
 | Testing | Partial | all families in differential oracle, property fuzzing, broker/crash/rebalance tests |

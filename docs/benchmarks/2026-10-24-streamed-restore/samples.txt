@@ -1,0 +1,46 @@
+goos: linux
+goarch: amd64
+pkg: github.com/SoraDaibu/kstream-go/adapters/pebble
+cpu: AMD EPYC 9V74 80-Core Processor                
+BenchmarkRestoreIntoPebble/entries=1024/sync=false/stream=false         	       3	    669633 ns/op	  410208 B/op	    1111 allocs/op
+BenchmarkRestoreIntoPebble/entries=1024/sync=false/stream=false         	       3	    658830 ns/op	  409034 B/op	    1108 allocs/op
+BenchmarkRestoreIntoPebble/entries=1024/sync=false/stream=false         	       3	    670678 ns/op	  410325 B/op	    1111 allocs/op
+BenchmarkRestoreIntoPebble/entries=1024/sync=false/stream=false         	       3	    697466 ns/op	  409621 B/op	    1109 allocs/op
+BenchmarkRestoreIntoPebble/entries=1024/sync=false/stream=false         	       3	    604242 ns/op	  409973 B/op	    1110 allocs/op
+BenchmarkRestoreIntoPebble/entries=1024/sync=false/stream=true          	       3	    383645 ns/op	  124000 B/op	      51 allocs/op
+BenchmarkRestoreIntoPebble/entries=1024/sync=false/stream=true          	       3	    286365 ns/op	  124000 B/op	      51 allocs/op
+BenchmarkRestoreIntoPebble/entries=1024/sync=false/stream=true          	       3	    279486 ns/op	  124000 B/op	      51 allocs/op
+BenchmarkRestoreIntoPebble/entries=1024/sync=false/stream=true          	       3	    280083 ns/op	  124000 B/op	      51 allocs/op
+BenchmarkRestoreIntoPebble/entries=1024/sync=false/stream=true          	       3	    267587 ns/op	  124000 B/op	      51 allocs/op
+BenchmarkRestoreIntoPebble/entries=1024/sync=true/stream=false          	       3	    643581 ns/op	  355712 B/op	    1111 allocs/op
+BenchmarkRestoreIntoPebble/entries=1024/sync=true/stream=false          	       3	    723979 ns/op	  354538 B/op	    1108 allocs/op
+BenchmarkRestoreIntoPebble/entries=1024/sync=true/stream=false          	       3	    685654 ns/op	  354186 B/op	    1107 allocs/op
+BenchmarkRestoreIntoPebble/entries=1024/sync=true/stream=false          	       3	    923323 ns/op	  354538 B/op	    1108 allocs/op
+BenchmarkRestoreIntoPebble/entries=1024/sync=true/stream=false          	       3	    713940 ns/op	  354421 B/op	    1108 allocs/op
+BenchmarkRestoreIntoPebble/entries=1024/sync=true/stream=true           	       3	    528210 ns/op	   69626 B/op	      52 allocs/op
+BenchmarkRestoreIntoPebble/entries=1024/sync=true/stream=true           	       3	    414729 ns/op	   69626 B/op	      52 allocs/op
+BenchmarkRestoreIntoPebble/entries=1024/sync=true/stream=true           	       3	    504675 ns/op	   69626 B/op	      52 allocs/op
+BenchmarkRestoreIntoPebble/entries=1024/sync=true/stream=true           	       3	    393343 ns/op	   69626 B/op	      52 allocs/op
+BenchmarkRestoreIntoPebble/entries=1024/sync=true/stream=true           	       3	    389307 ns/op	   69626 B/op	      52 allocs/op
+BenchmarkRestoreIntoPebble/entries=32768/sync=false/stream=false        	       3	  42351631 ns/op	10035466 B/op	   34468 allocs/op
+BenchmarkRestoreIntoPebble/entries=32768/sync=false/stream=false        	       3	  39557376 ns/op	10250976 B/op	   34477 allocs/op
+BenchmarkRestoreIntoPebble/entries=32768/sync=false/stream=false        	       3	  43488377 ns/op	10114058 B/op	   34674 allocs/op
+BenchmarkRestoreIntoPebble/entries=32768/sync=false/stream=false        	       3	  43859914 ns/op	10179589 B/op	   34671 allocs/op
+BenchmarkRestoreIntoPebble/entries=32768/sync=false/stream=false        	       3	  43924835 ns/op	 9976832 B/op	   34666 allocs/op
+BenchmarkRestoreIntoPebble/entries=32768/sync=false/stream=true         	       3	   9509774 ns/op	 1794792 B/op	     388 allocs/op
+BenchmarkRestoreIntoPebble/entries=32768/sync=false/stream=true         	       3	   9787372 ns/op	 1794922 B/op	     390 allocs/op
+BenchmarkRestoreIntoPebble/entries=32768/sync=false/stream=true         	       3	   9744995 ns/op	 1794842 B/op	     391 allocs/op
+BenchmarkRestoreIntoPebble/entries=32768/sync=false/stream=true         	       3	   9630882 ns/op	 1794760 B/op	     388 allocs/op
+BenchmarkRestoreIntoPebble/entries=32768/sync=false/stream=true         	       3	   9583571 ns/op	 1794877 B/op	     389 allocs/op
+BenchmarkRestoreIntoPebble/entries=32768/sync=true/stream=false         	       3	  41270856 ns/op	 9006381 B/op	   34610 allocs/op
+BenchmarkRestoreIntoPebble/entries=32768/sync=true/stream=false         	       3	  41294799 ns/op	 9003149 B/op	   34610 allocs/op
+BenchmarkRestoreIntoPebble/entries=32768/sync=true/stream=false         	       3	  41711291 ns/op	 9028882 B/op	   34701 allocs/op
+BenchmarkRestoreIntoPebble/entries=32768/sync=true/stream=false         	       3	  41229945 ns/op	 9000970 B/op	   34626 allocs/op
+BenchmarkRestoreIntoPebble/entries=32768/sync=true/stream=false         	       3	  39245846 ns/op	 9005770 B/op	   34626 allocs/op
+BenchmarkRestoreIntoPebble/entries=32768/sync=true/stream=true          	       3	  14467983 ns/op	  611506 B/op	     705 allocs/op
+BenchmarkRestoreIntoPebble/entries=32768/sync=true/stream=true          	       3	  13107081 ns/op	  611960 B/op	     710 allocs/op
+BenchmarkRestoreIntoPebble/entries=32768/sync=true/stream=true          	       3	  13039142 ns/op	  610154 B/op	     697 allocs/op
+BenchmarkRestoreIntoPebble/entries=32768/sync=true/stream=true          	       3	  13104120 ns/op	  611554 B/op	     707 allocs/op
+BenchmarkRestoreIntoPebble/entries=32768/sync=true/stream=true          	       3	  13072890 ns/op	  611493 B/op	     711 allocs/op
+PASS
+ok  	github.com/SoraDaibu/kstream-go/adapters/pebble	2.848s

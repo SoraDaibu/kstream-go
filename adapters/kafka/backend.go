@@ -25,6 +25,11 @@ type Config struct {
 	// ChangelogTopic must be provisioned with cleanup.policy=compact, durable
 	// replication, and enough partitions for the assigned task partition numbers.
 	ChangelogTopic string
+	// RestoreBatchSize bounds mutation batches delivered to the local store.
+	// Zero selects 256. RestoreFetchBytes is a fetch target (default 8 MiB),
+	// not a hard limit on oversized or compressed broker record batches.
+	RestoreBatchSize  int
+	RestoreFetchBytes int32
 	// Options supplies authentication/TLS and tuning. Internal transaction IDs,
 	// isolation levels and changelog partitioning are enforced after these options.
 	Options           []kgo.Opt
@@ -42,6 +47,7 @@ type Backend struct {
 }
 
 var _ execution.Backend = (*Backend)(nil)
+var _ execution.StreamingRestorer = (*Backend)(nil)
 
 type checkpoint struct {
 	NextOffsets map[string]int64 `json:"next_offsets"`
@@ -51,6 +57,15 @@ type checkpoint struct {
 func New(config Config) (*Backend, error) {
 	if len(config.Brokers) == 0 || config.ChangelogTopic == "" {
 		return nil, errors.New("brokers and changelog topic are required")
+	}
+	if config.RestoreBatchSize == 0 {
+		config.RestoreBatchSize = 256
+	}
+	if config.RestoreFetchBytes == 0 {
+		config.RestoreFetchBytes = 8 << 20
+	}
+	if config.RestoreBatchSize < 1 || config.RestoreBatchSize > 65536 || config.RestoreFetchBytes < 1024 {
+		return nil, errors.New("restore batch must be 1..65536 records and fetch target at least 1024 bytes")
 	}
 	config.Brokers = append([]string(nil), config.Brokers...)
 	config.Options = append([]kgo.Opt(nil), config.Options...)
@@ -92,16 +107,36 @@ func (p topicPartitioner) ForTopic(topic string) kgo.TopicPartitioner {
 }
 
 func (b *Backend) Open(ctx context.Context, s execution.Spec) (uint64, execution.Snapshot, error) {
+	image := make(state.Image)
+	generation, checkpoint, err := b.OpenInto(ctx, s, func(batch []state.Mutation) error {
+		for _, mutation := range batch {
+			image.Apply(mutation)
+		}
+		return nil
+	})
+	if err != nil {
+		return 0, execution.Snapshot{}, err
+	}
+	return generation, execution.Snapshot{State: image, NextOffsets: checkpoint.NextOffsets, StreamTime: checkpoint.StreamTime}, nil
+}
+
+func (b *Backend) OpenInto(ctx context.Context, s execution.Spec, sink execution.RestoreSink) (uint64, execution.Checkpoint, error) {
+	if sink == nil {
+		return 0, execution.Checkpoint{}, errors.New("restore sink required")
+	}
+	if err := ctx.Err(); err != nil {
+		return 0, execution.Checkpoint{}, err
+	}
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	if s.ApplicationID == "" || s.ID == "" || s.Partition < 0 {
-		return 0, execution.Snapshot{}, errors.New("invalid Kafka task identity")
+		return 0, execution.Checkpoint{}, errors.New("invalid Kafka task identity")
 	}
 	if b.closed {
-		return 0, execution.Snapshot{}, errors.New("Kafka backend closed")
+		return 0, execution.Checkpoint{}, errors.New("Kafka backend closed")
 	}
 	if b.opened && b.spec != s {
-		return 0, execution.Snapshot{}, errors.New("Kafka backend belongs to a different task")
+		return 0, execution.Checkpoint{}, errors.New("Kafka backend belongs to a different task")
 	}
 	if b.producer != nil {
 		b.producer.Close()
@@ -114,7 +149,7 @@ func (b *Backend) Open(ctx context.Context, s execution.Spec) (uint64, execution
 	}
 	producer, err := kgo.NewClient(b.options(kgo.TransactionalID(transactionID(s)), kgo.RequiredAcks(kgo.AllISRAcks()), kgo.RecordPartitioner(topicPartitioner{b.config.ChangelogTopic, output}))...)
 	if err != nil {
-		return 0, execution.Snapshot{}, err
+		return 0, execution.Checkpoint{}, err
 	}
 	success := false
 	defer func() {
@@ -124,24 +159,24 @@ func (b *Backend) Open(ctx context.Context, s execution.Spec) (uint64, execution
 	}()
 	token := make([]byte, 16)
 	if _, err = rand.Read(token); err != nil {
-		return 0, execution.Snapshot{}, err
+		return 0, execution.Checkpoint{}, err
 	}
 	marker := &kgo.Record{Topic: b.config.ChangelogTopic, Partition: s.Partition, Key: encodeKey(barrierKind, s, "", string(token)), Value: []byte("restore-barrier"), Timestamp: time.Now()}
 	// Producing a real transaction initializes the producer epoch and fences a
 	// previous owner before restoring a read-committed prefix through this marker.
 	if err = producer.BeginTransaction(); err != nil {
-		return 0, execution.Snapshot{}, fenceError(err)
+		return 0, execution.Checkpoint{}, fenceError(err)
 	}
 	if err = producer.ProduceSync(ctx, marker).FirstErr(); err != nil {
 		_ = producer.EndTransaction(ctx, kgo.TryAbort)
-		return 0, execution.Snapshot{}, fenceError(err)
+		return 0, execution.Checkpoint{}, fenceError(err)
 	}
 	if err = producer.EndTransaction(ctx, kgo.TryCommit); err != nil {
-		return 0, execution.Snapshot{}, fenceError(err)
+		return 0, execution.Checkpoint{}, fenceError(err)
 	}
-	snapshot, err := b.restore(ctx, s, marker.Offset)
+	snapshot, err := b.restore(ctx, s, marker.Offset, sink)
 	if err != nil {
-		return 0, execution.Snapshot{}, err
+		return 0, execution.Checkpoint{}, err
 	}
 	b.producer = producer
 	b.spec = s
@@ -153,41 +188,58 @@ func (b *Backend) Open(ctx context.Context, s execution.Spec) (uint64, execution
 	success = true
 	return b.generation, snapshot, nil
 }
-func (b *Backend) restore(ctx context.Context, s execution.Spec, end int64) (execution.Snapshot, error) {
-	reader, err := kgo.NewClient(b.options(kgo.ConsumePartitions(map[string]map[int32]kgo.Offset{b.config.ChangelogTopic: {s.Partition: kgo.NewOffset().AtStart()}}), kgo.FetchIsolationLevel(kgo.ReadCommitted()), kgo.FetchMaxWait(100*time.Millisecond))...)
+func (b *Backend) restore(ctx context.Context, s execution.Spec, end int64, sink execution.RestoreSink) (execution.Checkpoint, error) {
+	reader, err := kgo.NewClient(b.options(kgo.ConsumePartitions(map[string]map[int32]kgo.Offset{b.config.ChangelogTopic: {s.Partition: kgo.NewOffset().AtStart()}}), kgo.FetchIsolationLevel(kgo.ReadCommitted()), kgo.FetchMaxWait(100*time.Millisecond), kgo.FetchMaxBytes(b.config.RestoreFetchBytes), kgo.FetchMaxPartitionBytes(b.config.RestoreFetchBytes), kgo.MaxConcurrentFetches(1))...)
 	if err != nil {
-		return execution.Snapshot{}, err
+		return execution.Checkpoint{}, err
 	}
 	defer reader.Close()
-	snapshot := execution.Snapshot{State: make(state.Image), NextOffsets: make(map[string]int64), StreamTime: -1}
+	snapshot := execution.Checkpoint{NextOffsets: make(map[string]int64), StreamTime: -1}
+	batch := make([]state.Mutation, 0, b.config.RestoreBatchSize)
+	flush := func() error {
+		if len(batch) == 0 {
+			return nil
+		}
+		if err := sink(batch); err != nil {
+			return err
+		}
+		clear(batch)
+		batch = batch[:0]
+		return nil
+	}
 	for {
-		fetches := reader.PollFetches(ctx)
+		fetches := reader.PollRecords(ctx, b.config.RestoreBatchSize)
 		if errs := fetches.Errors(); len(errs) > 0 {
-			return execution.Snapshot{}, errs[0].Err
+			return execution.Checkpoint{}, errs[0].Err
 		}
 		for _, r := range fetches.Records() {
 			key, err := decodeKey(r.Key)
 			if err != nil {
-				return execution.Snapshot{}, err
+				return execution.Checkpoint{}, err
 			}
 			if key.application == s.ApplicationID && key.task == s.ID && key.partition == s.Partition {
 				switch key.kind {
 				case stateKind:
-					snapshot.State.Apply(state.Mutation{Store: key.store, Key: key.key, Value: r.Value})
+					batch = append(batch, state.Mutation{Store: key.store, Key: key.key, Value: r.Value})
+					if len(batch) == cap(batch) {
+						if err := flush(); err != nil {
+							return execution.Checkpoint{}, err
+						}
+					}
 				case metadataKind:
 					if r.Value == nil {
-						return execution.Snapshot{}, errors.New("checkpoint metadata was deleted")
+						return execution.Checkpoint{}, errors.New("checkpoint metadata was deleted")
 					}
 					var meta checkpoint
 					if err = json.Unmarshal(r.Value, &meta); err != nil {
-						return execution.Snapshot{}, err
+						return execution.Checkpoint{}, err
 					}
 					if meta.StreamTime < -1 {
-						return execution.Snapshot{}, errors.New("invalid checkpoint stream-time")
+						return execution.Checkpoint{}, errors.New("invalid checkpoint stream-time")
 					}
 					for topic, offset := range meta.NextOffsets {
 						if topic == "" || offset < 0 {
-							return execution.Snapshot{}, errors.New("invalid checkpoint offsets")
+							return execution.Checkpoint{}, errors.New("invalid checkpoint offsets")
 						}
 					}
 					snapshot.NextOffsets = cloneOffsets(meta.NextOffsets)
@@ -195,14 +247,17 @@ func (b *Backend) restore(ctx context.Context, s execution.Spec, end int64) (exe
 				}
 			}
 			if r.Offset == end {
+				if err := flush(); err != nil {
+					return execution.Checkpoint{}, err
+				}
 				return snapshot, nil
 			}
 			if r.Offset > end {
-				return execution.Snapshot{}, errors.New("restore barrier is missing from changelog")
+				return execution.Checkpoint{}, errors.New("restore barrier is missing from changelog")
 			}
 		}
 		if err = ctx.Err(); err != nil {
-			return execution.Snapshot{}, err
+			return execution.Checkpoint{}, err
 		}
 	}
 }
