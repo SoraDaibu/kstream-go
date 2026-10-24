@@ -24,6 +24,9 @@ apply error poisons all participants; discard their derived processor state and
 restore all participants from the committed backend. Panic cleanup releases
 ownership and preserves the original panic. A busy task or pre-callback routing
 error releases acquired guards without poisoning otherwise healthy tasks.
+Track successful completion explicitly in deferred cleanup. A callback may end
+its goroutine through runtime.Goexit without returning an error or panicking;
+that path must poison all staged participants and release guards as well.
 
 The group checks membership by its concrete backend identity and rejects duplicate
 tasks. A group has one active processing call. Empty input sets do nothing; a

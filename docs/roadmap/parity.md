@@ -25,7 +25,7 @@ needs independent semantics, recovery and integration coverage before completion
 | Exactly-once | Partial: fixed checkpoints and group-offset/state/output transactions | Broader kill/ambiguous-network/timeout/compaction and rebalance qualification; do not infer full EOS v2 parity |
 | Persistent state | Partial: shared Pebble key-value namespaces, streamed cache loads, atomic batches, owned reads, explicit sync writes | local checkpoint reuse, large-state qualification, window/session/versioned stores, range queries, snapshots and retention |
 | Interactive queries | Missing | task ownership discovery, local queries, consistency bounds, metadata and routing |
-| Runtime control/observability | Missing | lifecycle, error policies, metrics, lag, health and shutdown |
+| Runtime control/observability | Partial: context worker lifecycle, explicit task close and committed batch observations | metrics registry, lag, health, richer lifecycle/error policies and shutdown fault qualification |
 | Testing | Partial | all families in differential oracle, property fuzzing, broker/crash/rebalance tests |
 | Performance | Unqualified | matched Kafka Streams workload suite; see qualification.md |
 

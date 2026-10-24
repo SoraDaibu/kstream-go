@@ -37,6 +37,11 @@ a source-produce fraction near one may indicate an injection/client bottleneck.
 Go commits after each bounded poll (4096 records maximum); Kafka Streams uses a
 10ms commit interval and the same maximum poll record count. Different commit
 policies and latency outcomes must remain visible.
+The Go app also records successful batch counts, size histograms and processing
+time separately for warmup and measurement. These are optional runtime
+observations, not all Kafka transactions; bootstrap/restore traffic is excluded.
+The driver rejects a phase boundary mismatch or an observed input total that
+differs from its verified sequence count.
 
 **This is exploratory, not production qualification.** One broker with replication
 factor one does not qualify high-availability durability. Shared-host timing,

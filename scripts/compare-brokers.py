@@ -42,7 +42,7 @@ manifest = {
     'max_poll_records': 4096, 'go_commit': 'after each bounded poll', 'kafka_commit_interval_ms': 10,
     'compression': 'none', 'app_cpu_affinity': [app_cpu], 'driver_cpu_affinity': [driver_cpu],
     'heap_targets': 'Go GOMEMLIMIT=512MiB; Java -Xms32m -Xmx512m, active processors 1',
-    'hard_rss_cap': False, 'broker_cpu_isolated': False,
+    'hard_rss_cap': False, 'broker_cpu_isolated': False, 'go_batch_observation': True,
     'latency': 'external driver monotonic send ledger to read-committed output receipt',
     'cpu_window': 'observed around driver measurement events, before offset/tail verification; approximate',
     'rss_window': 'process high-water mark through measurement completion; shutdown excluded',
@@ -105,7 +105,7 @@ for scenario in manifest['scenarios']:
                     if engine == 'go':
                         command = [args.go_app, '-scenario', scenario, '-brokers', args.brokers,
                                    '-application', application, '-input', source, '-output', sink,
-                                   '-changelog', changelog, '-state', directory]
+                                   '-changelog', changelog, '-state', directory, '-warmup', str(warmup)]
                     else:
                         command = ['java', '-XX:ActiveProcessorCount=1', '-Xms32m', '-Xmx512m',
                                    '-cp', args.classpath, 'dev.kstream.BrokerApplication', scenario,
@@ -165,6 +165,22 @@ for scenario in manifest['scenarios']:
                         finally:
                             subprocess.run(control + ['delete'] + common + ['-timeout', '30s'], env=env,
                                            stdout=admin_log, stderr=admin_log, check=True, timeout=40)
+                if engine == 'go':
+                    app_log.flush()
+                    observations = []
+                    for line in (out / f'{name}.app.log').read_text().splitlines():
+                        try:
+                            event = json.loads(line)
+                        except ValueError:
+                            continue
+                        if isinstance(event, dict) and event.get('event') == 'batch_metrics':
+                            observations.append(event)
+                    if len(observations) != 1 or observations[0]['boundary_crossed']:
+                        raise RuntimeError('missing or mixed batch observation phase')
+                    observation = observations[0]
+                    if observation['warmup']['records'] != warmup or observation['measurement']['records'] != records:
+                        raise RuntimeError('batch observation differs from verified input count')
+                    sample['batch_observation'] = observation
                 samples.append(sample)
                 paired.append(sample['result']['checksum'])
                 with (out / 'samples.jsonl').open('a') as output:
@@ -191,5 +207,7 @@ for scenario in manifest['scenarios']:
                        'median_observed_cpu_ns': statistics.median(r['observed_measurement_cpu_ns'] for r in rows),
                        'median_source_produce_fraction': statistics.median(r['result']['source_produce_nanos'] / r['result']['nanos'] for r in rows)}
     summary['scenarios'][scenario] = row
+    row['go']['median_processing_batches'] = statistics.median(by['go', i]['batch_observation']['measurement']['batches'] for i in range(trials))
+    row['go']['median_records_per_batch'] = statistics.median(records / by['go', i]['batch_observation']['measurement']['batches'] for i in range(trials))
 (out / 'summary.json').write_text(json.dumps(summary, indent=2) + '\n')
 print(json.dumps(summary, indent=2), flush=True)

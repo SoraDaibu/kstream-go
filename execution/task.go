@@ -161,10 +161,15 @@ func (t *Task) ProcessBatch(ctx context.Context, records []record.Bytes) (err er
 	if t.group != nil {
 		return ErrGroupRequired
 	}
-	defer t.finish(&err)
+	completed := false
+	defer t.finish(&completed)
 	tx, err := t.stage(ctx, records)
-	if err != nil || len(tx.NextOffsets) == 0 {
+	if err != nil {
 		return err
+	}
+	if len(tx.NextOffsets) == 0 {
+		completed = true
+		return nil
 	}
 	if err = t.backend.Commit(ctx, t.spec, t.generation, *tx); err != nil {
 		return err
@@ -173,6 +178,7 @@ func (t *Task) ProcessBatch(ctx context.Context, records []record.Bytes) (err er
 		return err
 	}
 	t.publish(tx)
+	completed = true
 	return nil
 }
 func (t *Task) validate(ctx context.Context, records []record.Bytes) error {
@@ -206,14 +212,14 @@ func (t *Task) clearPending() {
 	t.pendingIndex = nil
 	t.pendingStoreError = nil
 }
-func (t *Task) finish(err *error) {
+func (t *Task) finish(completed *bool) {
 	t.clearPending()
+	if !*completed {
+		t.poisoned = true
+	}
 	if p := recover(); p != nil {
 		t.poisoned = true
 		panic(p)
-	}
-	if *err != nil {
-		t.poisoned = true
 	}
 }
 

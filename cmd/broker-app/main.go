@@ -3,6 +3,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"flag"
 	"log"
@@ -30,6 +31,7 @@ func run() (err error) {
 	output := flag.String("output", "", "output topic")
 	changelog := flag.String("changelog", "", "changelog topic")
 	directory := flag.String("state", "", "state directory")
+	warmup := flag.Int64("warmup", 100000, "warmup record boundary for observation")
 	flag.Parse()
 	engine, err := pebble.Open(*directory, pebble.Config{Options: &pebbledb.Options{DisableWAL: true}})
 	if err != nil {
@@ -57,9 +59,14 @@ func run() (err error) {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	config := kafka.GroupConfig{Kafka: kafka.Config{Brokers: strings.Split(*brokers, ","), ChangelogTopic: *changelog, Options: []kgo.Opt{kgo.ProducerBatchCompression(kgo.NoCompression())}}, ApplicationID: *app, InstanceID: "benchmark-worker", Topics: []string{*input}, BatchSize: 4096, Options: []kgo.Opt{kgo.RebalanceTimeout(5 * time.Minute)}}
+	observation := batchObservation{Event: "batch_metrics", warmupLimit: *warmup}
+	config.OnBatch = observation.add
 	err = kafka.RunGroup(ctx, config, func(ctx context.Context, spec execution.Spec, backend execution.Backend) (*execution.Task, error) {
 		return plan.NewTask(ctx, spec, backend, execution.WithStoreFactory(engine.Task))
 	})
+	if encodeErr := json.NewEncoder(os.Stdout).Encode(observation); encodeErr != nil {
+		err = errors.Join(err, encodeErr)
+	}
 	if err == context.Canceled {
 		return nil
 	}

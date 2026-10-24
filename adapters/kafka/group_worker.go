@@ -27,6 +27,17 @@ type GroupConfig struct {
 	FetchBytes     int32
 	PollInterval   time.Duration
 	RestoreTimeout time.Duration
+	// OnBatch observes a successfully committed processing batch under the
+	// worker owner. It must return promptly and does not run in a new goroutine.
+	OnBatch func(GroupBatchMetrics)
+}
+
+// GroupBatchMetrics describes a committed input poll, not output records or
+// bootstrap/restore transactions. Duration includes processing, broker commit
+// and local apply, and excludes polling/restoration and the observer itself.
+type GroupBatchMetrics struct {
+	Records, Tasks  int
+	ProcessDuration time.Duration
 }
 
 // TaskFactory binds a topology and optional store factory at the composition root.
@@ -324,6 +335,10 @@ func RunGroup(ctx context.Context, config GroupConfig, factory TaskFactory) (err
 			}
 			continue
 		}
+		var processingStart time.Time
+		if config.OnBatch != nil {
+			processingStart = time.Now()
+		}
 		if err := group.Process(ctx, batches); err != nil {
 			if !errors.Is(err, errGroupRebalanced) {
 				return fmt.Errorf("Kafka group processing: %w", err)
@@ -331,6 +346,8 @@ func RunGroup(ctx context.Context, config GroupConfig, factory TaskFactory) (err
 			if err := reset(tracker.current.Load()); err != nil {
 				return err
 			}
+		} else if config.OnBatch != nil {
+			config.OnBatch(GroupBatchMetrics{Records: len(rows), Tasks: len(batches), ProcessDuration: time.Since(processingStart)})
 		}
 	}
 }

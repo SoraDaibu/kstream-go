@@ -35,6 +35,8 @@ after the backend commits also poisons every participant: the group cannot roll
 back that durable decision. All local applies must succeed before the runtime
 publishes task offsets and clocks. External callback effects remain outside the
 transaction contract.
+Unexpected owner termination through runtime.Goexit also invalidates staged
+participants; absence of a returned error is not evidence of a durable decision.
 
 An empty set does nothing. A nonempty input set containing only checkpointed
 records still invokes CommitTasks with an empty state transaction set. The
