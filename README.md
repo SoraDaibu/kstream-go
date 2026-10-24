@@ -119,7 +119,7 @@ experimental fixed-assignment adapter; see its [deployment boundaries](adapters/
 - `KGroupedStream`: `GroupByKey`, count, reduce, and type-changing aggregate with
   explicit nullable initialization/results and aggregate timestamps. See
   [grouped aggregation](docs/grouped-aggregation.md).
-- Event-time tumbling and hopping counts/reduce with half-open windows, grace, aggregate timestamps,
+- Event-time tumbling and hopping count/reduce/aggregate with half-open windows, grace, aggregate timestamps,
   operator-local stream-time, and retention of open windows. See
   [time windows](docs/time-windows.md).
 - Partition tasks with independent state, committed changelog recovery, offset

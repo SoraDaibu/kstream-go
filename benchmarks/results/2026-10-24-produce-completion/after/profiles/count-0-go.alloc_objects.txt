@@ -1,0 +1,36 @@
+File: app
+Build ID: b1203a1cbe4132899a9b5612103f89f471bee7ca
+Type: alloc_objects
+Time: 2026-10-24 10:34:42 UTC
+Showing nodes accounting for 15427777, 98.68% of 15633980 total
+Dropped 142 nodes (cum <= 78169)
+      flat  flat%   sum%        cum   cum%
+         0     0%     0%   13514391 86.44%  runtime.main
+         0     0%     0%   13508185 86.40%  main.main
+         0     0%     0%   13508185 86.40%  main.run
+         0     0%     0%   13508180 86.40%  github.com/SoraDaibu/kstream-go/adapters/kafka.RunGroup
+         0     0%     0%   13507238 86.40%  github.com/SoraDaibu/kstream-go/execution.(*Group).Process
+      2521 0.016% 0.016%    9421159 60.26%  github.com/SoraDaibu/kstream-go/execution.(*Task).stage
+         0     0% 0.016%    9418638 60.24%  github.com/SoraDaibu/kstream-go/stream.Stream[go.shape.string,go.shape.string].func1.1
+         0     0% 0.016%    8271742 52.91%  github.com/SoraDaibu/kstream-go/internal/graph.(*Port[go.shape.string,go.shape.string]).Compile.func1
+         0     0% 0.016%    8271742 52.91%  github.com/SoraDaibu/kstream-go/stream.Count[go.shape.string,go.shape.string].func1.1
+   6520929 41.71% 41.73%    6520929 41.71%  github.com/SoraDaibu/kstream-go/record.CloneBytes (inline)
+       879 0.0056% 41.73%    4085951 26.14%  github.com/SoraDaibu/kstream-go/adapters/kafka.(*groupBackend).CommitTasks
+         0     0% 41.73%    4004547 25.61%  github.com/SoraDaibu/kstream-go/adapters/kafka.produceAll
+         0     0% 41.73%    4004547 25.61%  github.com/twmb/franz-go/pkg/kgo.(*Client).Produce (inline)
+   3997847 25.57% 67.30%    4004547 25.61%  github.com/twmb/franz-go/pkg/kgo.(*Client).produce
+         0     0% 67.30%    4004547 25.61%  github.com/twmb/franz-go/pkg/kgo.(*GroupTransactSession).Produce
+         0     0% 67.30%    3441195 22.01%  github.com/SoraDaibu/kstream-go/internal/graph.(*Port[go.shape.string,go.shape.int64]).Compile.func1
+         0     0% 67.30%    3441195 22.01%  github.com/SoraDaibu/kstream-go/stream.KStream[go.shape.string,go.shape.int64].To.func1.1
+      2656 0.017% 67.32%    2361987 15.11%  github.com/SoraDaibu/kstream-go/execution.(*Task).StorePut
+         0     0% 67.32%    2140875 13.69%  github.com/SoraDaibu/kstream-go/execution.(*Task).StoreGet
+       504 0.0032% 67.32%    2032150 13.00%  github.com/SoraDaibu/kstream-go/execution.(*Task).Emit
+         0     0% 67.32%    2031646 13.00%  github.com/SoraDaibu/kstream-go/record.Bytes.Clone (inline)
+     16385   0.1% 67.43%    2025192 12.95%  github.com/twmb/franz-go/pkg/kgo.(*cursorOffsetNext).processRespPartition
+         0     0% 67.43%    2025192 12.95%  github.com/twmb/franz-go/pkg/kgo.(*source).fetch.func5
+         0     0% 67.43%    2025192 12.95%  github.com/twmb/franz-go/pkg/kgo.(*source).handleReqResp
+         0     0% 67.43%    2008807 12.85%  github.com/twmb/franz-go/pkg/kgo.(*cursorOffsetNext).processRecordBatch
+   2002430 12.81% 80.24%    2002430 12.81%  github.com/twmb/franz-go/pkg/kgo.recordToRecord
+   1146896  7.34% 87.57%    1146896  7.34%  github.com/SoraDaibu/kstream-go/serde.init.func2
+    917518  5.87% 93.44%     917518  5.87%  github.com/SoraDaibu/kstream-go/serde.init.func3
+    819212  5.24% 98.68%     819212  5.24%  github.com/SoraDaibu/kstream-go/serde.init.func1

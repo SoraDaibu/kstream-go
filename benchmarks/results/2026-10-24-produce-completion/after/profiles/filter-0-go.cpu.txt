@@ -1,0 +1,68 @@
+File: app
+Build ID: b1203a1cbe4132899a9b5612103f89f471bee7ca
+Type: cpu
+Time: 2026-10-24 10:34:33 UTC
+Duration: 3.49s, Total samples = 1.71s (48.93%)
+Showing nodes accounting for 0.68s, 39.77% of 1.71s total
+Showing top 60 nodes out of 252
+      flat  flat%   sum%        cum   cum%
+         0     0%     0%      0.63s 36.84%  github.com/SoraDaibu/kstream-go/adapters/kafka.RunGroup
+         0     0%     0%      0.63s 36.84%  main.main
+         0     0%     0%      0.63s 36.84%  main.run
+         0     0%     0%      0.63s 36.84%  runtime.main
+         0     0%     0%      0.62s 36.26%  runtime.systemstack
+         0     0%     0%      0.54s 31.58%  github.com/SoraDaibu/kstream-go/execution.(*Group).Process
+         0     0%     0%      0.41s 23.98%  github.com/twmb/franz-go/pkg/kgo.(*cursorOffsetNext).processRespPartition
+         0     0%     0%      0.41s 23.98%  github.com/twmb/franz-go/pkg/kgo.(*source).fetch.func5
+         0     0%     0%      0.41s 23.98%  github.com/twmb/franz-go/pkg/kgo.(*source).handleReqResp
+         0     0%     0%      0.39s 22.81%  github.com/twmb/franz-go/pkg/kgo.(*cursorOffsetNext).processRecordBatch
+         0     0%     0%      0.32s 18.71%  runtime.gcBgMarkWorker
+         0     0%     0%      0.32s 18.71%  runtime.gcBgMarkWorker.func2
+         0     0%     0%      0.32s 18.71%  runtime.gcDrain
+         0     0%     0%      0.28s 16.37%  github.com/SoraDaibu/kstream-go/adapters/kafka.(*groupBackend).CommitTasks
+         0     0%     0%      0.28s 16.37%  runtime.mallocgc
+     0.05s  2.92%  2.92%      0.28s 16.37%  runtime.scanSpan
+         0     0%  2.92%      0.24s 14.04%  github.com/SoraDaibu/kstream-go/execution.(*Task).stage
+         0     0%  2.92%      0.23s 13.45%  github.com/SoraDaibu/kstream-go/adapters/kafka.produceAll
+         0     0%  2.92%      0.23s 13.45%  github.com/twmb/franz-go/pkg/kgo.(*Client).Produce (inline)
+     0.02s  1.17%  4.09%      0.23s 13.45%  github.com/twmb/franz-go/pkg/kgo.(*Client).produce
+         0     0%  4.09%      0.23s 13.45%  github.com/twmb/franz-go/pkg/kgo.(*GroupTransactSession).Produce
+     0.19s 11.11% 15.20%      0.22s 12.87%  runtime.tryDeferToSpanScan
+         0     0% 15.20%      0.20s 11.70%  github.com/twmb/franz-go/pkg/kgo.recordToRecord
+         0     0% 15.20%      0.18s 10.53%  github.com/SoraDaibu/kstream-go/stream.Stream[go.shape.string,go.shape.string].func1.1
+         0     0% 15.20%      0.17s  9.94%  runtime.gcDrainMarkWorkerIdle (inline)
+     0.03s  1.75% 16.96%      0.16s  9.36%  github.com/SoraDaibu/kstream-go/internal/graph.(*Port[go.shape.string,go.shape.string]).Compile.func1
+     0.01s  0.58% 17.54%      0.16s  9.36%  github.com/twmb/franz-go/pkg/kgo.(*Client).doPartitionRecord
+         0     0% 17.54%      0.16s  9.36%  github.com/twmb/franz-go/pkg/kgo.(*Client).partitionRecord
+         0     0% 17.54%      0.16s  9.36%  github.com/twmb/franz-go/pkg/kgo.readRawRecords
+         0     0% 17.54%      0.15s  8.77%  runtime.gcDrainMarkWorkerFractional (inline)
+         0     0% 17.54%      0.15s  8.77%  runtime.newobject
+     0.02s  1.17% 18.71%      0.15s  8.77%  runtime.scanObject
+     0.01s  0.58% 19.30%      0.14s  8.19%  github.com/SoraDaibu/kstream-go/stream.KStream[go.shape.string,go.shape.string].Filter.func1.1
+         0     0% 19.30%      0.13s  7.60%  runtime.wbBufFlush
+         0     0% 19.30%      0.13s  7.60%  runtime.wbBufFlush.func1
+     0.02s  1.17% 20.47%      0.13s  7.60%  runtime.wbBufFlush1
+         0     0% 20.47%      0.12s  7.02%  gcWriteBarrier
+     0.01s  0.58% 21.05%      0.12s  7.02%  github.com/SoraDaibu/kstream-go/stream.KStream[go.shape.string,go.shape.string].To.func1.1
+     0.05s  2.92% 23.98%      0.12s  7.02%  github.com/twmb/franz-go/pkg/kgo.(*recBuf).bufferRecord
+         0     0% 23.98%      0.12s  7.02%  runtime.gcAssistAlloc
+         0     0% 23.98%      0.11s  6.43%  github.com/twmb/franz-go/pkg/kmsg.(*Record).ReadFrom (inline)
+         0     0% 23.98%      0.11s  6.43%  github.com/twmb/franz-go/pkg/kmsg.(*Record).readFrom
+     0.11s  6.43% 30.41%      0.11s  6.43%  internal/runtime/syscall/linux.Syscall6
+         0     0% 30.41%      0.11s  6.43%  runtime.gcAssistAlloc.func2
+         0     0% 30.41%      0.11s  6.43%  runtime.gcAssistAlloc1
+         0     0% 30.41%      0.11s  6.43%  runtime.gcDrainN
+     0.02s  1.17% 31.58%      0.09s  5.26%  github.com/SoraDaibu/kstream-go/adapters/kafka.prepareGroupBatches
+         0     0% 31.58%      0.09s  5.26%  github.com/twmb/franz-go/pkg/kgo.(*broker).handleReq
+         0     0% 31.58%      0.09s  5.26%  github.com/twmb/franz-go/pkg/kgo.(*broker).handleReqs
+         0     0% 31.58%      0.09s  5.26%  github.com/twmb/franz-go/pkg/kgo.(*brokerCxn).writeRequest
+         0     0% 31.58%      0.09s  5.26%  internal/poll.ignoringEINTRIO
+         0     0% 31.58%      0.09s  5.26%  internal/runtime/gc/scan.ScanSpanPacked (inline)
+         0     0% 31.58%      0.09s  5.26%  internal/runtime/gc/scan.ScanSpanPackedAVX512
+     0.09s  5.26% 36.84%      0.09s  5.26%  internal/runtime/gc/scan.scanSpanPackedAVX512
+         0     0% 36.84%      0.09s  5.26%  runtime.deductAssistCredit
+     0.04s  2.34% 39.18%      0.09s  5.26%  runtime.findObject
+     0.01s  0.58% 39.77%      0.09s  5.26%  runtime.mallocgcSmallScanNoHeader
+         0     0% 39.77%      0.09s  5.26%  syscall.RawSyscall6
+         0     0% 39.77%      0.09s  5.26%  syscall.Syscall
+         0     0% 39.77%      0.08s  4.68%  github.com/twmb/franz-go/pkg/kgo.(*produceRequest).AppendTo

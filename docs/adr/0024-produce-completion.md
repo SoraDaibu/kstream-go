@@ -1,6 +1,7 @@
 # ADR 0024: Transaction produce completion without result retention
 
-Status: accepted for evaluation; benchmark and broker validation required.
+Status: accepted; local benchmark and all broker/reference/fault gates passed at
+`636abbe45029b624c48661ea4bc6858ef05e8855`.
 
 Kafka transaction adapters consume only the first production error; they do not
 use ProduceSync's per-record result list. The retained broker profile attributes

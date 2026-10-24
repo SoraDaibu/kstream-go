@@ -1,0 +1,16 @@
+goos: linux
+goarch: amd64
+pkg: github.com/SoraDaibu/kstream-go/stream
+cpu: AMD EPYC 9V74 80-Core Processor                
+BenchmarkWindowReduce/keys=64         	  220758	      1611 ns/op	     925 B/op	      22 allocs/op
+BenchmarkWindowReduce/keys=64         	  220840	      1603 ns/op	     925 B/op	      22 allocs/op
+BenchmarkWindowReduce/keys=64         	  224661	      1632 ns/op	     925 B/op	      22 allocs/op
+BenchmarkWindowReduce/keys=64         	  214311	      1600 ns/op	     925 B/op	      22 allocs/op
+BenchmarkWindowReduce/keys=64         	  221532	      1646 ns/op	     925 B/op	      22 allocs/op
+BenchmarkWindowReduce/keys=4096       	  199882	      1769 ns/op	     959 B/op	      22 allocs/op
+BenchmarkWindowReduce/keys=4096       	  204084	      1805 ns/op	     959 B/op	      22 allocs/op
+BenchmarkWindowReduce/keys=4096       	  199596	      1975 ns/op	     959 B/op	      22 allocs/op
+BenchmarkWindowReduce/keys=4096       	  195705	      1864 ns/op	     959 B/op	      22 allocs/op
+BenchmarkWindowReduce/keys=4096       	  181890	      1863 ns/op	     959 B/op	      22 allocs/op
+PASS
+ok  	github.com/SoraDaibu/kstream-go/stream	3.957s

@@ -206,6 +206,31 @@ func run() error {
 				}
 				return a + ":" + c, false
 			}).To("out")
+		case "window-aggregate", "window-aggregate-null", "hopping-aggregate", "hopping-aggregate-null", "hopping-uneven-aggregate", "hopping-uneven-aggregate-null":
+			initializer := func() (int64, bool) { return 10, strings.HasSuffix(scenario, "-null") }
+			aggregator := func(key, input string, inputNull bool, old int64, oldNull bool) (int64, bool) {
+				if oldNull {
+					old = 1000
+				}
+				size := len(input)
+				if inputNull {
+					size = 5
+				}
+				return old + int64(len(key)+size), !inputNull && input == "!delete"
+			}
+			var updates stream.KStream[window.Key[string], int64]
+			if strings.HasPrefix(scenario, "window-") {
+				updates = stream.WindowedAggregate(s, "aggregated", window.Tumbling{Size: 10, Grace: 5}, serde.Int64, initializer, aggregator)
+			} else {
+				advance := int64(5)
+				if strings.HasPrefix(scenario, "hopping-uneven-") {
+					advance = 6
+				}
+				updates = stream.HoppingWindowedAggregate(s, "aggregated", window.Hopping{Size: 10, Advance: advance, Grace: 5}, serde.Int64, initializer, aggregator)
+			}
+			stream.Map(updates, "format-window", serde.String, serde.String, func(r record.Record[window.Key[string], int64]) record.Record[string, string] {
+				return record.Record[string, string]{Key: fmt.Sprintf("%s@%d:%d", r.Key.Key, r.Key.Start, r.Key.End), Value: strconv.FormatInt(r.Value, 10), NullValue: r.NullValue, Timestamp: r.Timestamp}
+			}).To("out")
 		case "window-reduce", "hopping-reduce", "hopping-uneven-reduce":
 			reducer := func(old, v string, valueNull bool) (string, bool) {
 				if valueNull {

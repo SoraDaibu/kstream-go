@@ -1,4 +1,4 @@
-# Time-window counts and reduce
+# Time-window counts, reduce and aggregate
 
 WindowedCount accepts window.Tumbling{Size, Grace}. HoppingWindowedCount accepts
 window.Hopping{Size, Advance, Grace}. All durations are integral milliseconds;
@@ -76,3 +76,34 @@ unrelated custom processors. Existing count state encodings remain unchanged.
 Windowed reduce requires a nonempty store, a reducer, valid codecs and already
 partitioned keys. Its independent Java scenarios cover tumbling and divisible/
 uneven hopping windows; reference validation is required before qualification.
+
+## Typed aggregate
+
+WindowedAggregate and HoppingWindowedAggregate accept a result codec, nullable
+initializer and aggregator. Unlike reduce, the aggregator runs on the first
+accepted record after initialization. Input, previous state and result nulls are
+independent flags; no Go zero value implicitly denotes a Kafka null.
+
+```go
+updates := stream.WindowedAggregate(events, "totals",
+    window.Tumbling{Size: 10_000, Grace: 2_000}, serde.Int64,
+    func() (int64, bool) { return 0, false },
+    func(key, input string, inputNull bool, old int64, oldNull bool) (int64, bool) {
+        if oldNull { old = 0 }
+        if inputNull { return old, false }
+        return old + int64(len(input)), input == "!delete"
+    })
+updates.To("window-totals")
+```
+
+Null keys skip; null values reach the aggregator and advance the operator clock.
+A null initializer passes oldNull=true to the first callback. Null results emit
+tombstones and remove state, so the next record initializes again and starts a
+new aggregate timestamp lifetime. Zero and empty aggregates remain ordinary
+state when resultNull=false. Hopping windows apply these rules independently
+for every eligible overlap, in ascending start order.
+
+Reduce and aggregate share a typed fold, explicit state codec/envelope and the
+same transaction/restore/expiry ownership. Count keeps its specialized integer
+loop. The API currently exposes window updates as streams; it does not provide
+window-store queries, suppression or a complete WindowedKTable API.

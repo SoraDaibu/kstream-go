@@ -110,6 +110,16 @@ public final class Oracle {
                         table.filter((k,v) -> !v.isEmpty(), Materialized.as("filtered"))
                                 .mapValues(v -> v.equals("!null-output") ? null : v + "!", Materialized.as("mapped")),
                         (a,c) -> a + ":" + (c == null ? "missing" : c)).to("out", produced);
+                case "window-aggregate", "window-aggregate-null", "hopping-aggregate", "hopping-aggregate-null", "hopping-uneven-aggregate", "hopping-uneven-aggregate-null" -> source.groupByKey()
+                        .windowedBy(TimeWindows.ofSizeAndGrace(Duration.ofMillis(10), Duration.ofMillis(5))
+                                .advanceBy(Duration.ofMillis(scenario.startsWith("window-") ? 10 : scenario.startsWith("hopping-uneven-") ? 6 : 5)))
+                        .aggregate(() -> scenario.endsWith("-null") ? null : 10L,
+                                (k,v,a) -> "!delete".equals(v) ? null : (a == null ? 1000L : a)
+                                        + k.getBytes(StandardCharsets.UTF_8).length
+                                        + (v == null ? 5 : v.getBytes(StandardCharsets.UTF_8).length),
+                                Materialized.with(Serdes.String(), Serdes.Long()))
+                        .toStream().map((k,v) -> KeyValue.pair(k.key() + "@" + k.window().start() + ":" + k.window().end(), v == null ? null : v.toString()))
+                        .to("out", produced);
                 case "window-reduce", "hopping-reduce", "hopping-uneven-reduce" -> source.groupByKey()
                         .windowedBy(TimeWindows.ofSizeAndGrace(Duration.ofMillis(10), Duration.ofMillis(5))
                                 .advanceBy(Duration.ofMillis(scenario.equals("window-reduce") ? 10 : scenario.equals("hopping-reduce") ? 5 : 6)))

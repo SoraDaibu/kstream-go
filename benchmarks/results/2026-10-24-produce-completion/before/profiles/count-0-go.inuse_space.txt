@@ -1,0 +1,27 @@
+File: app
+Build ID: b1b86f0b7890f9ccc109016a7ce74e0522be2866
+Type: inuse_space
+Time: 2026-10-24 10:31:35 UTC
+Showing nodes accounting for 512.08kB, 100% of 512.08kB total
+      flat  flat%   sum%        cum   cum%
+         0     0%     0%   512.08kB   100%  google.golang.org/protobuf/internal/impl.(*MessageInfo).init (inline)
+         0     0%     0%   512.08kB   100%  google.golang.org/protobuf/internal/impl.(*MessageInfo).initOnce
+         0     0%     0%   512.08kB   100%  google.golang.org/protobuf/internal/impl.(*MessageInfo).makeKnownFieldsFunc
+         0     0%     0%   512.08kB   100%  google.golang.org/protobuf/internal/impl.(*MessageInfo).makeReflectFuncs
+         0     0%     0%   512.08kB   100%  google.golang.org/protobuf/internal/impl.(*messageState).ProtoMethods
+         0     0%     0%   512.08kB   100%  google.golang.org/protobuf/internal/impl.fieldInfoForList
+         0     0%     0%   512.08kB   100%  google.golang.org/protobuf/proto.Unmarshal
+         0     0%     0%   512.08kB   100%  google.golang.org/protobuf/proto.UnmarshalOptions.unmarshal
+         0     0%     0%   512.08kB   100%  google.golang.org/protobuf/proto.protoMethods (inline)
+         0     0%     0%   512.08kB   100%  google.golang.org/protobuf/reflect/protodesc.init.0
+         0     0%     0%   512.08kB   100%  internal/sync.(*HashTrieMap[go.shape.interface {},go.shape.interface {}]).Load
+         0     0%     0%   512.08kB   100%  internal/sync.(*HashTrieMap[go.shape.interface {},go.shape.interface {}]).init (inline)
+         0     0%     0%   512.08kB   100%  internal/sync.(*HashTrieMap[go.shape.interface {},go.shape.interface {}]).initSlow
+  512.08kB   100%   100%   512.08kB   100%  internal/sync.newIndirectNode[go.shape.interface {},go.shape.interface {}] (inline)
+         0     0%   100%   512.08kB   100%  reflect.(*rtype).ptrTo
+         0     0%   100%   512.08kB   100%  reflect.PointerTo (inline)
+         0     0%   100%   512.08kB   100%  reflect.PtrTo (inline)
+         0     0%   100%   512.08kB   100%  runtime.doInit (inline)
+         0     0%   100%   512.08kB   100%  runtime.doInit1
+         0     0%   100%   512.08kB   100%  runtime.main
+         0     0%   100%   512.08kB   100%  sync.(*Map).Load (inline)

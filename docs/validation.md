@@ -296,3 +296,20 @@ null-valued aggregate row is absent, aborted fanout, and bounded derived indexes
 retain the rejected shared-lifecycle timing regression and final clock-cache
 revision. Count's state format is unchanged; its benchmark removes one allocation
 per input after caching the operator-owned durable clock.
+
+## Produce completion cycle
+
+Source `636abbe45029b624c48661ea4bc6858ef05e8855` passed
+[ordinary and all 720 reference comparisons](https://github.com/SoraDaibu/kstream-go/actions/runs/40086116897),
+[persistent state](https://github.com/SoraDaibu/kstream-go/actions/runs/40086116896),
+all four [broker fault suites](https://github.com/SoraDaibu/kstream-go/actions/runs/40086116854)
+and verified comparison/profile workloads. Unit tests cover immediate and
+concurrent out-of-order completions, first errors, cancellation, sync-only
+fallback and transaction decisions only after every callback completes.
+
+[Retained before/after broker archives](../benchmarks/results/2026-10-24-produce-completion/README.md)
+confirm ProduceSync's roughly 50MB flat result-buffer allocation is absent.
+Whole-process sampled allocation changes little. The CPU model changed, paired
+throughput ratios fell, filter remains below target and Go RSS remains higher.
+[Completion-model measurements](benchmarks/2026-10-24-produce-completion/README.md)
+retain tiny-batch timing/byte regressions and their limited scope.
