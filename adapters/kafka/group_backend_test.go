@@ -5,10 +5,12 @@ import (
 	"errors"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/SoraDaibu/kstream-go/execution"
 	"github.com/SoraDaibu/kstream-go/record"
 	"github.com/SoraDaibu/kstream-go/state"
+	"github.com/twmb/franz-go/pkg/kerr"
 	"github.com/twmb/franz-go/pkg/kgo"
 )
 
@@ -185,5 +187,31 @@ func TestWorkerEpochFenceNeverCommitsGroupOffsets(t *testing.T) {
 	key, err := decodeKey(session.rows[0].Key)
 	if err != nil || key.kind != barrierKind || session.rows[0].Topic != "state" {
 		t.Fatal("bootstrap wrote user state/output", err)
+	}
+}
+
+func TestWorkerInitializationRetriesOnlyBeforeProcessing(t *testing.T) {
+	calls := 0
+	if err := initializeWorkerProducer(context.Background(), func(context.Context) (int64, int16, error) {
+		calls++
+		if calls == 1 {
+			return -1, -1, kerr.ConcurrentTransactions
+		}
+		return 1, 2, nil
+	}); err != nil || calls != 2 {
+		t.Fatal("transient producer initialization was not retried", err, calls)
+	}
+	failure := errors.New("fatal producer configuration")
+	calls = 0
+	if err := initializeWorkerProducer(context.Background(), func(context.Context) (int64, int16, error) { calls++; return -1, -1, failure }); !errors.Is(err, failure) || calls != 1 {
+		t.Fatal("fatal initialization was retried", err, calls)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Millisecond)
+	defer cancel()
+	if err := initializeWorkerProducer(ctx, func(context.Context) (int64, int16, error) { return -1, -1, kerr.ConcurrentTransactions }); !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatal("initialization retry ignored deadline", err)
+	}
+	if err := initializeWorkerProducer(context.Background(), func(context.Context) (int64, int16, error) { return -1, -1, nil }); err == nil {
+		t.Fatal("uninitialized transactional producer accepted")
 	}
 }

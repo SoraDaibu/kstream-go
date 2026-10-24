@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"sort"
 	"sync/atomic"
 
 	"github.com/SoraDaibu/kstream-go/record"
@@ -126,6 +127,17 @@ func (t *Task) Register(topic string, h func(record.Bytes) error) error {
 	}
 	t.handlers[topic] = h
 	return nil
+}
+
+// InputTopics returns an owned, sorted list of registered sources. Call during
+// setup under exclusive task ownership; registration is not concurrent-safe.
+func (t *Task) InputTopics() []string {
+	topics := make([]string, 0, len(t.handlers))
+	for topic := range t.handlers {
+		topics = append(topics, topic)
+	}
+	sort.Strings(topics)
+	return topics
 }
 
 // Process commits one input record. Use ProcessBatch to amortize transaction cost.

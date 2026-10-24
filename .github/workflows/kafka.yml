@@ -6,8 +6,21 @@ permissions:
   contents: read
 jobs:
   broker:
+    name: broker (${{ matrix.suite }})
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - suite: fixed-assignment
+            tests: '^TestBroker(Recovery|Checkpoint|Fences|Explicit|Bounded)'
+          - suite: group-restart
+            tests: '^TestBrokerGroupTransactionsRestartAndCommittedOffsets$'
+          - suite: group-rebalance
+            tests: '^TestBrokerGroupRebalanceDuringStaging$'
+          - suite: group-crash
+            tests: '^TestBrokerGroupRecoversKilledOpenTransaction$'
     services:
       kafka:
         image: apache/kafka:3.9.1
@@ -53,4 +66,4 @@ jobs:
         env:
           KSTREAM_KAFKA_BROKERS: localhost:9092
           KSTREAM_KAFKA_STATE_DIR: ${{ runner.temp }}/kstream-persistent-caches
-        run: go test -race -v -count=1 ./adapters/kafka
+        run: go test -race -v -count=1 -run '${{ matrix.tests }}' ./adapters/kafka

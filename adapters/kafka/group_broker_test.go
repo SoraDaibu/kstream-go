@@ -82,8 +82,7 @@ func startTestGroup(t *testing.T, ctx context.Context, config GroupConfig, hook 
 }
 func groupTestConfig(t *testing.T, application, instance string) GroupConfig {
 	config := brokerConfig(t)
-	config.Options = append(config.Options, kgo.SessionTimeout(6*time.Second), kgo.HeartbeatInterval(200*time.Millisecond), kgo.RebalanceTimeout(10*time.Second))
-	return GroupConfig{Kafka: config, ApplicationID: application, InstanceID: instance, Topics: []string{testInput}, BatchSize: 128, PollInterval: 50 * time.Millisecond}
+	return GroupConfig{Kafka: config, ApplicationID: application, InstanceID: instance, Topics: []string{testInput}, Options: []kgo.Opt{kgo.SessionTimeout(6 * time.Second), kgo.HeartbeatInterval(200 * time.Millisecond), kgo.RebalanceTimeout(10 * time.Second)}, BatchSize: 128, PollInterval: 50 * time.Millisecond}
 }
 func writeGroupInput(t *testing.T, ctx context.Context, producer *kgo.Client, prefix string, perPartition int) map[int32]int64 {
 	t.Helper()

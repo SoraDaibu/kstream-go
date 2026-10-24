@@ -10,6 +10,7 @@ import (
 
 	"github.com/SoraDaibu/kstream-go/execution"
 	"github.com/SoraDaibu/kstream-go/record"
+	"github.com/twmb/franz-go/pkg/kerr"
 	"github.com/twmb/franz-go/pkg/kgo"
 )
 
@@ -19,10 +20,13 @@ type GroupConfig struct {
 	Kafka                     Config
 	ApplicationID, InstanceID string
 	Topics                    []string
-	BatchSize                 int
-	FetchBytes                int32
-	PollInterval              time.Duration
-	RestoreTimeout            time.Duration
+	// Options applies only to the worker session, e.g. consumer-group timeouts.
+	// Kafka.Options supplies common authentication/TLS for all adapter clients.
+	Options        []kgo.Opt
+	BatchSize      int
+	FetchBytes     int32
+	PollInterval   time.Duration
+	RestoreTimeout time.Duration
 }
 
 // TaskFactory binds a topology and optional store factory at the composition root.
@@ -42,6 +46,7 @@ func normalizeGroup(config GroupConfig) (GroupConfig, error) {
 	config.Kafka = validated.config
 	seen := make(map[string]bool, len(config.Topics))
 	config.Topics = append([]string(nil), config.Topics...)
+	config.Options = append([]kgo.Opt(nil), config.Options...)
 	for _, topic := range config.Topics {
 		if topic == "" || topic == config.Kafka.ChangelogTopic || seen[topic] {
 			return config, errors.New("source topics must be unique, nonempty and separate from changelog")
@@ -76,6 +81,42 @@ func closeGroupTasks(tasks map[int32]*execution.Task) error {
 		delete(tasks, partition)
 	}
 	return err
+}
+
+// Retry only producer initialization, before any input or processing transaction.
+// Kafka can return CONCURRENT_TRANSACTIONS while aborting the old epoch. Calling
+// ProducerID directly keeps that startup condition out of the produce path,
+// where it may be classified as an unrecoverable producer error by the client.
+func initializeWorkerProducer(ctx context.Context, load func(context.Context) (int64, int16, error)) error {
+	backoff := 20 * time.Millisecond
+	for {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		id, epoch, err := load(ctx)
+		if err == nil {
+			if id < 0 || epoch < 0 {
+				return errors.New("broker/client did not initialize a transactional producer")
+			}
+			return nil
+		}
+		if !errors.Is(err, kerr.ConcurrentTransactions) && !kerr.IsRetriable(err) {
+			return fenceError(err)
+		}
+		timer := time.NewTimer(backoff)
+		select {
+		case <-ctx.Done():
+			timer.Stop()
+			return ctx.Err()
+		case <-timer.C:
+		}
+		if backoff < 500*time.Millisecond {
+			backoff *= 2
+			if backoff > 500*time.Millisecond {
+				backoff = 500 * time.Millisecond
+			}
+		}
+	}
 }
 
 // Initialize the stable worker producer epoch before any poll or task restore.
@@ -113,6 +154,7 @@ func RunGroup(ctx context.Context, config GroupConfig, factory TaskFactory) (err
 		output = kgo.UniformBytesPartitioner(64<<10, true, true, nil)
 	}
 	opts := append([]kgo.Opt(nil), config.Kafka.Options...)
+	opts = append(opts, config.Options...)
 	opts = append(opts, kgo.SeedBrokers(config.Kafka.Brokers...), kgo.ConsumerGroup(config.ApplicationID), kgo.ConsumeTopics(config.Topics...), kgo.ConsumeResetOffset(kgo.NewOffset().AtStart()),
 		kgo.TransactionalID(workerTransactionID(config.ApplicationID, config.InstanceID)), kgo.RequiredAcks(kgo.AllISRAcks()), kgo.DisableAutoCommit(), kgo.RequireStableFetchOffsets(), kgo.FetchIsolationLevel(kgo.ReadCommitted()),
 		kgo.Balancers(kgo.RangeBalancer()), kgo.OnPartitionsAssigned(tracker.assigned), kgo.OnPartitionsRevoked(tracker.revoked), kgo.OnPartitionsLost(tracker.revoked),
@@ -125,13 +167,21 @@ func RunGroup(ctx context.Context, config GroupConfig, factory TaskFactory) (err
 	if blocked, _ := session.Client().OptValue(kgo.BlockRebalanceOnPoll).(bool); blocked {
 		return errors.New("RunGroup requires automatic rebalance callbacks; BlockRebalanceOnPoll is unsupported")
 	}
-	count, err := sourcePartitionCount(ctx, session.Client(), config.Topics, config.Kafka.ChangelogTopic)
+	initializeCtx, stopInitialize := context.WithTimeout(ctx, config.RestoreTimeout)
+	count, err := sourcePartitionCount(initializeCtx, session.Client(), config.Topics, config.Kafka.ChangelogTopic)
 	if err != nil {
+		stopInitialize()
 		return err
 	}
-	if err := fenceWorker(ctx, session, config); err != nil {
+	if err := initializeWorkerProducer(initializeCtx, session.Client().ProducerID); err != nil {
+		stopInitialize()
 		return err
 	}
+	if err := fenceWorker(initializeCtx, session, config); err != nil {
+		stopInitialize()
+		return err
+	}
+	stopInitialize()
 	backend := &groupBackend{config: config.Kafka, application: config.ApplicationID, session: session, tracker: tracker}
 	group, err := execution.NewGroup(backend)
 	if err != nil {
@@ -231,6 +281,21 @@ func RunGroup(ctx context.Context, config GroupConfig, factory TaskFactory) (err
 				}
 				if task == nil {
 					return errors.New("task factory returned nil")
+				}
+				actual := task.InputTopics()
+				valid := len(actual) == len(config.Topics)
+				for _, topic := range actual {
+					found := false
+					for _, configured := range config.Topics {
+						if topic == configured {
+							found = true
+							break
+						}
+					}
+					valid = valid && found
+				}
+				if !valid {
+					return errors.Join(errors.New("task source topics differ from group subscription"), task.Close())
 				}
 				tasks[row.Partition] = task
 			}

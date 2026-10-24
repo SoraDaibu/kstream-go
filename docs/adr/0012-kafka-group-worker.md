@@ -14,6 +14,12 @@ Before any input poll or task restoration, initialize that producer epoch with
 an aborted internal control-record transaction. This fences an abandoned worker
 transaction without committing any group offsets, so read-committed task restore
 cannot wait behind the previous incarnation until its transaction timeout.
+Call the client's public ProducerID API before producing that control record and
+retry explicitly retryable initialization errors within the initialization budget.
+The forced-kill test exposed CONCURRENT_TRANSACTIONS while the broker aborts the
+old epoch. Sending a record before initialization finished let the client
+classify that transient startup condition as a fatal producer error. Only startup
+initialization is retried; transaction-end errors remain fatal and ambiguous.
 Every group participant must run the same topology and subscribe to the same
 source topics. Initially require equal source partition counts and the eager
 range assignor, which co-locates corresponding partitions when every member
