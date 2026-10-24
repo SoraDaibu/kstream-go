@@ -45,3 +45,10 @@ and round order, while each leaf retains the complete verified sample. No JVM,
 Maven or profiling is required for this Go-only mode. For an explicit standalone
 configuration, set KSTREAM_BROKER_FETCH_BYTES and run compare-brokers.sh with
 --go-only; ordinary comparisons still require Java and at least five trials.
+
+The [first verified experiment](../../benchmarks/results/2026-10-24-fetch-budget/README.md)
+found about 70% lower paired Go RSS at 1 MiB, essentially unchanged filter
+throughput and exploratory count improvement with one regressing round. The
+paired comparison workflow now explicitly tests 1 MiB on these small-value
+fixtures; library/app/script defaults remain 8 MiB. A broader default decision
+still requires the missing workload and recovery evidence above.

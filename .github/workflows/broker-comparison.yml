@@ -57,6 +57,7 @@ jobs:
           KSTREAM_BROKER_WARMUP: '1000000'
           KSTREAM_BROKER_TRIALS: '5'
           KSTREAM_BROKER_OUTPUT_CAPACITY: '4096'
+          KSTREAM_BROKER_FETCH_BYTES: '1048576'
         run: ./scripts/compare-brokers.sh results/broker-comparison
       - name: Profile verified Go broker workloads separately
         env:
@@ -65,6 +66,7 @@ jobs:
           KSTREAM_BROKER_WARMUP: '1000000'
           KSTREAM_BROKER_TRIALS: '1'
           KSTREAM_BROKER_OUTPUT_CAPACITY: '4096'
+          KSTREAM_BROKER_FETCH_BYTES: '1048576'
         run: ./scripts/compare-brokers.sh results/broker-profiles --profile-go
       - uses: actions/upload-artifact@v4
         if: always()
