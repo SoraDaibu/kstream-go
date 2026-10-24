@@ -206,6 +206,26 @@ func run() error {
 				}
 				return a + ":" + c, false
 			}).To("out")
+		case "window-reduce", "hopping-reduce", "hopping-uneven-reduce":
+			reducer := func(old, v string, valueNull bool) (string, bool) {
+				if valueNull {
+					v = "<null>"
+				}
+				return old + ":" + v, v == "!delete"
+			}
+			var updates stream.KStream[window.Key[string], string]
+			if scenario == "window-reduce" {
+				updates = stream.WindowedReduce(s, "reduced", window.Tumbling{Size: 10, Grace: 5}, reducer)
+			} else {
+				advance := int64(5)
+				if scenario == "hopping-uneven-reduce" {
+					advance = 6
+				}
+				updates = stream.HoppingWindowedReduce(s, "reduced", window.Hopping{Size: 10, Advance: advance, Grace: 5}, reducer)
+			}
+			stream.Map(updates, "format-window", serde.String, serde.String, func(r record.Record[window.Key[string], string]) record.Record[string, string] {
+				return record.Record[string, string]{Key: fmt.Sprintf("%s@%d:%d", r.Key.Key, r.Key.Start, r.Key.End), Value: r.Value, NullValue: r.NullValue, Timestamp: r.Timestamp}
+			}).To("out")
 		case "window", "hopping", "hopping-uneven":
 			var counts stream.KStream[window.Key[string], int64]
 			if scenario == "window" {

@@ -110,7 +110,7 @@ experimental fixed-assignment adapter; see its [deployment boundaries](adapters/
 ## Included behavior
 
 - `KStream`: filter/filterNot, map/mapValues, flatMap/flatMapValues, selectKey,
-  merge, observers, typed custom processors with source metadata and sinks.
+  merge, ordered branching, observers, typed custom processors with source metadata and sinks.
   See the [Processor API](docs/processor-api.md).
 - `KTable`: source upserts, tombstone deletes, filter/filterNot, nullable value
   mapping, grouped counts and stream-triggered
@@ -119,7 +119,7 @@ experimental fixed-assignment adapter; see its [deployment boundaries](adapters/
 - `KGroupedStream`: `GroupByKey`, count, reduce, and type-changing aggregate with
   explicit nullable initialization/results and aggregate timestamps. See
   [grouped aggregation](docs/grouped-aggregation.md).
-- Event-time tumbling and hopping counts with half-open windows, grace, aggregate timestamps,
+- Event-time tumbling and hopping counts/reduce with half-open windows, grace, aggregate timestamps,
   operator-local stream-time, and retention of open windows. See
   [time windows](docs/time-windows.md).
 - Partition tasks with independent state, committed changelog recovery, offset

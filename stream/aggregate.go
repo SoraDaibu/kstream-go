@@ -71,6 +71,21 @@ func decodeFold[A any](stored []byte, codec serde.Codec[A]) (value A, timestamp 
 	return value, timestamp, err
 }
 
+func encodeFold[A any](value A, timestamp int64, codec serde.Codec[A]) ([]byte, error) {
+	encoded, err := codec.Encode(value)
+	if err != nil {
+		return nil, err
+	}
+	if encoded == nil {
+		return nil, errors.New("non-null aggregate encoded as nil")
+	}
+	envelope := make([]byte, 9+len(encoded))
+	envelope[0] = 1
+	binary.BigEndian.PutUint64(envelope[1:9], uint64(timestamp))
+	copy(envelope[9:], encoded)
+	return envelope, nil
+}
+
 // fold is shared typed machinery; present is an internal existence flag, not null.
 func fold[K, V, A any](g KGroupedStream[K, V], store, kind string, value serde.Codec[A],
 	apply func(K, V, A, bool) (A, bool),
@@ -116,17 +131,10 @@ func fold[K, V, A any](g KGroupedStream[K, V], store, kind string, value serde.C
 			result, null := apply(r.Key, r.Value, old, present)
 			var encoded []byte
 			if !null {
-				encoded, err = value.Encode(result)
+				encoded, err = encodeFold(result, timestamp, value)
 				if err != nil {
 					return err
 				}
-				if encoded == nil {
-					return errors.New("non-null aggregate encoded as nil")
-				}
-				envelope := make([]byte, 9, 9+len(encoded))
-				envelope[0] = 1
-				binary.BigEndian.PutUint64(envelope[1:], uint64(timestamp))
-				encoded = append(envelope, encoded...)
 			}
 			task.StorePut(store, string(key), encoded)
 			return next(record.Record[K, A]{Key: r.Key, Value: result, NullValue: null, Timestamp: timestamp})

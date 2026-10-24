@@ -1,0 +1,8 @@
+[
+  ["in", 1000, null, "ignored"],
+  ["in", 925, "after-null-key", "accepted"],
+  ["in", 1000, "null-clock", null],
+  ["in", 926, "closed-by-null-value", "dropped"],
+  ["in", 1001, "null-clock", "new"],
+  ["in", 1002, "null-clock", null]
+]

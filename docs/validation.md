@@ -260,3 +260,15 @@ task/supplier ownership, recovery/replay, and state/output/offset rollback.
 [Dispatch measurements](benchmarks/2026-10-24-typed-processors/README.md) find the
 same transaction allocations for same-type and cross-type APIs at 1/256 records;
 this is an overhead check, not a Kafka throughput qualification.
+
+## Ordered branching cycle
+
+Source `8f476c6deb728739342f77351cea0f7689c07fb0` passed
+[Go/race/layer and 648 reference comparisons](https://github.com/SoraDaibu/kstream-go/actions/runs/40084431698),
+[persistent state](https://github.com/SoraDaibu/kstream-go/actions/runs/40084431674),
+all four [broker fault suites](https://github.com/SoraDaibu/kstream-go/actions/runs/40084431695)
+and verified comparison/profile workloads. Twenty-seven scenarios contain 8,453
+input rows. The new Java public split/branch scenarios check overlapping
+predicates, first-match order, null/empty input and dropped/catch-all routing.
+Go tests additionally verify unmatched offset progress across recovery and
+transaction rollback spanning different selected branches.

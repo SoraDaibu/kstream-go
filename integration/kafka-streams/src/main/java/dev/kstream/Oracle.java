@@ -110,6 +110,12 @@ public final class Oracle {
                         table.filter((k,v) -> !v.isEmpty(), Materialized.as("filtered"))
                                 .mapValues(v -> v.equals("!null-output") ? null : v + "!", Materialized.as("mapped")),
                         (a,c) -> a + ":" + (c == null ? "missing" : c)).to("out", produced);
+                case "window-reduce", "hopping-reduce", "hopping-uneven-reduce" -> source.groupByKey()
+                        .windowedBy(TimeWindows.ofSizeAndGrace(Duration.ofMillis(10), Duration.ofMillis(5))
+                                .advanceBy(Duration.ofMillis(scenario.equals("window-reduce") ? 10 : scenario.equals("hopping-reduce") ? 5 : 6)))
+                        .reduce((old,v) -> "!delete".equals(v) ? null : old + ":" + (v == null ? "<null>" : v), Materialized.as("reduced"))
+                        .toStream().map((k,v) -> KeyValue.pair(k.key() + "@" + k.window().start() + ":" + k.window().end(), v))
+                        .to("out", produced);
                 case "window" -> source.groupByKey()
                         .windowedBy(TimeWindows.ofSizeAndGrace(Duration.ofMillis(10), Duration.ofMillis(5)))
                         .count(Materialized.as("windows")).toStream()

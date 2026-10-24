@@ -10,8 +10,8 @@ compare exact output topic/key/value/timestamp rows. Go runs transaction batch
 sizes 1, 32 and 256 against the same Java output; batching must preserve every
 record update and event-time result. Each batch size runs both memory and Pebble
 task stores, using both independent and grouped task commits, with output capacity
-hints 0 and 256. This configures 648
-exact trace comparisons across twenty-seven scenarios. `~` represents null; empty
+hints 0 and 256. This configures 720
+exact trace comparisons across thirty scenarios. `~` represents null; empty
 fields represent non-null empty strings. The fixed boundary cases are followed
 by 300 generated rows with seed 73019 per scenario. Caching is disabled to make
 update traces observable. Scenarios cover ordered first-match branching with and without catch-all routes, filter/filterNot, null-aware mapValues, flatMap, flatMapValues,
@@ -21,7 +21,11 @@ skipped records, nulls and changed timestamps,
 grouped count/reduce/aggregate (including nullable initialization), table upserts
 and tombstones, table filter/filterNot/nullable value maps and chained lookups,
 stream-table inner/left joins with nullable results, and tumbling/hopping windows with size 10ms and
-grace 5ms. Hopping advances of 5ms and 6ms cover divisible and uneven overlap.
+grace 5ms. Typed windowed reduce covers tombstones, first-value initialization,
+reinitialization timestamps, null-key clock isolation and null-value clock
+advancement with the same bounds. The null-input fixture preserves the first
+windowed-reduce reference mismatch.
+Hopping advances of 5ms and 6ms cover divisible and uneven overlap.
 Streams that change keys are not grouped without a broker exchange.
 
 A mismatch is a correctness failure. Minimize it, commit a regression fixture,
