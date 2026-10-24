@@ -220,13 +220,13 @@ func (s KStream[K, V]) To(topic string) {
 	if topic == "" {
 		s.builder.fail(errors.New("sink topic required"))
 	}
-	s.sinkTopic(func(*graph.Context) string { return topic })
+	s.sinkTopic(func(*graph.Context) string { return topic }, false)
 }
-func (s KStream[K, V]) sinkTopic(resolve func(*graph.Context) string) {
+func (s KStream[K, V]) sinkTopic(resolve func(*graph.Context) string, dropNullKeys bool) {
 	s.port.Subscribe(func(t *graph.Context) processor.Handler[K, V] {
 		topic := resolve(t)
 		task := t.Task
-		return func(r record.Record[K, V]) error {
+		emit := func(r record.Record[K, V]) error {
 			out := record.Bytes{Topic: topic, Timestamp: r.Timestamp}
 			var err error
 			if !r.NullKey {
@@ -250,16 +250,25 @@ func (s KStream[K, V]) sinkTopic(resolve func(*graph.Context) string) {
 			task.Emit(out)
 			return nil
 		}
+		if dropNullKeys {
+			return func(r record.Record[K, V]) error {
+				if r.NullKey {
+					return nil
+				}
+				return emit(r)
+			}
+		}
+		return emit
 	})
 }
 
 // Repartition writes a committed broker exchange and consumes it as a new
-// source. It never forwards directly. Wire InputTopics/RepartitionTopics into
+// source. Like Kafka Streams 3.9, it drops null keys. It never forwards directly. Wire InputTopics/RepartitionTopics into
 // the adapter and provision stable equal-partition-count exchange topics.
 func (s KStream[K, V]) Repartition(name string) KStream[K, V] {
 	s.builder.mutable()
 	source := sourceTopic{name: name, internal: true}
 	s.builder.add(topology.Node{Name: name, Kind: "repartition", Parents: []string{s.name}})
-	s.sinkTopic(func(ctx *graph.Context) string { return source.topic(ctx.ApplicationID) })
+	s.sinkTopic(func(ctx *graph.Context) string { return source.topic(ctx.ApplicationID) }, true)
 	return bindSource(s.builder, topology.Node{Name: name + "-source", Kind: "repartition-source", Parents: []string{name}}, source, s.key, s.value)
 }

@@ -39,8 +39,9 @@ sequenceDiagram
 
 The Kafka adapter forces standard keyed hashing for configured exchanges, even
 with a custom ordinary OutputPartitioner. Changelogs keep explicit task partition
-routing. Null keys receive a valid producer partition; null/empty payloads and
-timestamps pass through the exchange. Task.Emit's output partition field is not
+routing. Like Kafka Streams 3.9.1, the DSL drops null-key records before the
+exchange sink; their source positions still commit. Empty keys, keyed null/empty
+values and timestamps pass through the exchange. Task.Emit's output partition field is not
 a substitute for the adapter's key routing. A model transport must assign the
 actual destination partition and consumed offset before delivering a record.
 

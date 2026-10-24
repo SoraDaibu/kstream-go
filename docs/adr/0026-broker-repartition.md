@@ -18,8 +18,10 @@ delete retention for exchanges; automatic provisioning is separate work.
 
 Compile each side into the existing typed ports and explicit codecs. The returned
 stream is partitioned by its encoded key, so key-local operations become valid.
-Preserve value/null/timestamp data; independently test null-key behavior against
-Kafka Streams 3.9.1 rather than assuming it. Application IDs, exchange names and
+Preserve keyed value/null/timestamp data. The independent Kafka Streams 3.9.1
+oracle rejected the initial null-key forwarding behavior; drop null keys before
+writing the exchange, while committing their source positions. Retain the
+randomized differential scenario and direct null/empty regression test. Application IDs, exchange names and
 codecs must remain stable across restarts. Generated topics cannot collide with
 external sources or user sinks in the same topology.
 

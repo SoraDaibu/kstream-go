@@ -111,7 +111,7 @@ func TestRepartitionCoalescedTaskClockAndWindowClockBoundary(t *testing.T) {
 	}
 }
 
-func TestRepartitionPreservesNullEmptyValuesAndTimestamps(t *testing.T) {
+func TestRepartitionDropsNullKeysAndPreservesNullEmptyValuesAndTimestamps(t *testing.T) {
 	b := stream.NewStreamsBuilder()
 	stream.Stream(b, "in", serde.String, serde.String).Repartition("exchange").To("out")
 	plan := build(t, b)
@@ -130,6 +130,9 @@ func TestRepartitionPreservesNullEmptyValuesAndTimestamps(t *testing.T) {
 		t.Fatal(err)
 	}
 	exchanges := backend.Outputs(upID)
+	if len(exchanges) != 2 {
+		t.Fatal("null-key input reached exchange", exchanges)
+	}
 	for i := range exchanges {
 		exchanges[i].Partition, exchanges[i].Offset = 1, int64(i)
 	}
@@ -137,11 +140,11 @@ func TestRepartitionPreservesNullEmptyValuesAndTimestamps(t *testing.T) {
 		t.Fatal(err)
 	}
 	out := backend.Outputs(downID)
-	if len(out) != len(rows) {
-		t.Fatal("exchange dropped null or empty data", out)
+	if len(out) != len(rows)-1 {
+		t.Fatal("exchange dropped keyed null or empty data", out)
 	}
 	for i, r := range out {
-		if !reflect.DeepEqual(r.Key, rows[i].Key) || !reflect.DeepEqual(r.Value, rows[i].Value) || r.Timestamp != rows[i].Timestamp {
+		if !reflect.DeepEqual(r.Key, rows[i+1].Key) || !reflect.DeepEqual(r.Value, rows[i+1].Value) || r.Timestamp != rows[i+1].Timestamp {
 			t.Fatal("exchange changed null/empty/timestamp identity", i, r)
 		}
 	}
