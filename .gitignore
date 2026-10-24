@@ -2,3 +2,4 @@
 *.test
 coverage.out
 /integration/kafka-streams/target/
+__pycache__/
