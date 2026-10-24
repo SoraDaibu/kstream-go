@@ -1,6 +1,6 @@
 # ADR 0015: Stream-table left joins and nullable results
 
-Status: Semantics design before implementation; independent oracle gated.
+Status: Accepted for current-value lookup; independent oracle and broker gates passed.
 
 Keep Join as the existing non-null-result inner-join convenience. Add JoinNullable
 for inner joiners that can emit Kafka null values, and LeftJoin with an explicit
