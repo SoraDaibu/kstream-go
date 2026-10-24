@@ -10,9 +10,9 @@ type Forward[K, V any] func(record.Record[K, V]) error
 // Stores belong exclusively to the current task. Scan order is unspecified.
 type Context interface {
 	StreamTime() int64
-	StoreGet(store, key string) ([]byte, bool)
+	StoreGet(store, key string) ([]byte, bool, error)
 	StorePut(store, key string, value []byte)
-	StoreScan(store string, visit func(string, []byte))
+	StoreScan(store string, visit func(string, []byte)) error
 }
 
 // Factory is invoked once per task, not once per record.

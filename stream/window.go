@@ -44,7 +44,11 @@ func WindowedCount[K, V any](s KStream[K, V], store string, w window.Tumbling) K
 			// always contain at least the eight-byte window-start prefix.
 			clock := r.Timestamp
 			advanced := true
-			if raw, ok := task.StoreGet(store, ""); ok {
+			raw, ok, err := task.StoreGet(store, "")
+			if err != nil {
+				return err
+			}
+			if ok {
 				previous, err := serde.Int64.Decode(raw)
 				if err != nil {
 					return err
@@ -60,7 +64,7 @@ func WindowedCount[K, V any](s KStream[K, V], store string, w window.Tumbling) K
 					return err
 				}
 				task.StorePut(store, "", encoded)
-				task.StoreScan(store, func(key string, _ []byte) {
+				if err := task.StoreScan(store, func(key string, _ []byte) {
 					if len(key) < 8 {
 						return
 					}
@@ -68,7 +72,9 @@ func WindowedCount[K, V any](s KStream[K, V], store string, w window.Tumbling) K
 					if w.Closed(start+w.Size, clock) {
 						task.StorePut(store, key, nil)
 					}
-				})
+				}); err != nil {
+					return err
+				}
 			}
 			if w.Closed(end, clock) {
 				return nil
@@ -84,7 +90,11 @@ func WindowedCount[K, V any](s KStream[K, V], store string, w window.Tumbling) K
 			binary.BigEndian.PutUint64(key, uint64(start))
 			copy(key[8:], encoded)
 			count, timestamp := int64(0), r.Timestamp
-			if old, ok := task.StoreGet(store, string(key)); ok {
+			old, ok, err := task.StoreGet(store, string(key))
+			if err != nil {
+				return err
+			}
+			if ok {
 				var prior int64
 				count, prior, err = decodeAggregate(old)
 				if err != nil {

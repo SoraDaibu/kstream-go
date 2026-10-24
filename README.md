@@ -6,7 +6,9 @@ Streams as its conceptual and semantic reference. Apache-2.0 licensed.
 **This is an architecture and executable-core prototype, not a production Kafka
 Streams replacement.** An experimental Kafka transaction/changelog adapter supports
 explicitly assigned tasks. Consumer-group assignment, group-offset EOS v2,
-distributed repartitioning and crash-safe local stores remain unimplemented.
+and distributed repartitioning remain unimplemented. An optional Pebble adapter
+provides task-owned persistent caches on a shared engine; recovery still rebuilds
+those caches from a complete committed backend snapshot.
 The implemented oracle scenarios pass differential testing against Kafka
 Streams 3.9.1; broader compatibility remains unproven. See the
 [compatibility matrix](docs/compatibility.md) and [validation status](docs/validation.md).
@@ -32,7 +34,8 @@ boundaries use explicit codecs. Build freezes the builder.
 ## Run
 
 Requires the Go **programming-language** toolchain, version 1.23 or newer.
-The core uses only the standard library; the Kafka adapter uses franz-go.
+The core uses only the standard library; optional Kafka and persistent-state
+adapters use franz-go and Pebble respectively.
 
 ```sh
 go run ./examples/wordcount
@@ -58,6 +61,11 @@ experimental fixed-assignment adapter; see its [deployment boundaries](adapters/
   producer fencing and atomic output/state/input-position checkpoints.
 - Atomic state/output/offset transaction contract and fail-closed recovery after
   errors or ambiguous commit outcomes. External callback effects are outside it.
+- Optional persistent state via a shared Pebble engine with isolated task
+  namespaces, explicit sync durability, owned buffers and atomic local batches.
+  Store errors abort processing; local apply failure after backend commit requires
+  restoration. See [storage setup](adapters/pebble/README.md) and
+  [design and limits](docs/adr/0007-persistent-state.md).
 - Bounded-worker and goroutine-per-task finite-batch schedulers and comparative
   benchmarks. No production winner is asserted before measurement.
 

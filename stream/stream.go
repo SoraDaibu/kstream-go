@@ -63,8 +63,8 @@ func (b *StreamsBuilder) Build() (Topology, error) {
 }
 func (t Topology) Describe() string    { return t.plan.Describe() }
 func (t Topology) Plan() topology.Plan { return t.plan }
-func (t Topology) NewTask(ctx context.Context, s execution.Spec, backend execution.Backend) (*execution.Task, error) {
-	task, err := execution.New(ctx, s, backend)
+func (t Topology) NewTask(ctx context.Context, s execution.Spec, backend execution.Backend, options ...execution.Option) (*execution.Task, error) {
+	task, err := execution.New(ctx, s, backend, options...)
 	if err != nil {
 		return nil, err
 	}

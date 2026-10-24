@@ -9,7 +9,8 @@ flowchart LR
   DSL --> Graph[internal/graph: typed physical compiler]
   Graph --> Processor[processor: typed handlers]
   Processor --> Task[execution: partition task]
-  Task --> Store[state: task-owned overlay]
+  Task --> Store[state: task-owned overlay and store contract]
+  Store --> Persistent[adapters/pebble: shared physical engine]
   Task --> Backend[transaction backend contract]
   Backend --> Memory[adapters/memory: executable model]
   Backend --> Kafka[adapters/kafka: fixed-assignment transactions]
@@ -22,6 +23,11 @@ input once and calls operators synchronously. Output is serialized at the sink.
 No goroutine or channel exists per operator. Batches run on explicitly bounded
 workers or the benchmark comparison strategy. Only a task's current owner touches
 its stores. Backend synchronization protects shared infrastructure, not operators.
+The optional Pebble adapter gives each task an exclusive namespace in a shared
+physical engine. The execution package depends only on the state.Store contract;
+the composition root supplies an execution.WithStoreFactory option. Store I/O
+errors are explicit, and a failed local apply after a backend commit invalidates
+the task until committed state is restored. See [ADR 0007](adr/0007-persistent-state.md).
 
 A caller-bounded record batch stages all mutations. Reads observe preceding
 records in the batch; clocks advance per record. Repeated writes to a store key

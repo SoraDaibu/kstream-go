@@ -36,5 +36,10 @@
     "execution",
     "record",
     "state"
+  ],
+  "adapters/pebble": [
+    "execution",
+    "record",
+    "state"
   ]
 }

@@ -35,7 +35,7 @@ The memory backend remains a reference model. An experimental Kafka adapter now
 supports explicit partition assignment with transactional output/state/input
 checkpoints, broker producer fencing and read-committed restoration. It does not
 implement consumer-group EOS v2, rebalance-safe assignment, distributed exchanges
-or a crash-safe local store. Full broker fault injection, forced-compaction
+or reusable local recovery checkpoints. Full broker fault injection, forced-compaction
 validation, group coordination and production performance remain release gates.
 
 All five ADRs preceded implementation. The architecture is a tested experimental

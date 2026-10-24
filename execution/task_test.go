@@ -55,7 +55,7 @@ func TestAbortAndAmbiguousCommitRecovery(t *testing.T) {
 			if e = a.Process(ctx, r); !errors.Is(e, injected) {
 				t.Fatal(e)
 			}
-			if _, ok := a.StoreGet("count", "a"); ok {
+			if _, ok, _ := a.StoreGet("count", "a"); ok {
 				t.Fatal("unacknowledged local state published")
 			}
 			if e = a.Process(ctx, r); !errors.Is(e, execution.ErrPoisoned) {
@@ -215,7 +215,7 @@ func TestPanicPoisonsTaskAndDiscardsStaging(t *testing.T) {
 		}()
 		_ = a.Process(ctx, record.Bytes{Topic: "in"})
 	}()
-	if _, ok := a.StoreGet("state", "a"); ok {
+	if _, ok, _ := a.StoreGet("state", "a"); ok {
 		t.Fatal("panic published state")
 	}
 	if e = a.Process(ctx, record.Bytes{Topic: "in"}); !errors.Is(e, execution.ErrPoisoned) {

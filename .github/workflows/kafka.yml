@@ -52,4 +52,5 @@ jobs:
       - name: Validate against a real Kafka broker
         env:
           KSTREAM_KAFKA_BROKERS: localhost:9092
+          KSTREAM_KAFKA_STATE_DIR: ${{ runner.temp }}/kstream-persistent-caches
         run: go test -race -v -count=1 ./adapters/kafka
