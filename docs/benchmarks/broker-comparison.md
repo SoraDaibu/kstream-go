@@ -29,6 +29,10 @@ Go uses GOMAXPROCS=1 and a 512MiB soft heap target; Java uses one active process
 and a 512MiB maximum heap. Native memory has no enforced common cap. Record
 observed process peak RSS and CPU snapshots; CPU event boundaries are approximate.
 The broker shares the hosted runner and is not CPU-isolated.
+The current CI experiment explicitly sets one million warmup and one million
+measured records to investigate startup/runtime effects after observing mostly
+full input batches. Environment overrides and each retained manifest identify
+the actual size; the script defaults preserve reproduction of the first run.
 
 The output retains samples.jsonl, summary.json, manifest.json, environment data,
 commands and all app/driver/admin logs. Throughput excludes warmup and result

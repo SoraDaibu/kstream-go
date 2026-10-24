@@ -53,8 +53,8 @@ jobs:
       - name: Compare verified transactional broker workloads
         env:
           KSTREAM_KAFKA_BROKERS: localhost:9092
-          KSTREAM_BROKER_RECORDS: '200000'
-          KSTREAM_BROKER_WARMUP: '100000'
+          KSTREAM_BROKER_RECORDS: '1000000'
+          KSTREAM_BROKER_WARMUP: '1000000'
           KSTREAM_BROKER_TRIALS: '5'
         run: ./scripts/compare-brokers.sh results/broker-comparison
       - uses: actions/upload-artifact@v4
