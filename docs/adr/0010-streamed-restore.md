@@ -1,6 +1,6 @@
 # ADR 0010: Bounded-batch restoration into task stores
 
-Status: Proposed before implementation; failure and broker tests required.
+Status: Accepted for the experimental Kafka and memory backends after failure and broker validation.
 
 The original Backend.Open returns a complete in-memory state image. Copying that
 image into Pebble preserves correctness but defeats the purpose of persistent

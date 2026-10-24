@@ -112,3 +112,17 @@ eviction batches with both stores, replay and restoration of unordered windows.
 The [fixed-input Go before/after evaluation](benchmarks/2026-10-24-window-expiry/README.md)
 retains raw data, baseline source, checksum model and limitations. It is separate
 from Kafka Streams production throughput qualification.
+
+## Streamed restoration cycle
+
+Commit `453a1de3cee4256abf5781db4e08b438227b9a9a` passed
+[Go/race/layer and differential CI](https://github.com/SoraDaibu/kstream-go/actions/runs/40052853772),
+[persistent-state integration](https://github.com/SoraDaibu/kstream-go/actions/runs/40052853826),
+[broker recovery](https://github.com/SoraDaibu/kstream-go/actions/runs/40052853756),
+and exploratory checksum validation. The broker suite forced seven-record restore
+batches, injected a sink failure, and compared streamed state/checkpoints with
+the legacy image path. Local tests cover cancellation, borrowed buffers, partial
+restore cleanup, setup panic cleanup and rejecting an unbuilt topology before
+fencing a healthy owner. The [local cache-load measurements](benchmarks/2026-10-24-streamed-restore/README.md)
+retain raw allocation/time samples and limits; larger-than-RAM qualification and
+local checkpoint reuse remain open.

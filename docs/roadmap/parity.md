@@ -18,7 +18,7 @@ needs independent semantics, recovery and integration coverage before completion
 | Windows | Partial | hopping, sliding, session, grace/retention, emit strategies, suppression and late records |
 | Processor API | Partial | cross-type processors, record metadata/headers, punctuation, schedules, lifecycle and stores |
 | Logical topology/compilation | Partial | exchange subtopologies, exchange validation, safe rewrites and optimization evidence |
-| Partition runtime | Partial | backpressure, live fairness, pause/resume, idle partitions |
+| Partition runtime | Partial: task ownership, bounded batches and atomic multi-task model | backpressure, live fairness, pause/resume, idle partitions and broker group coordinator |
 | Kafka adapter | Partial: explicit input, transactions, fencing, changelogs | Consumer groups, assignment/rebalance, authentication/TLS failure coverage and production lifecycle |
 | Repartition | Rejected explicitly | broker exchanges, key serde/partitioner agreement, partition counts and recovery |
 | Changelogs/restore | Partial: Kafka read-committed prefix restore, bounded mutation batches and compactable full checkpoints | Forced-compaction validation, local checkpoint reuse, restore lifecycle callbacks and standby tasks |

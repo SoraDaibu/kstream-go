@@ -120,6 +120,15 @@ func run() error {
 	backend := memory.New()
 	id := execution.Spec{ApplicationID: "oracle", ID: "0"}
 	ctx := context.Background()
+	var transactionGroup *execution.Group
+	var taskBackend execution.Backend = backend
+	if os.Getenv("KSTREAM_TRANSACTION_GROUP") == "1" {
+		transactionGroup, err = execution.NewGroup(backend)
+		if err != nil {
+			return err
+		}
+		taskBackend = transactionGroup
+	}
 	var options []execution.Option
 	if directory := os.Getenv("KSTREAM_STATE_DIR"); directory != "" {
 		engine, err := persistent.Open(directory, persistent.Config{SyncWrites: true})
@@ -129,7 +138,7 @@ func run() error {
 		defer engine.Close()
 		options = append(options, execution.WithStoreFactory(engine.Task))
 	}
-	task, err := p.NewTask(ctx, id, backend, options...)
+	task, err := p.NewTask(ctx, id, taskBackend, options...)
 	if err != nil {
 		return err
 	}
@@ -152,7 +161,12 @@ func run() error {
 		if len(batch) == 0 {
 			return nil
 		}
-		err := task.ProcessBatch(ctx, batch)
+		var err error
+		if transactionGroup == nil {
+			err = task.ProcessBatch(ctx, batch)
+		} else {
+			err = transactionGroup.Process(ctx, []execution.TaskBatch{{Task: task, Records: batch}})
+		}
 		batch = batch[:0]
 		return err
 	}

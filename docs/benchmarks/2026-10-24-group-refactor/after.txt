@@ -1,0 +1,46 @@
+goos: linux
+goarch: amd64
+pkg: github.com/SoraDaibu/kstream-go/execution
+cpu: AMD EPYC 9V74 80-Core Processor                
+BenchmarkTransactionBatch/stateful=false/batch=1         	    1000	    394163 ns/op	      1024 records/op	  449920 B/op	   10080 allocs/op
+BenchmarkTransactionBatch/stateful=false/batch=1         	    1000	    425398 ns/op	      1024 records/op	  449920 B/op	   10080 allocs/op
+BenchmarkTransactionBatch/stateful=false/batch=1         	    1000	    385437 ns/op	      1024 records/op	  449920 B/op	   10080 allocs/op
+BenchmarkTransactionBatch/stateful=false/batch=1         	    1000	    386989 ns/op	      1024 records/op	  449920 B/op	   10080 allocs/op
+BenchmarkTransactionBatch/stateful=false/batch=1         	    1000	    384149 ns/op	      1024 records/op	  449920 B/op	   10080 allocs/op
+BenchmarkTransactionBatch/stateful=false/batch=16        	    1000	    187661 ns/op	      1024 records/op	  231808 B/op	    6496 allocs/op
+BenchmarkTransactionBatch/stateful=false/batch=16        	    1000	    186655 ns/op	      1024 records/op	  231808 B/op	    6496 allocs/op
+BenchmarkTransactionBatch/stateful=false/batch=16        	    1000	    188693 ns/op	      1024 records/op	  231808 B/op	    6496 allocs/op
+BenchmarkTransactionBatch/stateful=false/batch=16        	    1000	    184662 ns/op	      1024 records/op	  231808 B/op	    6496 allocs/op
+BenchmarkTransactionBatch/stateful=false/batch=16        	    1000	    187735 ns/op	      1024 records/op	  231808 B/op	    6496 allocs/op
+BenchmarkTransactionBatch/stateful=false/batch=256       	    1000	    158471 ns/op	      1024 records/op	  221248 B/op	    6032 allocs/op
+BenchmarkTransactionBatch/stateful=false/batch=256       	    1000	    155386 ns/op	      1024 records/op	  221248 B/op	    6032 allocs/op
+BenchmarkTransactionBatch/stateful=false/batch=256       	    1000	    156378 ns/op	      1024 records/op	  221248 B/op	    6032 allocs/op
+BenchmarkTransactionBatch/stateful=false/batch=256       	    1000	    176647 ns/op	      1024 records/op	  221248 B/op	    6032 allocs/op
+BenchmarkTransactionBatch/stateful=false/batch=256       	    1000	    172772 ns/op	      1024 records/op	  221248 B/op	    6032 allocs/op
+BenchmarkTransactionBatch/stateful=false/batch=1024      	    1000	    179842 ns/op	      1024 records/op	  327216 B/op	    5999 allocs/op
+BenchmarkTransactionBatch/stateful=false/batch=1024      	    1000	    181591 ns/op	      1024 records/op	  327216 B/op	    5999 allocs/op
+BenchmarkTransactionBatch/stateful=false/batch=1024      	    1000	    188961 ns/op	      1024 records/op	  327216 B/op	    5999 allocs/op
+BenchmarkTransactionBatch/stateful=false/batch=1024      	    1000	    184554 ns/op	      1024 records/op	  327216 B/op	    5999 allocs/op
+BenchmarkTransactionBatch/stateful=false/batch=1024      	    1000	    191552 ns/op	      1024 records/op	  327216 B/op	    5999 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=1          	    1000	    684566 ns/op	      1024 records/op	  580365 B/op	   16927 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=1          	    1000	    676946 ns/op	      1024 records/op	  580364 B/op	   16927 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=1          	    1000	    665269 ns/op	      1024 records/op	  580364 B/op	   16927 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=1          	    1000	    642127 ns/op	      1024 records/op	  580364 B/op	   16927 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=1          	    1000	    659250 ns/op	      1024 records/op	  580365 B/op	   16927 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=16         	    1000	    553749 ns/op	      1024 records/op	  510380 B/op	   12769 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=16         	    1000	    542509 ns/op	      1024 records/op	  510368 B/op	   12769 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=16         	    1000	    578515 ns/op	      1024 records/op	  510375 B/op	   12769 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=16         	    1000	    553780 ns/op	      1024 records/op	  510388 B/op	   12769 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=16         	    1000	    552585 ns/op	      1024 records/op	  510409 B/op	   12769 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=256        	    1000	    361490 ns/op	      1024 records/op	  351953 B/op	   11145 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=256        	    1000	    361524 ns/op	      1024 records/op	  351944 B/op	   11145 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=256        	    1000	    380654 ns/op	      1024 records/op	  351931 B/op	   11145 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=256        	    1000	    385063 ns/op	      1024 records/op	  351941 B/op	   11145 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=256        	    1000	    391041 ns/op	      1024 records/op	  351948 B/op	   11145 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=1024       	    1000	    345938 ns/op	      1024 records/op	  396268 B/op	   10877 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=1024       	    1000	    357527 ns/op	      1024 records/op	  396292 B/op	   10877 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=1024       	    1000	    345386 ns/op	      1024 records/op	  396274 B/op	   10877 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=1024       	    1000	    346122 ns/op	      1024 records/op	  396270 B/op	   10877 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=1024       	    1000	    346059 ns/op	      1024 records/op	  396274 B/op	   10877 allocs/op
+PASS
+ok  	github.com/SoraDaibu/kstream-go/execution	14.436s
