@@ -8,7 +8,7 @@ base = [("in", 0, "a", "one"), ("in", 9, "a", "two"), ("in", 10, "b", "x"),
         ("in", 14, "a", "x"), ("in", 8, "a", "late"), ("in", 15, "b", "clock"),
         ("in", 9, "a", "closed"), ("in", 20, "~", "null-key"),
         ("in", 21, "a", "~"), ("in", 22, "", "")]
-for scenario in ("filter", "filter-not", "mapvalues", "flatmap", "flatmapvalues", "merge", "count", "reduce", "aggregate", "aggregate-null", "window", "table", "join", "join-null", "left-join"):
+for scenario in ("filter", "filter-not", "mapvalues", "flatmap", "flatmapvalues", "merge", "count", "reduce", "aggregate", "aggregate-null", "window", "hopping", "hopping-uneven", "table", "join", "join-null", "left-join"):
     rows = list(base)
     if scenario in ("reduce", "aggregate", "aggregate-null"):
         # Deletion/reinitialization must reset the aggregate timestamp lifetime.
@@ -26,9 +26,13 @@ for scenario in ("filter", "filter-not", "mapvalues", "flatmap", "flatmapvalues"
         if scenario != "join":
             rows += [("in", 8, "a", "!null-output"), ("in", 9, "missing", "!null-output"),
                      ("in", 10, "a", "~"), ("table", 11, "", ""), ("in", 12, "", "empty-key")]
-    if scenario == "window":
+    if scenario in ("window", "hopping", "hopping-uneven"):
         # Regression: Kafka 3.9.1 counts a null value when the key is present.
         rows = [("in", 1, "null-value", "~"), ("in", 2, "null-value", "x")] + rows
+        if scenario != "window":
+            rows += [("in", 15, "clock", "x"), ("in", 9, "boundary", "x"),
+                     ("in", 20, "clock", "x"), ("in", 14, "boundary", "~"),
+                     ("in", 1000, "~", "ignored"), ("in", 19, "boundary", "x")]
     if scenario == "merge":
         rows = [("in" if i % 2 == 0 else "right", ts, k, v) for i, (_, ts, k, v) in enumerate(rows)]
     rng = random.Random(73019)

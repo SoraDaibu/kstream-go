@@ -61,6 +61,12 @@ public final class Oracle {
                         .count(Materialized.as("windows")).toStream()
                         .map((k,v) -> KeyValue.pair(k.key() + "@" + k.window().start() + ":" + k.window().end(), v.toString()))
                         .to("out", produced);
+                case "hopping", "hopping-uneven" -> source.groupByKey()
+                        .windowedBy(TimeWindows.ofSizeAndGrace(Duration.ofMillis(10), Duration.ofMillis(5))
+                                .advanceBy(Duration.ofMillis(scenario.equals("hopping") ? 5 : 6)))
+                        .count(Materialized.as("windows")).toStream()
+                        .map((k,v) -> KeyValue.pair(k.key() + "@" + k.window().start() + ":" + k.window().end(), v.toString()))
+                        .to("out", produced);
                 default -> throw new IllegalArgumentException("unknown scenario: " + scenario);
             }
         }

@@ -15,7 +15,7 @@ needs independent semantics, recovery and integration coverage before completion
 | Table-table joins | Missing | inner/left/outer, old/new values, tombstones and updates |
 | Foreign-key table joins | Missing | subscription/repartition protocol, old-key removal, recovery |
 | GlobalKTable | Missing | replicated global state, stream joins, bootstrap and fault tolerance |
-| Windows | Partial | hopping, sliding, session, grace/retention, emit strategies, suppression and late records |
+| Windows | Partial: tumbling/hopping counts and per-window grace | sliding, session, window aggregates, configurable retention, emit strategies, suppression and broader late-record qualification |
 | Processor API | Partial | cross-type processors, record metadata/headers, punctuation, schedules, lifecycle and stores |
 | Logical topology/compilation | Partial | exchange subtopologies, exchange validation, safe rewrites and optimization evidence |
 | Partition runtime | Partial: task ownership, bounded batches, atomic groups and serial Kafka worker | cross-topic timestamp scheduling, idle controls, live fairness, pause/resume and broader backpressure |

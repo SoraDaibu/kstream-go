@@ -114,8 +114,18 @@ func run() error {
 				}
 				return a + ":" + c, a == "!null-output"
 			}).To("out")
-		case "window":
-			stream.Map(stream.WindowedCount(s, "windows", window.Tumbling{Size: 10, Grace: 5}), "format-window", serde.String, serde.String, func(r record.Record[window.Key[string], int64]) record.Record[string, string] {
+		case "window", "hopping", "hopping-uneven":
+			var counts stream.KStream[window.Key[string], int64]
+			if scenario == "window" {
+				counts = stream.WindowedCount(s, "windows", window.Tumbling{Size: 10, Grace: 5})
+			} else {
+				advance := int64(5)
+				if scenario == "hopping-uneven" {
+					advance = 6
+				}
+				counts = stream.HoppingWindowedCount(s, "windows", window.Hopping{Size: 10, Advance: advance, Grace: 5})
+			}
+			stream.Map(counts, "format-window", serde.String, serde.String, func(r record.Record[window.Key[string], int64]) record.Record[string, string] {
 				return record.Record[string, string]{Key: fmt.Sprintf("%s@%d:%d", r.Key.Key, r.Key.Start, r.Key.End), Value: strconv.FormatInt(r.Value, 10), Timestamp: r.Timestamp}
 			}).To("out")
 		default:

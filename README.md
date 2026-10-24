@@ -59,8 +59,9 @@ experimental fixed-assignment adapter; see its [deployment boundaries](adapters/
 - `KGroupedStream`: `GroupByKey`, count, reduce, and type-changing aggregate with
   explicit nullable initialization/results and aggregate timestamps. See
   [grouped aggregation](docs/grouped-aggregation.md).
-- Event-time tumbling counts with half-open windows, grace, aggregate timestamps,
-  operator-local stream-time, and retention of open windows.
+- Event-time tumbling and hopping counts with half-open windows, grace, aggregate timestamps,
+  operator-local stream-time, and retention of open windows. See
+  [time windows](docs/time-windows.md).
 - Partition tasks with independent state, committed changelog recovery, offset
   replay suppression and generation fencing in the reference backend. The
   experimental Kafka adapter adds read-committed changelog restoration, broker
