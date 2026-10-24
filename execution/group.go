@@ -98,11 +98,12 @@ func (g *Group) Process(ctx context.Context, batches []TaskBatch) (err error) {
 	}
 	acquired := 0
 	started := false
+	completed := false
 	defer func() {
 		panicValue := recover()
 		for _, batch := range batches[:acquired] {
 			batch.Task.clearPending()
-			if started && (err != nil || panicValue != nil) {
+			if started && !completed {
 				batch.Task.poisoned = true
 			}
 			batch.Task.active.Store(false)
@@ -147,5 +148,6 @@ func (g *Group) Process(ctx context.Context, batches []TaskBatch) (err error) {
 	for _, batch := range batches {
 		batch.Task.publish(batch.Task.pending)
 	}
+	completed = true
 	return nil
 }

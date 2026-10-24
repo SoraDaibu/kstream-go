@@ -54,6 +54,15 @@ defaults to one minute and also bounds startup initialization. Set the worker's
 group/poll timeouts large enough for restore and processing of an entire poll.
 Callbacks must return within that budget; arbitrary Go callbacks are not preempted.
 
+Optional OnBatch receives GroupBatchMetrics after a successful processing
+transaction and all local applies. Records counts polled input (including a
+checkpointed replay), Tasks counts participating tasks, and ProcessDuration
+includes callbacks, broker commit and local apply. It excludes polling, restore
+and the observer. No timer is sampled when the observer is nil. The observer
+runs under the worker owner and must return promptly; monitoring effects are
+outside the processing transaction. Bootstrap/restore transactions are not
+reported as processing batches.
+
 Provision source/output topics and a compacted changelog explicitly. The initial
 broker reference is Kafka 3.9.1. The complete
 [group-count example](../../examples/kafka-group-count/main.go) requires:

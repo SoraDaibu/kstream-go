@@ -29,6 +29,10 @@ Go uses GOMAXPROCS=1 and a 512MiB soft heap target; Java uses one active process
 and a 512MiB maximum heap. Native memory has no enforced common cap. Record
 observed process peak RSS and CPU snapshots; CPU event boundaries are approximate.
 The broker shares the hosted runner and is not CPU-isolated.
+The current CI experiment explicitly sets one million warmup and one million
+measured records to investigate startup/runtime effects after observing mostly
+full input batches. Environment overrides and each retained manifest identify
+the actual size; the script defaults preserve reproduction of the first run.
 
 The output retains samples.jsonl, summary.json, manifest.json, environment data,
 commands and all app/driver/admin logs. Throughput excludes warmup and result
@@ -37,6 +41,11 @@ a source-produce fraction near one may indicate an injection/client bottleneck.
 Go commits after each bounded poll (4096 records maximum); Kafka Streams uses a
 10ms commit interval and the same maximum poll record count. Different commit
 policies and latency outcomes must remain visible.
+The Go app also records successful batch counts, size histograms and processing
+time separately for warmup and measurement. These are optional runtime
+observations, not all Kafka transactions; bootstrap/restore traffic is excluded.
+The driver rejects a phase boundary mismatch or an observed input total that
+differs from its verified sequence count.
 
 **This is exploratory, not production qualification.** One broker with replication
 factor one does not qualify high-availability durability. Shared-host timing,

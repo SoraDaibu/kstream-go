@@ -211,6 +211,35 @@ func awaitTwoMembers(t *testing.T, ctx context.Context, client *kgo.Client, grou
 	}
 }
 
+func committedInputCount(t *testing.T, ctx context.Context, config Config, end map[int32]int64) int64 {
+	t.Helper()
+	reader := clientFor(t, config, kgo.ConsumePartitions(map[string]map[int32]kgo.Offset{testInput: {0: kgo.NewOffset().AtStart(), 1: kgo.NewOffset().AtStart(), 2: kgo.NewOffset().AtStart()}}), kgo.FetchIsolationLevel(kgo.ReadCommitted()))
+	defer reader.Close()
+	positions := make(map[int32]int64)
+	var count int64
+	for {
+		done := true
+		for partition, offset := range end {
+			if positions[partition] < offset {
+				done = false
+			}
+		}
+		if done {
+			return count
+		}
+		fetches := reader.PollRecords(ctx, 256)
+		if failures := fetches.Errors(); len(failures) > 0 {
+			t.Fatal(failures[0].Err)
+		}
+		for _, row := range fetches.Records() {
+			if row.Offset < end[row.Partition] {
+				count++
+				positions[row.Partition] = row.Offset + 1
+			}
+		}
+	}
+}
+
 func TestBrokerGroupTransactionsRestartAndCommittedOffsets(t *testing.T) {
 	base := brokerConfig(t)
 	ctx := brokerContext(t)
@@ -225,12 +254,24 @@ func TestBrokerGroupTransactionsRestartAndCommittedOffsets(t *testing.T) {
 		t.Fatal(err)
 	}
 	positions := writeGroupInput(t, ctx, producer, application, 3)
+	expectedObserved := committedInputCount(t, ctx, base, positions)
 	reader := groupOutputReader(t, base)
 	counts := make(map[string]int)
-	first := startTestGroup(t, ctx, groupTestConfig(t, application, "worker-a"), nil)
+	firstConfig := groupTestConfig(t, application, "worker-a")
+	var observed atomic.Int64
+	firstConfig.OnBatch = func(metrics GroupBatchMetrics) {
+		if metrics.Records < 1 || metrics.Tasks < 1 || metrics.ProcessDuration <= 0 {
+			t.Error("invalid committed-batch observation", metrics)
+		}
+		observed.Add(int64(metrics.Records))
+	}
+	first := startTestGroup(t, ctx, firstConfig, nil)
 	awaitGroupCounts(t, ctx, reader, application, counts, 9)
 	awaitCommittedGroupOffsets(t, ctx, producer, application, positions)
 	first.stop(t)
+	if observed.Load() != expectedObserved {
+		t.Fatal("observer included aborted or missing input", observed.Load(), expectedObserved)
+	}
 	positions = writeGroupInput(t, ctx, producer, application, 2)
 	second := startTestGroup(t, ctx, groupTestConfig(t, application, "worker-a"), nil)
 	awaitGroupCounts(t, ctx, reader, application, counts, 15)
