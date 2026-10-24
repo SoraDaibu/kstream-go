@@ -1,0 +1,66 @@
+{
+  "production_qualified": false,
+  "target_throughput_ratio": 2.5,
+  "scenarios": {
+    "filter": {
+      "paired_throughput_ratios": [
+        1.5335162942104463,
+        2.200134129821621,
+        1.9012701067635729,
+        2.5282624505541307,
+        2.2266902893863674
+      ],
+      "median_throughput_ratio": 2.200134129821621,
+      "exploratory_bootstrap_95pct": [
+        1.5335162942104463,
+        2.5282624505541307
+      ],
+      "go": {
+        "median_records_per_second": 617506.4988159266,
+        "median_p99_latency_ms": 1067.011868,
+        "median_peak_rss_kib": 229396,
+        "median_observed_cpu_ns": 980000000,
+        "median_source_produce_fraction": 0.4157929794148558,
+        "median_processing_batches": 248,
+        "median_records_per_batch": 4032.2580645161293
+      },
+      "kafka": {
+        "median_records_per_second": 280667.66041486384,
+        "median_p99_latency_ms": 2860.927365,
+        "median_peak_rss_kib": 160288,
+        "median_observed_cpu_ns": 2560000000,
+        "median_source_produce_fraction": 0.17602286268642822
+      }
+    },
+    "count": {
+      "paired_throughput_ratios": [
+        5.641827306448334,
+        5.988573906513897,
+        5.945631972488556,
+        6.015067740412198,
+        5.4039545333042005
+      ],
+      "median_throughput_ratio": 5.945631972488556,
+      "exploratory_bootstrap_95pct": [
+        5.4039545333042005,
+        6.015067740412198
+      ],
+      "go": {
+        "median_records_per_second": 743287.5997343116,
+        "median_p99_latency_ms": 863.67754,
+        "median_peak_rss_kib": 243352,
+        "median_observed_cpu_ns": 930000000,
+        "median_source_produce_fraction": 0.4431781861252085,
+        "median_processing_batches": 248,
+        "median_records_per_batch": 4032.2580645161293
+      },
+      "kafka": {
+        "median_records_per_second": 127104.92791112143,
+        "median_p99_latency_ms": 7169.306217,
+        "median_peak_rss_kib": 236344,
+        "median_observed_cpu_ns": 5370000000,
+        "median_source_produce_fraction": 0.07039903201891691
+      }
+    }
+  }
+}

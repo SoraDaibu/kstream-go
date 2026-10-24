@@ -9,7 +9,8 @@ base = [("in", 0, "a", "one"), ("in", 9, "a", "two"), ("in", 10, "b", "x"),
         ("in", 14, "a", "x"), ("in", 8, "a", "late"), ("in", 15, "b", "clock"),
         ("in", 9, "a", "closed"), ("in", 20, "~", "null-key"),
         ("in", 21, "a", "~"), ("in", 22, "", "")]
-for scenario in ("filter", "filter-not", "branch", "branch-default", "mapvalues", "flatmap", "flatmapvalues", "merge", "metadata", "metadata-fanout", "process-typed", "process-typed-fanout", "count", "reduce", "aggregate", "aggregate-null", "window", "hopping", "hopping-uneven", "window-reduce", "hopping-reduce", "hopping-uneven-reduce", "table", "table-filter", "table-filter-not", "table-mapvalues", "table-transform-join", "join", "join-null", "left-join"):
+window_folds = ("window-reduce", "hopping-reduce", "hopping-uneven-reduce", "window-aggregate", "window-aggregate-null", "hopping-aggregate", "hopping-aggregate-null", "hopping-uneven-aggregate", "hopping-uneven-aggregate-null")
+for scenario in ("filter", "filter-not", "branch", "branch-default", "mapvalues", "flatmap", "flatmapvalues", "merge", "metadata", "metadata-fanout", "process-typed", "process-typed-fanout", "count", "reduce", "aggregate", "aggregate-null", "window", "hopping", "hopping-uneven", "window-reduce", "hopping-reduce", "hopping-uneven-reduce", "window-aggregate", "window-aggregate-null", "hopping-aggregate", "hopping-aggregate-null", "hopping-uneven-aggregate", "hopping-uneven-aggregate-null", "table", "table-filter", "table-filter-not", "table-mapvalues", "table-transform-join", "join", "join-null", "left-join"):
     rows = list(base)
     if scenario.startswith("process-typed"):
         rows += [("in", 3, "é🌊", "漢字"), ("in", 4, "skip", "!skip"),
@@ -38,7 +39,7 @@ for scenario in ("filter", "filter-not", "branch", "branch-default", "mapvalues"
         if scenario != "join":
             rows += [("in", 8, "a", "!null-output"), ("in", 9, "missing", "!null-output"),
                      ("in", 10, "a", "~"), ("table", 11, "", ""), ("in", 12, "", "empty-key")]
-    if scenario in ("window-reduce", "hopping-reduce", "hopping-uneven-reduce"):
+    if scenario in window_folds:
         rows = [("in", 9, "reset", "first"), ("in", 4, "reset", "second"),
                 ("in", 3, "reset", "!delete"), ("in", 2, "reset", "!delete"),
                 ("in", 5, "reset", ""), ("in", 6, "reset", "~"),
@@ -63,14 +64,14 @@ for scenario in ("filter", "filter-not", "branch", "branch-default", "mapvalues"
         timestamp = max(0, clock - rng.randrange(0, 25))
         key = rng.choice(["a", "b", "c", "", "~"])
         value = rng.choice(["one", "two", "", "~"])
-        if scenario in ("reduce", "aggregate", "aggregate-null", "window-reduce", "hopping-reduce", "hopping-uneven-reduce"):
+        if scenario in ("reduce", "aggregate", "aggregate-null") or scenario in window_folds:
             value = rng.choice(["one", "two", "", "~", "!delete"])
         topic = "table" if scenario == "table" or scenario.startswith("table-") else "in"
         if scenario in ("join", "join-null", "left-join", "table-transform-join"): topic = rng.choice(["table", "in"])
         if scenario in ("join-null", "left-join", "table-mapvalues", "table-transform-join") and rng.randrange(5) == 0: value = "!null-output"
         if scenario in ("merge", "metadata", "metadata-fanout", "process-typed", "process-typed-fanout"): topic = rng.choice(["in", "right"])
         rows.append((topic, timestamp, key, value))
-    if scenario in ("window-reduce", "hopping-reduce", "hopping-uneven-reduce"):
+    if scenario in window_folds:
         fixture = Path(__file__).resolve().parent.parent / "integration/fixtures/window-reduce-null-input.json"
         rows += [tuple("~" if cell is None else cell for cell in row) for row in json.loads(fixture.read_text())]
     (out / (scenario + ".tsv")).write_text("".join("\t".join(map(str,r)) + "\n" for r in rows))
