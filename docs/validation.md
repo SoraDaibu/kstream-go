@@ -183,3 +183,14 @@ cover nullable inner results and left joins, including null stream keys, missing
 table entries, empty values and table deletes. Focused Go tests also cover source
 replay/recovery and invalid plans. Versioned lookup and cross-input Kafka runtime
 scheduling remain open gates.
+
+## Hopping-window cycle
+
+Source `32ca9742cc79cc135703742e51956e70f488fecf` passed
+[Go/race/layer and independent differential CI](https://github.com/SoraDaibu/kstream-go/actions/runs/40061776072).
+Seventeen scenarios compare 5,313 inputs at three batch sizes with memory/Pebble
+and independent/group transactions: 204 exact traces. Hopping advances 5 and 6
+for size 10 validate output order, overlap, grace boundaries and null-valued
+input. Local tests cover bounded arithmetic, replay and restoration after an
+aborted multi-window batch with both stores. Existing tumbling allocations stay
+unchanged in the retained [before/after samples](benchmarks/2026-10-24-hopping-refactor/README.md).

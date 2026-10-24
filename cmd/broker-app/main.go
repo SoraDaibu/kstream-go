@@ -32,7 +32,14 @@ func run() (err error) {
 	changelog := flag.String("changelog", "", "changelog topic")
 	directory := flag.String("state", "", "state directory")
 	warmup := flag.Int64("warmup", 100000, "warmup record boundary for observation")
+	cpuProfile := flag.String("cpuprofile", "", "diagnostic whole-process CPU profile path")
+	heapProfile := flag.String("heapprofile", "", "diagnostic post-cleanup cumulative allocation profile path")
 	flag.Parse()
+	finishProfiles, err := startProfiles(*cpuProfile, *heapProfile)
+	if err != nil {
+		return err
+	}
+	defer func() { err = errors.Join(err, finishProfiles()) }()
 	engine, err := pebble.Open(*directory, pebble.Config{Options: &pebbledb.Options{DisableWAL: true}})
 	if err != nil {
 		return err

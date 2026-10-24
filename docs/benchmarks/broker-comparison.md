@@ -54,3 +54,15 @@ missing hard RSS cap also limit inference. Recovery, large/skewed state, joins,
 windows, repartitioning and failure workloads remain required. Preserve every
 regression and apply the full [qualification rules](../roadmap/qualification.md)
 before claiming the 2.5x production target.
+
+The [longer run](../../benchmarks/results/2026-10-24-broker-longer/README.md)
+retains a filter shortfall and higher Go peak RSS. To diagnose allocation/CPU
+costs separately, run `./scripts/compare-brokers.sh results/new-profiles --profile-go`.
+This mode runs Go only, permits one diagnostic trial, retains raw CPU/heap
+profiles and cumulative text reports, and never calculates comparative ratios.
+It uses the same independent output/checkpoint gates. Profiling perturbs timing.
+Profiles cover startup, warmup, measurement and shutdown. The heap snapshot is
+after engine cleanup and explicit GC: alloc_space/alloc_objects are cumulative,
+while inuse_space is neither peak memory nor equivalent to process RSS. The CI
+job stores these in a separate diagnostic artifact. Normal comparisons disable
+profiling and retain their own output directory and paired-trial requirements.
