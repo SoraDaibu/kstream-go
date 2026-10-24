@@ -18,11 +18,11 @@ needs independent semantics, recovery and integration coverage before completion
 | Windows | Partial | hopping, sliding, session, grace/retention, emit strategies, suppression and late records |
 | Processor API | Partial | cross-type processors, record metadata/headers, punctuation, schedules, lifecycle and stores |
 | Logical topology/compilation | Partial | exchange subtopologies, exchange validation, safe rewrites and optimization evidence |
-| Partition runtime | Partial: task ownership, bounded batches and atomic multi-task model | backpressure, live fairness, pause/resume, idle partitions and broker group coordinator |
-| Kafka adapter | Partial: explicit input, transactions, fencing, changelogs | Consumer groups, assignment/rebalance, authentication/TLS failure coverage and production lifecycle |
+| Partition runtime | Partial: task ownership, bounded batches, atomic groups and serial Kafka worker | cross-topic timestamp scheduling, idle controls, live fairness, pause/resume and broader backpressure |
+| Kafka adapter | Partial: fixed input and bounded group worker, transactions, fencing, changelogs | Cooperative/heterogeneous assignment, authentication/TLS failure coverage and broader production lifecycle |
 | Repartition | Rejected explicitly | broker exchanges, key serde/partitioner agreement, partition counts and recovery |
-| Changelogs/restore | Partial: Kafka read-committed prefix restore, bounded mutation batches and compactable full checkpoints | Forced-compaction validation, local checkpoint reuse, restore lifecycle callbacks and standby tasks |
-| Exactly-once | Partial: Kafka atomic output/changelog/input checkpoints for fixed assignment | Consumer-group offsets/EOS v2, real ambiguous-commit fault injection, kill/rebalance tests |
+| Changelogs/restore | Partial: Kafka read-committed prefix restore, bounded mutation batches and compactable full checkpoints | Forced-compaction validation, orphan-marker GC, local checkpoint reuse, restore lifecycle callbacks and standby tasks |
+| Exactly-once | Partial: fixed checkpoints and group-offset/state/output transactions | Broader kill/ambiguous-network/timeout/compaction and rebalance qualification; do not infer full EOS v2 parity |
 | Persistent state | Partial: shared Pebble key-value namespaces, streamed cache loads, atomic batches, owned reads, explicit sync writes | local checkpoint reuse, large-state qualification, window/session/versioned stores, range queries, snapshots and retention |
 | Interactive queries | Missing | task ownership discovery, local queries, consistency bounds, metadata and routing |
 | Runtime control/observability | Missing | lifecycle, error policies, metrics, lag, health and shutdown |

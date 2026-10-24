@@ -32,11 +32,12 @@ CI remains required for subsequent changes.
 ## Remaining compatibility gates
 
 The memory backend remains a reference model. An experimental Kafka adapter now
-supports explicit partition assignment with transactional output/state/input
-checkpoints, broker producer fencing and read-committed restoration. It does not
-implement consumer-group EOS v2, rebalance-safe assignment, distributed exchanges
-or reusable local recovery checkpoints. Full broker fault injection, forced-compaction
-validation, group coordination and production performance remain release gates.
+supports explicit assignment and an experimental bounded group worker with
+transactional output/state/input positions, broker fencing and read-committed
+restoration. Group restart, rebalance during staging and an open-transaction
+process kill have broker coverage. Distributed exchanges, reusable local recovery
+checkpoints, full group fault qualification, forced compaction and production
+performance remain release gates.
 
 All five ADRs preceded implementation. The architecture is a tested experimental
 core; production scheduling and additional feature compatibility remain open.
@@ -126,3 +127,37 @@ restore cleanup, setup panic cleanup and rejecting an unbuilt topology before
 fencing a healthy owner. The [local cache-load measurements](benchmarks/2026-10-24-streamed-restore/README.md)
 retain raw allocation/time samples and limits; larger-than-RAM qualification and
 local checkpoint reuse remain open.
+
+## Atomic task-group cycle
+
+Commit `804618438c05785e63f8a0d81948313e9aff3323` passed
+[Go/race/layer and differential CI](https://github.com/SoraDaibu/kstream-go/actions/runs/40054483754),
+[persistent-state integration](https://github.com/SoraDaibu/kstream-go/actions/runs/40054483760),
+[fixed-assignment broker recovery](https://github.com/SoraDaibu/kstream-go/actions/runs/40054483748),
+and exploratory checksum validation. Thirteen oracle scenarios now run at three
+batch sizes with both stores and both independent/group task commits: 156 exact
+comparisons. Model failures cover stale last-participant generations, aborted and
+ambiguous durable decisions, local-apply failure, callback panic/error, routing,
+membership and concurrent ownership. The [single-task refactor measurements](benchmarks/2026-10-24-group-refactor/README.md)
+record unchanged allocations and a small possible timing regression with a longer
+paired follow-up. This model boundary alone does not certify Kafka group EOS.
+
+## Experimental Kafka group-worker cycle
+
+Commit `01c52db6e56c2d287fc2be1731bf0c7a14917715` passed the four isolated
+[Kafka 3.9.1 broker suites](https://github.com/SoraDaibu/kstream-go/actions/runs/40056468708):
+fixed-assignment recovery, group restart with committed-offset checks,
+a second member joining during staged processing, and a subprocess killed after
+producing state/output but before transaction end. The killed worker's records
+remain invisible and fresh processing resumes within the 20-second recovery gate.
+
+The kill test first found a producer initialization failure during Kafka's old
+epoch abort. Initialization now uses the public ProducerID API and retries
+explicitly retryable startup failures before any input is polled or produced.
+No ambiguous data transaction is retried in place. The test also preserves the
+same range assignment protocol across the killed and replacement processes.
+
+These are focused single-broker fixtures. They do not certify all commit phases,
+network ambiguity, coordinator failover, forced compaction, cooperative or
+heterogeneous assignment, or Kafka Streams production throughput. See
+[group-worker limits](../adapters/kafka/GROUPS.md) and the parity inventory.

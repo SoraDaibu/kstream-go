@@ -1,6 +1,6 @@
 # ADR 0012: Kafka group transactions through a bounded worker owner
 
-Status: Proposed before implementation; broker rebalance/failure gates required.
+Status: Accepted for the experimental eager-range worker after focused broker restart/rebalance/kill validation.
 
 Use franz-go's public GroupTransactSession API to coordinate Kafka group offsets,
 changelogs and outputs. Do not duplicate the client's protocol implementation.

@@ -188,7 +188,11 @@ func RunGroup(ctx context.Context, config GroupConfig, factory TaskFactory) (err
 		return err
 	}
 	tasks := make(map[int32]*execution.Task)
-	defer func() { err = errors.Join(err, closeGroupTasks(tasks)) }()
+	defer func() {
+		if closeErr := closeGroupTasks(tasks); closeErr != nil {
+			err = errors.Join(err, closeErr)
+		}
+	}()
 	reset := func(assignment *groupAssignment) error {
 		if err := closeGroupTasks(tasks); err != nil {
 			return err

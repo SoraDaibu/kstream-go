@@ -4,9 +4,10 @@ An experimental, independent Go stream-processing core using Apache Kafka
 Streams as its conceptual and semantic reference. Apache-2.0 licensed.
 
 **This is an architecture and executable-core prototype, not a production Kafka
-Streams replacement.** An experimental Kafka transaction/changelog adapter supports
-explicitly assigned tasks. Consumer-group assignment, group-offset EOS v2,
-and distributed repartitioning remain unimplemented. An optional Pebble adapter
+Streams replacement.** Experimental Kafka adapters support explicitly assigned
+tasks and bounded consumer-group workers with atomic group-offset/state/output
+transactions. Full group fault-tolerance qualification and distributed
+repartitioning remain incomplete. An optional Pebble adapter
 provides task-owned persistent caches on a shared engine. Kafka recovery replays
 committed changes directly into the cache in bounded mutation batches; validated
 local checkpoint reuse remains unimplemented.
@@ -73,8 +74,8 @@ experimental fixed-assignment adapter; see its [deployment boundaries](adapters/
 - Bounded-worker and goroutine-per-task finite-batch schedulers and comparative
   benchmarks. No production winner is asserted before measurement.
 - Optional [atomic task groups](docs/task-groups.md) stage several partition tasks
-  before one durable decision. The memory model implements this contract;
-  Kafka consumer-group coordination remains separate work.
+  before one durable decision. The memory model and experimental
+  [Kafka group worker](adapters/kafka/GROUPS.md) use this boundary.
 
 Key-changing maps/processors require repartitioning before key-local operations.
 An explicit `Repartition` node is represented logically, and Build rejects it

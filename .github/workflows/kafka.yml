@@ -16,7 +16,7 @@ jobs:
           - suite: fixed-assignment
             tests: '^TestBroker(Recovery|Checkpoint|Fences|Explicit|Bounded)'
           - suite: group-restart
-            tests: '^TestBrokerGroupTransactionsRestartAndCommittedOffsets$'
+            tests: '^TestBrokerGroup(TransactionsRestartAndCommittedOffsets|RejectsUnsafeConfiguration)$'
           - suite: group-rebalance
             tests: '^TestBrokerGroupRebalanceDuringStaging$'
           - suite: group-crash
@@ -62,6 +62,7 @@ jobs:
           docker exec '${{ job.services.kafka.id }}' /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic kstream-test-state --partitions 3 --replication-factor 1 --config cleanup.policy=compact --config retention.ms=-1
           docker exec '${{ job.services.kafka.id }}' /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic kstream-test-output --partitions 3 --replication-factor 1
           docker exec '${{ job.services.kafka.id }}' /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic kstream-test-input --partitions 3 --replication-factor 1
+          docker exec '${{ job.services.kafka.id }}' /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic kstream-test-input-short --partitions 1 --replication-factor 1
       - name: Validate against a real Kafka broker
         env:
           KSTREAM_KAFKA_BROKERS: localhost:9092

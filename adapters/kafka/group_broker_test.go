@@ -244,6 +244,30 @@ func TestBrokerGroupTransactionsRestartAndCommittedOffsets(t *testing.T) {
 	}
 }
 
+func TestBrokerGroupRejectsUnsafeConfiguration(t *testing.T) {
+	for _, mode := range []string{"unequal-partitions", "blocked-rebalance"} {
+		t.Run(mode, func(t *testing.T) {
+			ctx := brokerContext(t)
+			config := groupTestConfig(t, unique("group-rejected"), "worker-a")
+			want := "equal source partition counts"
+			if mode == "unequal-partitions" {
+				config.Topics = append(config.Topics, "kstream-test-input-short")
+			} else {
+				config.Options = append(config.Options, kgo.BlockRebalanceOnPoll())
+				want = "BlockRebalanceOnPoll"
+			}
+			called := false
+			err := RunGroup(ctx, config, func(context.Context, execution.Spec, execution.Backend) (*execution.Task, error) {
+				called = true
+				return nil, errors.New("unexpected task factory")
+			})
+			if err == nil || !strings.Contains(err.Error(), want) || called {
+				t.Fatal("unsafe configuration reached processing", called, err)
+			}
+		})
+	}
+}
+
 func TestBrokerGroupRebalanceDuringStaging(t *testing.T) {
 	base := brokerConfig(t)
 	ctx := brokerContext(t)

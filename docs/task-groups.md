@@ -2,8 +2,9 @@
 
 Use a transaction group when one durable input prefix contains work for several
 partition tasks. It stages every participant before making one backend decision.
-The memory backend models this capability; a Kafka consumer-group adapter is
-separate work and remains required for group-managed EOS v2.
+The memory backend models this capability; the experimental Kafka
+[RunGroup adapter](../adapters/kafka/GROUPS.md) binds it to consumer-group
+transactions. Full group-managed fault tolerance remains unqualified.
 
 ```go
 backend := memory.New()
@@ -36,7 +37,7 @@ publishes task offsets and clocks. External callback effects remain outside the
 transaction contract.
 
 An empty set does nothing. A nonempty input set containing only checkpointed
-records still invokes CommitTasks with an empty state transaction set. A future
+records still invokes CommitTasks with an empty state transaction set. The
 Kafka group adapter needs that opportunity to advance a replayed poll's group
 offsets. It must verify coverage of every polled record before committing; the
 generic memory model does not know Kafka consumer positions or group metadata.
