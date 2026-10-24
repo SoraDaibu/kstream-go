@@ -28,6 +28,11 @@ physical engine. The execution package depends only on the state.Store contract;
 the composition root supplies an execution.WithStoreFactory option. Store I/O
 errors are explicit, and a failed local apply after a backend commit invalidates
 the task until committed state is restored. See [ADR 0007](adr/0007-persistent-state.md).
+An optional StreamingRestorer capability delivers ordered bounded mutation
+batches directly into the store during setup. Kafka and the memory model provide
+it; legacy backends retain the snapshot path. Tasks remain unpublished until the
+entire committed prefix and checkpoint restore successfully. See
+[ADR 0010](adr/0010-streamed-restore.md).
 Window processors maintain a task-owned derived expiry heap and rebuild it from
 committed windows on first use. Clock advances remove only closed entries;
 they do not repeatedly scan all retained state. The heap is discarded with a

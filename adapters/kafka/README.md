@@ -13,6 +13,15 @@ the task removes its barrier in its first successful data transaction. Restore
 applies state tombstones and the latest complete checkpoint. Ambiguous commit
 errors poison the task; a fresh incarnation restores the broker's committed state.
 
+Task construction uses OpenInto to replay committed state directly into the
+task store, without a complete intermediate state image. RestoreBatchSize
+defaults to 256 and bounds synchronous mutation batches; RestoreFetchBytes
+defaults to an 8 MiB fetch target with one fetch in flight/buffered. Kafka may
+return an oversized record batch despite that target, and compressed batches
+expand in memory. Broker message/batch limits still matter. Open remains an
+explicit image-collecting API for legacy callers. A sink failure leaves the
+backend unusable until a fresh successful open; no partial task is published.
+
 The changelog topic must be provisioned with `cleanup.policy=compact`, durable
 replication and enough partitions. Outputs use Kafka-compatible keyed hashing
 through franz-go; changelogs always use the explicit task partition. Kafka/TLS
@@ -29,10 +38,12 @@ restarts, and source ownership must be externally controlled.
 
 This is **not yet Kafka Streams group-managed EOS v2**. Input positions are stored
 atomically in the application's compacted changelog, not in consumer-group offset
-transactions. Consumer-group assignment/rebalance, standby tasks, persistent local
-stores, checkpoint migration, automatic topic provisioning and distributed
+transactions. Consumer-group assignment/rebalance, standby tasks, local checkpoint
+reuse/migration, automatic topic provisioning and distributed
 repartition subtopologies remain separate work. No production qualification is
 claimed from the single-broker integration fixture.
+Optional Pebble task stores are covered by the integration suite, but this is
+not yet a complete Kafka Streams state subsystem.
 
 The integration workflow provisions a Kafka 3.9.1 broker and exercises restart
 recovery, replay suppression, aborted-record isolation, multi-topic checkpoints,

@@ -4,6 +4,7 @@ package memory
 
 import (
 	"context"
+	"errors"
 	"sync"
 
 	"github.com/SoraDaibu/kstream-go/execution"
@@ -29,8 +30,27 @@ type Backend struct {
 func New() *Backend                 { return &Backend{tasks: make(map[identity]*entry)} }
 func key(s execution.Spec) identity { return identity{s.ApplicationID, s.ID, s.Partition} }
 func (b *Backend) Open(ctx context.Context, s execution.Spec) (uint64, execution.Snapshot, error) {
-	if err := ctx.Err(); err != nil {
+	restored := make(state.Image)
+	generation, checkpoint, err := b.OpenInto(ctx, s, func(batch []state.Mutation) error {
+		for _, mutation := range batch {
+			restored.Apply(mutation)
+		}
+		return nil
+	})
+	if err != nil {
 		return 0, execution.Snapshot{}, err
+	}
+	return generation, execution.Snapshot{State: restored, NextOffsets: checkpoint.NextOffsets, StreamTime: checkpoint.StreamTime}, nil
+}
+
+var _ execution.StreamingRestorer = (*Backend)(nil)
+
+func (b *Backend) OpenInto(ctx context.Context, s execution.Spec, sink execution.RestoreSink) (uint64, execution.Checkpoint, error) {
+	if sink == nil {
+		return 0, execution.Checkpoint{}, errors.New("restore sink required")
+	}
+	if err := ctx.Err(); err != nil {
+		return 0, execution.Checkpoint{}, err
 	}
 	b.mu.Lock()
 	defer b.mu.Unlock()
@@ -40,16 +60,25 @@ func (b *Backend) Open(ctx context.Context, s execution.Spec) (uint64, execution
 		b.tasks[key(s)] = e
 	}
 	e.generation++
-	// Rebuild from committed changelog, rather than trusting a task's local cache.
-	restored := make(state.Image)
-	for _, m := range e.log {
-		restored.Apply(m)
+	// Stream committed log order without a second state-sized map. The model
+	// still retains its complete log; this is not a durable storage engine.
+	for start := 0; start < len(e.log); start += 256 {
+		if err := ctx.Err(); err != nil {
+			return 0, execution.Checkpoint{}, err
+		}
+		end := start + 256
+		if end > len(e.log) {
+			end = len(e.log)
+		}
+		if err := sink(e.log[start:end]); err != nil {
+			return 0, execution.Checkpoint{}, err
+		}
 	}
 	offsets := make(map[string]int64)
 	for k, v := range e.snapshot.NextOffsets {
 		offsets[k] = v
 	}
-	return e.generation, execution.Snapshot{State: restored, NextOffsets: offsets, StreamTime: e.snapshot.StreamTime}, nil
+	return e.generation, execution.Checkpoint{NextOffsets: offsets, StreamTime: e.snapshot.StreamTime}, nil
 }
 func (b *Backend) Commit(ctx context.Context, s execution.Spec, g uint64, tx execution.Transaction) error {
 	if err := ctx.Err(); err != nil {

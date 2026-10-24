@@ -16,7 +16,7 @@ links the passing Go/race suite and differential scenarios.
 | Processor API | Factories instantiate per task; explicit key-change declaration | Go tests |
 | Partition tasks | Single partition number, task-local state | Isolation and race tests |
 | Changelog/recovery/EOS | In-memory model plus experimental fixed-assignment Kafka transactions/checkpoints | Model failures and real-broker recovery/fencing/aborted-record tests; group EOS v2 pending |
-| Persistent local stores | Optional shared Pebble engine, task-owned key-value namespaces, atomic batches and synchronous write mode | Ownership/reopen/failure tests; restoration still loads a complete in-memory backend snapshot |
+| Persistent local stores | Optional shared Pebble engine, task-owned key-value namespaces, atomic batches, synchronous write mode and streamed cache loads | Ownership/reopen/failure tests; local checkpoint reuse and specialized stores pending |
 | Repartition | Logical explicit node; Build fails until Kafka exchange exists | Rejection tests |
 | Other joins/windows | Not implemented | Do not infer compatibility |
 | Caching/suppression | Disabled/absent; every update emitted | Deliberate difference, oracle cache disabled |

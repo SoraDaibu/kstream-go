@@ -31,8 +31,11 @@ When paired with a Kafka backend, the backend transaction commits first; local
 cache failure then requires restoration instead of retrying an input in place.
 Store reads and scans return owned buffers and preserve empty versus null values.
 
-Restoration conservatively resets the namespace and loads the complete committed
-backend snapshot. The cache is not yet reused by offset checkpoint, and snapshot
-materialization consumes RAM proportional to state. Window/session/versioned
+Restoration conservatively resets the namespace. Backends with the optional
+StreamingRestorer capability (Kafka and the reference memory backend) replay
+ordered bounded mutation batches directly into the store. Legacy backends still
+materialize a complete snapshot first. The cache is not reused by offset
+checkpoint. Window operators also retain an O(N) derived expiry heap, so this
+does not qualify larger-than-RAM window processing. Window/session/versioned
 store APIs, efficient range scans and retention remain separate work. This is an
 experimental adapter, not a complete Kafka Streams state subsystem.

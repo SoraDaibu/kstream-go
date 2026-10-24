@@ -47,8 +47,9 @@ selected explicitly; no local power-loss guarantee is claimed in that mode. Any
 performance comparison must match these durability settings to the reference.
 
 The first implementation still restores through the existing in-memory backend
-snapshot. Streaming restore into the store and validated checkpoint reuse are
-required before claiming bounded recovery memory for state larger than RAM.
+snapshot. [ADR 0010](0010-streamed-restore.md) subsequently adds direct bounded-batch
+restoration for capable backends. Validated checkpoint reuse and large-state
+qualification remain required before claiming production recovery guarantees.
 Versioned/window/session store APIs, efficient retention/range queries, standby
 replication and interactive-query routing remain separate parity work.
 

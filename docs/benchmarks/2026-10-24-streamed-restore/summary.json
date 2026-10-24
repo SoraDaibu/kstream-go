@@ -1,0 +1,45 @@
+{
+  "production_qualified": false,
+  "workloads": {
+    "BenchmarkRestoreIntoPebble/entries=1024/sync=false/stream=false": {
+      "median_nanos": 669633.0,
+      "median_bytes": 409973,
+      "median_allocs": 1110
+    },
+    "BenchmarkRestoreIntoPebble/entries=1024/sync=false/stream=true": {
+      "median_nanos": 280083.0,
+      "median_bytes": 124000,
+      "median_allocs": 51
+    },
+    "BenchmarkRestoreIntoPebble/entries=1024/sync=true/stream=false": {
+      "median_nanos": 713940.0,
+      "median_bytes": 354538,
+      "median_allocs": 1108
+    },
+    "BenchmarkRestoreIntoPebble/entries=1024/sync=true/stream=true": {
+      "median_nanos": 414729.0,
+      "median_bytes": 69626,
+      "median_allocs": 52
+    },
+    "BenchmarkRestoreIntoPebble/entries=32768/sync=false/stream=false": {
+      "median_nanos": 43488377.0,
+      "median_bytes": 10114058,
+      "median_allocs": 34666
+    },
+    "BenchmarkRestoreIntoPebble/entries=32768/sync=false/stream=true": {
+      "median_nanos": 9630882.0,
+      "median_bytes": 1794842,
+      "median_allocs": 389
+    },
+    "BenchmarkRestoreIntoPebble/entries=32768/sync=true/stream=false": {
+      "median_nanos": 41270856.0,
+      "median_bytes": 9005770,
+      "median_allocs": 34626
+    },
+    "BenchmarkRestoreIntoPebble/entries=32768/sync=true/stream=true": {
+      "median_nanos": 13104120.0,
+      "median_bytes": 611506,
+      "median_allocs": 707
+    }
+  }
+}

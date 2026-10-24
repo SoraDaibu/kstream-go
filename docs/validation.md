@@ -100,3 +100,15 @@ Thirteen oracle scenarios run against both stores at batch sizes 1, 32 and 256:
 deletion/reinitialization and aggregate timestamp lifetimes. The expanded
 [paired driver comparison](../benchmarks/results/2026-10-24-grouped-driver/README.md)
 retains actual raw data and its nonproduction limits.
+
+## Window expiry optimization cycle
+
+Commit `26c4e5da05146cac0935c88073b449f4242ce8cf` passed
+[Go/race/layer and all 78 oracle comparisons](https://github.com/SoraDaibu/kstream-go/actions/runs/40052118209),
+[persistent-state integration](https://github.com/SoraDaibu/kstream-go/actions/runs/40052118239),
+[broker recovery](https://github.com/SoraDaibu/kstream-go/actions/runs/40052118216),
+and exploratory benchmark checksum validation. Additional tests cover aborted
+eviction batches with both stores, replay and restoration of unordered windows.
+The [fixed-input Go before/after evaluation](benchmarks/2026-10-24-window-expiry/README.md)
+retains raw data, baseline source, checksum model and limitations. It is separate
+from Kafka Streams production throughput qualification.

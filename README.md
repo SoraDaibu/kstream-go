@@ -7,8 +7,9 @@ Streams as its conceptual and semantic reference. Apache-2.0 licensed.
 Streams replacement.** An experimental Kafka transaction/changelog adapter supports
 explicitly assigned tasks. Consumer-group assignment, group-offset EOS v2,
 and distributed repartitioning remain unimplemented. An optional Pebble adapter
-provides task-owned persistent caches on a shared engine; recovery still rebuilds
-those caches from a complete committed backend snapshot.
+provides task-owned persistent caches on a shared engine. Kafka recovery replays
+committed changes directly into the cache in bounded mutation batches; validated
+local checkpoint reuse remains unimplemented.
 The implemented oracle scenarios pass differential testing against Kafka
 Streams 3.9.1; broader compatibility remains unproven. See the
 [compatibility matrix](docs/compatibility.md) and [validation status](docs/validation.md).
