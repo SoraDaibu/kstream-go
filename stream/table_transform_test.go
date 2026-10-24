@@ -61,8 +61,23 @@ func TestTableTransformsDeleteWithoutCallingUserCode(t *testing.T) {
 	if len(lookups) != 4 || string(lookups[0].Value) != "present" || string(lookups[1].Value) != "missing" || string(lookups[2].Value) != "zero" || string(lookups[3].Value) != "missing" {
 		t.Fatal("derived table retained stale/missing/zero state", lookups)
 	}
-	if len(updates) != 5 || updates[1].Value != nil || updates[1].Timestamp != 2 || updates[2].Value != nil || long(t, updates[3].Value) != 0 || updates[4].Value != nil {
+	if len(updates) != 4 || updates[1].Value != nil || updates[1].Timestamp != 2 || long(t, updates[2].Value) != 0 || updates[3].Value != nil {
 		t.Fatal("derived tombstone/zero/timestamp output", updates)
+	}
+}
+
+func TestMaterializedTableFilterSuppressesRepeatedAbsentDeletes(t *testing.T) {
+	b := stream.NewStreamsBuilder()
+	stream.Table(b, "table", "source", serde.String, serde.String).Filter("filtered", func(_, v string) bool { return v != "" }).ToStream().To("out")
+	backend := memory.New()
+	a := task(t, build(t, b), spec(), backend)
+	defer a.Close()
+	for i, value := range [][]byte{nil, {}, {}, nil, []byte("present"), {}, nil} {
+		feed(t, a, "table", int64(i), int64(i), []byte("key"), value)
+	}
+	out := backend.Outputs(spec())
+	if len(out) != 2 || string(out[0].Value) != "present" || out[0].Timestamp != 4 || out[1].Value != nil || out[1].Timestamp != 5 {
+		t.Fatal("filter forwarded absent-row delete or dropped actual delete", out)
 	}
 }
 

@@ -24,6 +24,8 @@ zero values and empty byte arrays are ordinary data. Callbacks receive a
 read-only key and non-null value. Input tombstones bypass all predicates and
 mappers and delete the derived row; they cannot be revived by a table mapper.
 Null source keys are skipped. Updates keep the input key and timestamp.
+Materialized filters suppress a tombstone when the derived row is already
+absent; repeated filtered updates must not invent additional delete events.
 
 Every result requires a unique store name and value codec. Its state participates
 in the same task transaction as upstream source/aggregate state, outputs and

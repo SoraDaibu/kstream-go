@@ -64,6 +64,15 @@ func transformTable[K, V, O any](t KTable[K, V], store, kind string, value serde
 			if key == nil {
 				return errors.New("non-null table key encoded as nil")
 			}
+			if null && kind != "map-values" {
+				// Materialized table filters suppress deletes for already absent
+				// result rows. Inspect the staged derived state, not source state.
+				if _, exists, err := task.StoreGet(store, string(key)); err != nil {
+					return err
+				} else if !exists {
+					return nil
+				}
+			}
 			var encoded []byte
 			if !null {
 				encoded, err = value.Encode(result)

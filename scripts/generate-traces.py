@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Deterministic fixtures plus seeded late/null/update traces; no third-party deps."""
+import json
 import random
 import sys
 from pathlib import Path
@@ -23,6 +24,9 @@ for scenario in ("filter", "filter-not", "mapvalues", "flatmap", "flatmapvalues"
             rows += [("table", 3, "absent", "~"), ("table", 4, "rejected", ""),
                      ("table", 5, "rejected", ""), ("table", 6, "rejected", "~"),
                      ("table", 2, "a", "!null-output")]
+        if scenario in ("table-filter", "table-filter-not"):
+            fixture = Path(__file__).resolve().parent.parent / "integration/fixtures/table-filter-noop-delete.json"
+            rows = [tuple("~" if cell is None else cell for cell in row) for row in json.loads(fixture.read_text())] + rows
     if scenario in ("join", "join-null", "left-join", "table-transform-join"):
         rows = [("table", 0, "a", "A"), ("in", 1, "a", "one"),
                 ("table", 2, "a", "~"), ("in", 3, "a", "missing"),

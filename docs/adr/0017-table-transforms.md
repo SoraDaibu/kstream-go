@@ -23,3 +23,9 @@ Independent traces must resolve exact repeated-delete/filtered-update emission
 and chained lookup behavior. Include out-of-order input, nullable results,
 empty/zero values, source replays and restoration after abort. Caching, table
 retraction aggregates and versioned stores remain separate feature gates.
+
+The first 3.9.1 oracle run found extra Go tombstones for already absent filtered
+rows. Materialized Filter/FilterNot must consult staged derived state and skip
+these redundant deletes. Preserve a seven-row input fixture and focused Go
+regression; do not change expected reference output. Map-value tombstone
+behavior is independently gated rather than inferred from filter behavior.
