@@ -1,0 +1,46 @@
+goos: linux
+goarch: amd64
+pkg: github.com/SoraDaibu/kstream-go/adapters/kafka
+cpu: AMD EPYC 9V74 80-Core Processor                
+BenchmarkProduceCompletion/records=1/retain-results=true         	 7791728	        45.68 ns/op	      40 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=1/retain-results=true         	 7871556	        48.28 ns/op	      40 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=1/retain-results=true         	 6631764	        50.50 ns/op	      40 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=1/retain-results=true         	 7195431	        54.09 ns/op	      40 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=1/retain-results=true         	 7221710	        47.54 ns/op	      40 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=1/retain-results=false        	 6451182	        61.25 ns/op	      64 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=1/retain-results=false        	 6350208	        57.78 ns/op	      64 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=1/retain-results=false        	 6190332	        57.21 ns/op	      64 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=1/retain-results=false        	 6378362	        56.96 ns/op	      64 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=1/retain-results=false        	 6488628	        56.16 ns/op	      64 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=2/retain-results=true         	 5842280	        59.07 ns/op	      64 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=2/retain-results=true         	 6124296	        59.14 ns/op	      64 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=2/retain-results=true         	 6167583	        60.26 ns/op	      64 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=2/retain-results=true         	 5415264	        67.10 ns/op	      64 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=2/retain-results=true         	 5801049	        62.76 ns/op	      64 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=2/retain-results=false        	 5489190	        64.86 ns/op	      64 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=2/retain-results=false        	 4908999	        65.63 ns/op	      64 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=2/retain-results=false        	 5565442	        66.84 ns/op	      64 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=2/retain-results=false        	 4800015	        68.53 ns/op	      64 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=2/retain-results=false        	 5275288	        67.36 ns/op	      64 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=512/retain-results=true       	   52832	      6262 ns/op	   13584 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=512/retain-results=true       	   58812	      6343 ns/op	   13584 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=512/retain-results=true       	   55182	      6425 ns/op	   13584 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=512/retain-results=true       	   56006	      6613 ns/op	   13584 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=512/retain-results=true       	   57202	      6184 ns/op	   13584 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=512/retain-results=false      	   86215	      4032 ns/op	      64 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=512/retain-results=false      	   89665	      4085 ns/op	      64 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=512/retain-results=false      	   88737	      4009 ns/op	      64 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=512/retain-results=false      	   89000	      4058 ns/op	      64 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=512/retain-results=false      	   85028	      4072 ns/op	      64 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=4096/retain-results=true      	    6846	     52446 ns/op	   98320 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=4096/retain-results=true      	    6073	     51508 ns/op	   98320 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=4096/retain-results=true      	    6290	     51289 ns/op	   98320 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=4096/retain-results=true      	    6060	     50314 ns/op	   98320 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=4096/retain-results=true      	    6519	     54871 ns/op	   98320 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=4096/retain-results=false     	    9128	     33538 ns/op	      64 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=4096/retain-results=false     	   10000	     33218 ns/op	      64 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=4096/retain-results=false     	   10000	     32743 ns/op	      64 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=4096/retain-results=false     	   10000	     34222 ns/op	      64 B/op	       2 allocs/op
+BenchmarkProduceCompletion/records=4096/retain-results=false     	   10809	     32380 ns/op	      64 B/op	       2 allocs/op
+PASS
+ok  	github.com/SoraDaibu/kstream-go/adapters/kafka	16.482s

@@ -298,7 +298,7 @@ func (b *Backend) Commit(ctx context.Context, s execution.Spec, generation uint6
 		b.failed = true
 		return fenceError(err)
 	}
-	if err = b.producer.ProduceSync(ctx, rows...).FirstErr(); err != nil {
+	if err = produceAll(ctx, b.producer, rows); err != nil {
 		b.failed = true
 		abortErr := b.producer.EndTransaction(ctx, kgo.TryAbort)
 		return errors.Join(fenceError(err), abortErr)
