@@ -14,6 +14,10 @@ Do not mechanically port Kafka Streams Java internals. Avoid reflection,
 per-operator goroutines/channels, hidden shared state and unbounded queues.
 Processor factories run per task; callbacks must not use nontransactional
 side effects as a substitute for state stores or output sinks.
+StoreGet now returns (value, present, error), and StoreScan returns an error.
+Propagate these errors from custom processors. The runtime also records a store
+failure so an accidentally ignored read error cannot commit invalid output.
+Stop processing before Task.Close, and close all tasks before a shared engine.
 
 Be respectful, assume good intent, and make technical disagreements specific.
 Do not submit credentials, private data, or generated benchmark claims.
