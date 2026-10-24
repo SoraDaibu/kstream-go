@@ -172,3 +172,14 @@ The [retained results](../benchmarks/results/2026-10-24-broker-first/README.md)
 report a 6.90x median paired ratio for count and 2.06x for filter, with lower
 observed p99/RSS in both. Filter remains below the target, and the experiment's
 single-broker/shared-host limits prevent production qualification.
+
+## Stream-table nullable join cycle
+
+Source `9efa5833c87938f5dfbd8932cefeb881c4bb8829` passed
+[Go/race/layer and independent differential CI](https://github.com/SoraDaibu/kstream-go/actions/runs/40061456949).
+Fifteen scenarios now compare 4,677 input rows at three batch sizes with both
+stores and both independent/group commits: 180 exact output traces. New scenarios
+cover nullable inner results and left joins, including null stream keys, missing
+table entries, empty values and table deletes. Focused Go tests also cover source
+replay/recovery and invalid plans. Versioned lookup and cross-input Kafka runtime
+scheduling remain open gates.

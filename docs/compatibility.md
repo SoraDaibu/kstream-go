@@ -10,9 +10,10 @@ links the passing Go/race suite and differential scenarios.
 | KTable | Upsert, null-key skip, tombstone delete; ToStream emits input updates | Go tests; Java oracle table trace |
 | Grouped count | Null keys/values skipped, emits each count update | Go tests; Java oracle count trace |
 | Grouped reduce/aggregate | Explicit nullable results, aggregate timestamps, delete/reinitialize, nullable initializer | Go tests; reference traces are required for every implementation change |
-| Stream-table inner/left join | Stream-triggered current-value lookup; explicit absent-right and nullable-result flags; left join preserves null stream keys | Go null/empty/recovery tests; Java join, join-null and left-join traces required |
+| Stream-table inner/left join | Stream-triggered current-value lookup; explicit absent-right and nullable-result flags; left join preserves null stream keys | Go null/empty/recovery tests; Java join, join-null and left-join traces passed |
 | Event time | Operator-local max timestamp for windows; task clock for custom processors | Go boundary/isolation tests; Java oracle |
 | Tumbling count | [start,end), grace boundary, late drop, closed-window eviction; null values count when key is present | Go tests; Java oracle window trace |
+| Hopping count | Overlapping half-open windows, ascending start order, per-window grace, null values count | Membership/recovery/aborted-fanout tests; divisible/uneven advance Java traces required |
 | Processor API | Factories instantiate per task; explicit key-change declaration | Go tests |
 | Partition tasks | Single partition number, task-local state | Isolation and race tests |
 | Changelog/recovery/EOS | In-memory model, fixed checkpoints and experimental group-offset transactions | Model and broker recovery/fencing/aborted-record gates; broader group fault qualification remains open |

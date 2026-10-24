@@ -9,14 +9,15 @@ Both programs receive identical ordered topic/timestamp/key/value TSV traces and
 compare exact output topic/key/value/timestamp rows. Go runs transaction batch
 sizes 1, 32 and 256 against the same Java output; batching must preserve every
 record update and event-time result. Each batch size runs both memory and Pebble
-task stores, using both independent and grouped task commits. This configures 180
-exact trace comparisons across fifteen scenarios. `~` represents null; empty
+task stores, using both independent and grouped task commits. This configures 204
+exact trace comparisons across seventeen scenarios. `~` represents null; empty
 fields represent non-null empty strings. The fixed boundary cases are followed
 by 300 generated rows with seed 73019 per scenario. Caching is disabled to make
 update traces observable. Scenarios cover filter/filterNot, null-aware mapValues, flatMap, flatMapValues,
 merge, grouped count/reduce/aggregate (including nullable initialization), table upserts
-and tombstones, stream-table inner/left joins with nullable results, and tumbling windows with size 10ms and
-grace 5ms. Streams that change keys are not grouped without a broker exchange.
+and tombstones, stream-table inner/left joins with nullable results, and tumbling/hopping windows with size 10ms and
+grace 5ms. Hopping advances of 5ms and 6ms cover divisible and uneven overlap.
+Streams that change keys are not grouped without a broker exchange.
 
 A mismatch is a correctness failure. Minimize it, commit a regression fixture,
 and update the compatibility matrix only after an explicit semantic decision.
