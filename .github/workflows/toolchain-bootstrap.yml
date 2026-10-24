@@ -1,0 +1,46 @@
+name: Authoring toolchain bootstrap
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/toolchain-bootstrap.yml'
+permissions:
+  contents: read
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Verify and split the official Go 1.27.3 archive
+        run: |
+          curl --fail --location --retry 3 --max-time 120 https://go.dev/dl/go1.27.3.linux-amd64.tar.gz -o toolchain.tar.gz
+          python3 - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          data = Path('toolchain.tar.gz').read_bytes()
+          expected = '65efbc80fdc1fa2cd2631cad5b481777a68e8725f34e89f50fc6ac714e379b40'
+          assert hashlib.sha256(data).hexdigest() == expected
+          parts = []
+          for i, start in enumerate(range(0, len(data), 24 * 1024 * 1024)):
+              part = data[start:start + 24 * 1024 * 1024]
+              name = f'go127-part-{i}'
+              Path(name).write_bytes(part)
+              parts.append({'name': name, 'size': len(part), 'sha256': hashlib.sha256(part).hexdigest()})
+          Path('manifest.json').write_text(json.dumps({'version': 'go1.27.3', 'sha256': expected, 'size': len(data), 'parts': parts}, indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: go127-part-0
+          compression-level: 0
+          path: |
+            go127-part-0
+            manifest.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: go127-part-1
+          compression-level: 0
+          path: go127-part-1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: go127-part-2
+          compression-level: 0
+          path: go127-part-2

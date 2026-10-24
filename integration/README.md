@@ -1,6 +1,6 @@
 # Independent semantic oracle
 
-Run `./scripts/differential.sh` with Go >= 1.23, Python 3, Java >= 17 and Maven.
+Run `./scripts/differential.sh` with Go >= 1.27, Python 3, Java >= 17 and Maven.
 Maven downloads Kafka Streams **3.9.1**, test-utils, RocksDB and build plugins.
 There is no Kafka broker dependency: Java uses the public TopologyTestDriver.
 The oracle is original test code, not a port of Kafka internals.
