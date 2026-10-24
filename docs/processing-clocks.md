@@ -49,6 +49,10 @@ when upgrading an existing multi-stage custom-processor application from the
 shared-clock version. This is an explicit migration limit, not an inferred clock.
 
 This does not implement cross-topic timestamp scheduling, max-task-idle controls,
-punctuation or independent stage workers. Java oracle cases and broker recovery
+punctuation or independent stage workers. Composed-driver Java oracle cases and Go broker recovery
 tests validate the covered clock behavior; they do not establish full scheduling
 equivalence. See [ADR 0027](adr/0027-processing-clocks.md).
+
+The [Java oracle](../integration/README.md) pins the single-driver clock
+coalescing limitation and uses separate public-API drivers for its two task
+components. It does not establish live Java/Go assignment or scheduling parity.

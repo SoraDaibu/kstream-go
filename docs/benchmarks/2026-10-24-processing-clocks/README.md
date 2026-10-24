@@ -26,14 +26,16 @@ including regressions. Expiry-window byte counts depend slightly on benchmark
 iteration count; inspect all raw rows instead of treating them as fixed sizes.
 Five short samples do not establish a stable end-to-end speedup.
 
-[Scoped clock measurements](final/scoped.txt) compare one native component with
+[Scoped clock measurements with the final scope IDs](final/scoped-base64.txt) compare one native component with
 a second disconnected component, with identical scalar input and clock reads.
 Scoped maps cost 512 B/four allocations per transaction versus 256 B/two for the
-native path. Median times are about 582.5 vs 329.8 ns for one-record transactions,
-and 24,180 vs 16,211 ns for 256-record transactions. This is the explicit cost of
+native path. Median times are about 592.5 vs 356.2 ns for one-record transactions,
+and 23,434 vs 17,399 ns for 256-record transactions. This is the explicit cost of
 the new capability on this fixture; it is amortized per transaction, with no
 additional allocation per record or operator. Runs are sequential by case rather
-than alternating, so they are descriptive overhead measurements.
+than alternating, so they are descriptive overhead measurements. The earlier
+[JSON-scope measurement](final/scoped.txt) is also retained; final IDs use
+length-prefixed source-name bytes and URL-safe base64.
 
 Commands used for ordinary pairs:
 

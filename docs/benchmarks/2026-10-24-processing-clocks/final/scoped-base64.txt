@@ -1,0 +1,26 @@
+goos: linux
+goarch: amd64
+pkg: github.com/SoraDaibu/kstream-go/stream
+cpu: AMD EPYC 9V74 80-Core Processor                
+BenchmarkProcessingClockDispatch/batch=1/scoped=false         	  838327	       362.4 ns/op	     256 B/op	       2 allocs/op
+BenchmarkProcessingClockDispatch/batch=1/scoped=false         	  810818	       348.4 ns/op	     256 B/op	       2 allocs/op
+BenchmarkProcessingClockDispatch/batch=1/scoped=false         	  795614	       356.2 ns/op	     256 B/op	       2 allocs/op
+BenchmarkProcessingClockDispatch/batch=1/scoped=false         	  700540	       380.1 ns/op	     256 B/op	       2 allocs/op
+BenchmarkProcessingClockDispatch/batch=1/scoped=false         	  753222	       347.3 ns/op	     256 B/op	       2 allocs/op
+BenchmarkProcessingClockDispatch/batch=1/scoped=true          	  412587	       558.0 ns/op	     512 B/op	       4 allocs/op
+BenchmarkProcessingClockDispatch/batch=1/scoped=true          	  436627	       556.1 ns/op	     512 B/op	       4 allocs/op
+BenchmarkProcessingClockDispatch/batch=1/scoped=true          	  390774	       595.0 ns/op	     512 B/op	       4 allocs/op
+BenchmarkProcessingClockDispatch/batch=1/scoped=true          	  426792	       613.0 ns/op	     512 B/op	       4 allocs/op
+BenchmarkProcessingClockDispatch/batch=1/scoped=true          	  400662	       592.5 ns/op	     512 B/op	       4 allocs/op
+BenchmarkProcessingClockDispatch/batch=256/scoped=false       	   12994	     22892 ns/op	     256 B/op	       2 allocs/op
+BenchmarkProcessingClockDispatch/batch=256/scoped=false       	   13257	     17887 ns/op	     256 B/op	       2 allocs/op
+BenchmarkProcessingClockDispatch/batch=256/scoped=false       	   14732	     17039 ns/op	     256 B/op	       2 allocs/op
+BenchmarkProcessingClockDispatch/batch=256/scoped=false       	   15070	     16077 ns/op	     256 B/op	       2 allocs/op
+BenchmarkProcessingClockDispatch/batch=256/scoped=false       	   15152	     17399 ns/op	     256 B/op	       2 allocs/op
+BenchmarkProcessingClockDispatch/batch=256/scoped=true        	    9538	     23838 ns/op	     512 B/op	       4 allocs/op
+BenchmarkProcessingClockDispatch/batch=256/scoped=true        	   10000	     23434 ns/op	     512 B/op	       4 allocs/op
+BenchmarkProcessingClockDispatch/batch=256/scoped=true        	    9718	     25898 ns/op	     512 B/op	       4 allocs/op
+BenchmarkProcessingClockDispatch/batch=256/scoped=true        	   10000	     23106 ns/op	     512 B/op	       4 allocs/op
+BenchmarkProcessingClockDispatch/batch=256/scoped=true        	   10000	     23281 ns/op	     512 B/op	       4 allocs/op
+PASS
+ok  	github.com/SoraDaibu/kstream-go/stream	6.228s

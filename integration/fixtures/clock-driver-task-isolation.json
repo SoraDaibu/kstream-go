@@ -1,0 +1,32 @@
+[
+  [
+    "in",
+    9,
+    "start",
+    "x"
+  ],
+  [
+    "right",
+    10000,
+    null,
+    "unrelated-or-dropped"
+  ],
+  [
+    "in",
+    3,
+    "late",
+    "x"
+  ],
+  [
+    "in",
+    100,
+    "filtered",
+    "!skip"
+  ],
+  [
+    "in",
+    2,
+    "after-filter",
+    "x"
+  ]
+]

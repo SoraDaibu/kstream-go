@@ -33,6 +33,10 @@ public final class Oracle {
     public static void main(String[] args) throws Exception {
         if (args.length != 3) throw new IllegalArgumentException("scenario input.tsv output.tsv required");
         String scenario = args[0];
+        if (scenario.equals("clock-disconnected") || scenario.equals("clock-repartition")) {
+            ClockOracle.run(scenario, Path.of(args[1]), Path.of(args[2]));
+            return;
+        }
         StreamsBuilder b = new StreamsBuilder();
         var strings = Consumed.with(Serdes.String(), Serdes.String());
         var produced = Produced.with(Serdes.String(), Serdes.String());
@@ -70,20 +74,6 @@ public final class Oracle {
                 case "flatmapvalues" -> source.flatMapValues(v -> Arrays.asList(v, v == null ? null : v + "2")).to("out", produced);
                 case "flatmap" -> source.flatMap((k,v) -> Arrays.asList(KeyValue.pair(k,v), KeyValue.pair(k == null ? null : k + "2",v))).to("out", produced);
                 case "merge" -> source.merge(b.stream("right",strings)).to("out", produced);
-                case "clock-disconnected", "clock-repartition" -> {
-                    var clocked = source;
-                    if (scenario.equals("clock-disconnected")) {
-                        b.stream("right", strings).foreach((k,v) -> {});
-                    } else {
-                        clocked = source.repartition(Repartitioned.with(Serdes.String(), Serdes.String()).withName("exchange"));
-                    }
-                    clocked.filter((k,v) -> !"!skip".equals(v))
-                            .process(() -> new ContextualProcessor<String,String,String,String>() {
-                                @Override public void process(Record<String,String> record) {
-                                    context().forward(record.withValue(Long.toString(context().currentStreamTimeMs())));
-                                }
-                            }).to("out", produced);
-                }
                 case "repartition-values" -> source.repartition(Repartitioned.with(Serdes.String(), Serdes.String()).withName("exchange")).to("out", produced);
                 case "repartition-count" -> source.selectKey((k,v) -> k == null ? null : "g" + (k.getBytes(StandardCharsets.UTF_8).length % 2))
                         .repartition(Repartitioned.with(Serdes.String(), Serdes.String()).withName("exchange"))
@@ -170,7 +160,7 @@ public final class Oracle {
         props.put(StreamsConfig.STATE_DIR_CONFIG, state.toString());
         try (var driver = new TopologyTestDriver(b.build(), props)) {
             HashMap<String, TestInputTopic<String,String>> inputs = new HashMap<>();
-            for (String topic : scenario.equals("clock-disconnected") || scenario.equals("merge") || scenario.equals("metadata") || scenario.equals("metadata-fanout") || scenario.startsWith("process-typed") ? List.of("in", "right")
+            for (String topic : scenario.equals("merge") || scenario.equals("metadata") || scenario.equals("metadata-fanout") || scenario.startsWith("process-typed") ? List.of("in", "right")
                     : scenario.equals("join") || scenario.equals("join-null") || scenario.equals("left-join") || scenario.equals("table-transform-join") ? List.of("table", "in")
                     : scenario.equals("table") || scenario.startsWith("table-") ? List.of("table") : List.of("in")) {
                 inputs.put(topic, driver.createInputTopic(topic, new StringSerializer(), new StringSerializer()));

@@ -342,3 +342,9 @@ inputs after a fresh-store restart and checks the restored processor clock.
 initial 16-byte transaction regression, final private-descriptor measurements,
 ordinary-path regressions and explicit scoped-map overhead. Independent CI gates
 remain required before accepting the change.
+
+The first single-driver clock oracle exposed a TopologyTestDriver limitation:
+it coalesces all described subtopologies into one simulated task. The clock
+harness now explicitly asserts two public subtopologies, pins the single-driver
+behavior and evaluates each task with a separate public-API driver. The minimized
+fixture remains committed; live Java/Go scheduling qualification remains open.

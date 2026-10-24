@@ -72,10 +72,10 @@ for scenario in ("filter", "filter-not", "branch", "branch-default", "mapvalues"
         if scenario in ("merge", "clock-disconnected", "metadata", "metadata-fanout", "process-typed", "process-typed-fanout"): topic = rng.choice(["in", "right"])
         rows.append((topic, timestamp, key, value))
     if scenario.startswith("clock-"):
-        topic = "right" if scenario == "clock-disconnected" else "in"
-        rows = [("in", 9, "start", "x"), (topic, 10000, "~", "unrelated-or-dropped"),
-                ("in", 3, "late", "x"), ("in", 100, "filtered", "!skip"),
-                ("in", 2, "after-filter", "x")] + rows
+        fixture = Path(__file__).resolve().parent.parent / "integration/fixtures/clock-driver-task-isolation.json"
+        prefix = [tuple("~" if cell is None else cell for cell in row) for row in json.loads(fixture.read_text())]
+        if scenario == "clock-repartition": prefix = [("in", ts, key, value) for _, ts, key, value in prefix]
+        rows = prefix + rows
     if scenario in window_folds:
         fixture = Path(__file__).resolve().parent.parent / "integration/fixtures/window-reduce-null-input.json"
         rows += [tuple("~" if cell is None else cell for cell in row) for row in json.loads(fixture.read_text())]

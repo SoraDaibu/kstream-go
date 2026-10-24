@@ -13,7 +13,7 @@ links the passing Go/race suite and differential scenarios.
 | Grouped count | Null keys/values skipped, emits each count update | Go tests; Java oracle count trace |
 | Grouped reduce/aggregate | Explicit nullable results, aggregate timestamps, delete/reinitialize, nullable initializer | Go tests; reference traces are required for every implementation change |
 | Stream-table inner/left join | Stream-triggered current-value lookup; explicit absent-right and nullable-result flags; left join preserves null stream keys | Go null/empty/recovery tests; Java join, join-null and left-join traces passed |
-| Event time | Operator-local window clocks; connected-stage custom processor clocks, cut at exchanges | Go isolation/recovery/rollback tests; Java oracle includes disconnected/exchange clocks; cross-topic timestamp scheduling remains incomplete |
+| Event time | Operator-local window clocks; connected-stage custom processor clocks, cut at exchanges | Go isolation/recovery/rollback tests; two-driver Java clock oracle; live Java/Go clock comparison open; cross-topic timestamp scheduling remains incomplete |
 | Tumbling count | [start,end), grace boundary, late drop, closed-window eviction; null values count when key is present | Go tests; Java oracle window trace |
 | Hopping count | Overlapping half-open windows, ascending start order, per-window grace, null values count | Membership/recovery/aborted-fanout tests; divisible/uneven advance Java traces passed |
 | Windowed reduce | Tumbling/hopping typed reduce, first-value initialization, nullable result deletion, lifetime timestamps; null keys skip, null values advance clock and reach reducer with a flag | Go recovery/overlap/null/rollback tests; independent Java traces passed |

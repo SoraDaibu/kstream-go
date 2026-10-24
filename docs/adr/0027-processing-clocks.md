@@ -46,3 +46,12 @@ and verify restored downstream clocks against older inputs after a real Kafka
 worker restarts with a fresh Pebble store. Benchmark ordinary dispatch/window
 paths as well as the new scoped path. Cross-source timestamp scheduling, idle
 controls, punctuation and heterogeneous stage scheduling remain open.
+
+
+The first single-driver clock comparison failed because Kafka's test driver
+coalesces the two described subtopologies into one simulated task. Preserve the
+minimized input and pin that behavior in the Java harness. Use two independent
+public-API drivers to evaluate the task components and transfer exchange records
+explicitly. This validates per-task clock behavior without treating the test
+harness as a production scheduler. Live Java/Go assignment and clock comparisons
+remain open. See [oracle boundaries](../../integration/README.md).
