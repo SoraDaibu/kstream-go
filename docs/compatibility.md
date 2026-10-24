@@ -8,6 +8,7 @@ links the passing Go/race suite and differential scenarios.
 |---|---|---|
 | KStream transforms/merge | Typed synchronous callbacks; null-aware value mapping, streaming flat maps, key selection and shared merge graph | Go tests; Java filter/filterNot/mapValues/flatMap/flatMapValues/merge traces |
 | KTable | Upsert, null-key skip, tombstone delete; ToStream emits input updates | Go tests; Java oracle table trace |
+| KTable transforms | Materialized filter/filterNot and nullable type-changing MapTableValues; tombstones bypass callbacks | Callback, zero/empty, failure/recovery tests; four Java traces required |
 | Grouped count | Null keys/values skipped, emits each count update | Go tests; Java oracle count trace |
 | Grouped reduce/aggregate | Explicit nullable results, aggregate timestamps, delete/reinitialize, nullable initializer | Go tests; reference traces are required for every implementation change |
 | Stream-table inner/left join | Stream-triggered current-value lookup; explicit absent-right and nullable-result flags; left join preserves null stream keys | Go null/empty/recovery tests; Java join, join-null and left-join traces passed |

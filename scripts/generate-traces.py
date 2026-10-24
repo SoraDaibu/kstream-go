@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Deterministic fixtures plus seeded late/null/update traces; no third-party deps."""
+import json
 import random
 import sys
 from pathlib import Path
@@ -8,7 +9,7 @@ base = [("in", 0, "a", "one"), ("in", 9, "a", "two"), ("in", 10, "b", "x"),
         ("in", 14, "a", "x"), ("in", 8, "a", "late"), ("in", 15, "b", "clock"),
         ("in", 9, "a", "closed"), ("in", 20, "~", "null-key"),
         ("in", 21, "a", "~"), ("in", 22, "", "")]
-for scenario in ("filter", "filter-not", "mapvalues", "flatmap", "flatmapvalues", "merge", "count", "reduce", "aggregate", "aggregate-null", "window", "hopping", "hopping-uneven", "table", "join", "join-null", "left-join"):
+for scenario in ("filter", "filter-not", "mapvalues", "flatmap", "flatmapvalues", "merge", "count", "reduce", "aggregate", "aggregate-null", "window", "hopping", "hopping-uneven", "table", "table-filter", "table-filter-not", "table-mapvalues", "table-transform-join", "join", "join-null", "left-join"):
     rows = list(base)
     if scenario in ("reduce", "aggregate", "aggregate-null"):
         # Deletion/reinitialization must reset the aggregate timestamp lifetime.
@@ -17,8 +18,16 @@ for scenario in ("filter", "filter-not", "mapvalues", "flatmap", "flatmapvalues"
                 ("in", 5, "reset", "new"), ("in", 2, "reset", "old"),
                 ("in", 110, "absent", "!delete"), ("in", 1, "absent", "!delete"),
                 ("in", 2, "absent", "")] + rows
-    if scenario == "table": rows = [("table", ts, k, v) for _, ts, k, v in base]
-    if scenario in ("join", "join-null", "left-join"):
+    if scenario == "table" or scenario.startswith("table-"):
+        rows = [("table", ts, k, v) for _, ts, k, v in base]
+        if scenario != "table":
+            rows += [("table", 3, "absent", "~"), ("table", 4, "rejected", ""),
+                     ("table", 5, "rejected", ""), ("table", 6, "rejected", "~"),
+                     ("table", 2, "a", "!null-output")]
+        if scenario in ("table-filter", "table-filter-not"):
+            fixture = Path(__file__).resolve().parent.parent / "integration/fixtures/table-filter-noop-delete.json"
+            rows = [tuple("~" if cell is None else cell for cell in row) for row in json.loads(fixture.read_text())] + rows
+    if scenario in ("join", "join-null", "left-join", "table-transform-join"):
         rows = [("table", 0, "a", "A"), ("in", 1, "a", "one"),
                 ("table", 2, "a", "~"), ("in", 3, "a", "missing"),
                 ("table", 4, "a", ""), ("in", 5, "a", "empty"),
@@ -44,9 +53,9 @@ for scenario in ("filter", "filter-not", "mapvalues", "flatmap", "flatmapvalues"
         value = rng.choice(["one", "two", "", "~"])
         if scenario in ("reduce", "aggregate", "aggregate-null"):
             value = rng.choice(["one", "two", "", "~", "!delete"])
-        topic = "table" if scenario == "table" else "in"
-        if scenario in ("join", "join-null", "left-join"): topic = rng.choice(["table", "in"])
-        if scenario in ("join-null", "left-join") and rng.randrange(5) == 0: value = "!null-output"
+        topic = "table" if scenario == "table" or scenario.startswith("table-") else "in"
+        if scenario in ("join", "join-null", "left-join", "table-transform-join"): topic = rng.choice(["table", "in"])
+        if scenario in ("join-null", "left-join", "table-mapvalues", "table-transform-join") and rng.randrange(5) == 0: value = "!null-output"
         if scenario == "merge": topic = rng.choice(["in", "right"])
         rows.append((topic, timestamp, key, value))
     (out / (scenario + ".tsv")).write_text("".join("\t".join(map(str,r)) + "\n" for r in rows))
