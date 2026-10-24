@@ -1,0 +1,36 @@
+{
+  "diagnostic_only": true,
+  "instrumented": false,
+  "production_qualified": false,
+  "scope": "Go-only configuration experiment; no Kafka Streams throughput ratio",
+  "fetch_targets": [
+    8388608,
+    1048576,
+    262144
+  ],
+  "round_order": [
+    [
+      8388608,
+      1048576,
+      262144
+    ],
+    [
+      1048576,
+      262144,
+      8388608
+    ],
+    [
+      262144,
+      8388608,
+      1048576
+    ]
+  ],
+  "rounds": 3,
+  "records": 1000000,
+  "warmup": 1000000,
+  "output_capacity": 4096,
+  "app_sha256": "96fc29ebe3d437fc91c0ad3c0046cf0f7b6c1e8b59e03b279985a2c7dda50af3",
+  "driver_sha256": "c78c9471f18865d64225dcee9b702cd2b5a5d4ca9f75d965f674d14a8a142983",
+  "default_fetch_bytes_unchanged": 8388608,
+  "limits": "Shared CPUs/unisolated broker; tiny values and state; soft heap target; no large-payload/HA qualification."
+}

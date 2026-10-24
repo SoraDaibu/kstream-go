@@ -1,0 +1,157 @@
+{
+  "diagnostic_only": true,
+  "instrumented": false,
+  "production_qualified": false,
+  "scope": "Ratios compare Go configurations within each round, not Go with Kafka Streams",
+  "default_fetch_bytes_unchanged": 8388608,
+  "scenarios": {
+    "filter": {
+      "8388608": {
+        "throughput_ratios_to_8mib_by_round": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "median_throughput_ratio_to_8mib": 1.0,
+        "rss_ratios_to_8mib_by_round": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "median_rss_ratio_to_8mib": 1.0,
+        "cpu_ratios_to_8mib_by_round": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "median_records_per_second": 448681.28699874965,
+        "median_peak_rss_kib": 231092,
+        "median_p99_latency_ms": 1450.214394,
+        "median_observed_cpu_ns": 1600000000,
+        "median_records_per_batch": 4032.2580645161293
+      },
+      "1048576": {
+        "throughput_ratios_to_8mib_by_round": [
+          1.4065432659234456,
+          1.001448985539646,
+          0.9559128781830439
+        ],
+        "median_throughput_ratio_to_8mib": 1.001448985539646,
+        "rss_ratios_to_8mib_by_round": [
+          0.28171449472949156,
+          0.353819139596137,
+          0.29273189898395446
+        ],
+        "median_rss_ratio_to_8mib": 0.29273189898395446,
+        "cpu_ratios_to_8mib_by_round": [
+          0.8080808080808081,
+          0.95625,
+          1.0337837837837838
+        ],
+        "median_records_per_second": 449331.4196955206,
+        "median_peak_rss_kib": 67704,
+        "median_p99_latency_ms": 1084.634488,
+        "median_observed_cpu_ns": 1530000000,
+        "median_records_per_batch": 3861.003861003861
+      },
+      "262144": {
+        "throughput_ratios_to_8mib_by_round": [
+          1.4976624658276765,
+          0.9650297533064798,
+          0.9390512410195905
+        ],
+        "median_throughput_ratio_to_8mib": 0.9650297533064798,
+        "rss_ratios_to_8mib_by_round": [
+          0.1703687693279686,
+          0.224361386345583,
+          0.17629342426392952
+        ],
+        "median_rss_ratio_to_8mib": 0.17629342426392952,
+        "cpu_ratios_to_8mib_by_round": [
+          0.8434343434343434,
+          1.06875,
+          1.054054054054054
+        ],
+        "median_records_per_second": 452658.37240632874,
+        "median_peak_rss_kib": 40988,
+        "median_p99_latency_ms": 1219.45355,
+        "median_observed_cpu_ns": 1670000000,
+        "median_records_per_batch": 3846.153846153846
+      }
+    },
+    "count": {
+      "8388608": {
+        "throughput_ratios_to_8mib_by_round": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "median_throughput_ratio_to_8mib": 1.0,
+        "rss_ratios_to_8mib_by_round": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "median_rss_ratio_to_8mib": 1.0,
+        "cpu_ratios_to_8mib_by_round": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "median_records_per_second": 374474.42098412086,
+        "median_peak_rss_kib": 227864,
+        "median_p99_latency_ms": 1764.224501,
+        "median_observed_cpu_ns": 1860000000,
+        "median_records_per_batch": 4032.2580645161293
+      },
+      "1048576": {
+        "throughput_ratios_to_8mib_by_round": [
+          1.1265219342762645,
+          1.2115974064297224,
+          0.9514794689081256
+        ],
+        "median_throughput_ratio_to_8mib": 1.1265219342762645,
+        "rss_ratios_to_8mib_by_round": [
+          0.3102903486290068,
+          0.2945659141086817,
+          0.2798904388814574
+        ],
+        "median_rss_ratio_to_8mib": 0.2945659141086817,
+        "cpu_ratios_to_8mib_by_round": [
+          0.9623655913978495,
+          0.88,
+          1.0060240963855422
+        ],
+        "median_records_per_second": 439662.9998933685,
+        "median_peak_rss_kib": 70304,
+        "median_p99_latency_ms": 1269.01733,
+        "median_observed_cpu_ns": 1760000000,
+        "median_records_per_batch": 3861.003861003861
+      },
+      "262144": {
+        "throughput_ratios_to_8mib_by_round": [
+          1.1334994467609116,
+          1.0209942798271618,
+          0.7664481095303318
+        ],
+        "median_throughput_ratio_to_8mib": 1.0209942798271618,
+        "rss_ratios_to_8mib_by_round": [
+          0.1917459537267844,
+          0.19542767609144648,
+          0.17244728963628256
+        ],
+        "median_rss_ratio_to_8mib": 0.1917459537267844,
+        "cpu_ratios_to_8mib_by_round": [
+          0.978494623655914,
+          0.99,
+          1.2228915662650603
+        ],
+        "median_records_per_second": 370497.16808618564,
+        "median_peak_rss_kib": 43692,
+        "median_p99_latency_ms": 1370.948287,
+        "median_observed_cpu_ns": 1980000000,
+        "median_records_per_batch": 3831.417624521073
+      }
+    }
+  }
+}
