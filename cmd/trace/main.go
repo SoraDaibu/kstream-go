@@ -114,6 +114,14 @@ func run() error {
 		case "merge":
 			right := stream.Stream(b, "right", serde.String, serde.String)
 			stream.Merge(s, right, "merged").To("out")
+		case "repartition-values":
+			s.Repartition("exchange").To("out")
+		case "repartition-count":
+			changed := stream.SelectKey(s, "key", serde.String, func(r record.Record[string, string]) (string, bool) {
+				return "g" + strconv.Itoa(len(r.Key)%2), r.NullKey
+			})
+			counts := stream.Count(changed.Repartition("exchange"), "repartition-counts").ToStream()
+			stream.MapValues(counts, "format", serde.String, func(v int64, null bool) (string, bool) { return strconv.FormatInt(v, 10), null }).To("out")
 		case "metadata", "metadata-fanout":
 			merged := stream.Merge(s, stream.Stream(b, "right", serde.String, serde.String), "merged")
 			if scenario == "metadata-fanout" {
@@ -320,18 +328,57 @@ func run() error {
 		}
 	}
 	batch := make([]record.Bytes, 0, batchSize)
+	process := func(rows []record.Bytes) error {
+		if transactionGroup == nil {
+			return task.ProcessBatch(ctx, rows)
+		}
+		return transactionGroup.Process(ctx, []execution.TaskBatch{{Task: task, Records: rows}})
+	}
+	exchangeTopics, err := p.RepartitionTopics(id.ApplicationID)
+	if err != nil {
+		return err
+	}
+	exchanges := make(map[string]bool, len(exchangeTopics))
+	for _, topic := range exchangeTopics {
+		exchanges[topic] = true
+	}
+	delivered := 0
+	exchangeOffsets := make(map[string]int64)
+	drain := func() error {
+		for {
+			outputs := backend.Outputs(id) // Only committed output is eligible for transport.
+			var queued []record.Bytes
+			for _, row := range outputs[delivered:] {
+				if exchanges[row.Topic] {
+					row.Offset = exchangeOffsets[row.Topic]
+					exchangeOffsets[row.Topic]++
+					queued = append(queued, row)
+				}
+			}
+			delivered = len(outputs)
+			if len(queued) == 0 {
+				return nil
+			}
+			for start := 0; start < len(queued); start += batchSize {
+				if err := process(queued[start:min(start+batchSize, len(queued))]); err != nil {
+					return err
+				}
+			}
+		}
+	}
 	flush := func() error {
 		if len(batch) == 0 {
 			return nil
 		}
-		var err error
-		if transactionGroup == nil {
-			err = task.ProcessBatch(ctx, batch)
-		} else {
-			err = transactionGroup.Process(ctx, []execution.TaskBatch{{Task: task, Records: batch}})
-		}
+		err := process(batch)
 		batch = batch[:0]
-		return err
+		if err != nil {
+			return err
+		}
+		if len(exchanges) > 0 {
+			return drain()
+		}
+		return nil
 	}
 	offsets := make(map[string]int64)
 	for scanner.Scan() {
@@ -362,6 +409,9 @@ func run() error {
 		return err
 	}
 	for _, r := range backend.Outputs(id) {
+		if exchanges[r.Topic] {
+			continue
+		}
 		fmt.Printf("%s\t%s\t%s\t%d\n", r.Topic, field(r.Key), field(r.Value), r.Timestamp)
 	}
 	return nil

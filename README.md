@@ -6,8 +6,8 @@ Streams as its conceptual and semantic reference. Apache-2.0 licensed.
 **This is an architecture and executable-core prototype, not a production Kafka
 Streams replacement.** Experimental Kafka adapters support explicitly assigned
 tasks and bounded consumer-group workers with atomic group-offset/state/output
-transactions. Full group fault-tolerance qualification and distributed
-repartitioning remain incomplete. An optional Pebble adapter
+transactions. Broader group fault-tolerance qualification and heterogeneous
+repartition stage scheduling remain incomplete. An optional Pebble adapter
 provides task-owned persistent caches on a shared engine. Kafka recovery replays
 committed changes directly into the cache in bounded mutation batches; validated
 local checkpoint reuse remains unimplemented.
@@ -153,9 +153,18 @@ flowchart LR
 If that event arrives at stream-time 15ms, it updates only the second window.
 
 Key-changing maps/processors require repartitioning before key-local operations.
-An explicit `Repartition` node is represented logically, and Build rejects it
-until a broker adapter can implement an actual exchange. This avoids silently
-producing incorrect distributed aggregates. Callbacks must be deterministic,
+Use an explicit [broker repartition boundary](docs/repartition.md) with provisioned
+internal topics and declared Kafka routing before grouping changed keys. The
+current worker requires equal partition counts and coalesces stages per partition.
+
+```mermaid
+flowchart LR
+    Key["Changed key"] --> Hash["Producer key hash"]
+    Hash --> Topic["Committed exchange topic"]
+    Topic --> Task["Destination task · key-local state"]
+```
+
+Callbacks must be deterministic,
 respect record immutability, and use task stores for recoverable state.
 
 ## Qualification program

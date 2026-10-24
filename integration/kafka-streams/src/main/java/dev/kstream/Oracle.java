@@ -19,6 +19,7 @@ import org.apache.kafka.streams.TopologyTestDriver;
 import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.Branched;
 import org.apache.kafka.streams.kstream.Named;
+import org.apache.kafka.streams.kstream.Repartitioned;
 import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.kstream.TimeWindows;
@@ -69,6 +70,11 @@ public final class Oracle {
                 case "flatmapvalues" -> source.flatMapValues(v -> Arrays.asList(v, v == null ? null : v + "2")).to("out", produced);
                 case "flatmap" -> source.flatMap((k,v) -> Arrays.asList(KeyValue.pair(k,v), KeyValue.pair(k == null ? null : k + "2",v))).to("out", produced);
                 case "merge" -> source.merge(b.stream("right",strings)).to("out", produced);
+                case "repartition-values" -> source.repartition(Repartitioned.with(Serdes.String(), Serdes.String()).withName("exchange")).to("out", produced);
+                case "repartition-count" -> source.selectKey((k,v) -> k == null ? null : "g" + (k.getBytes(StandardCharsets.UTF_8).length % 2))
+                        .repartition(Repartitioned.with(Serdes.String(), Serdes.String()).withName("exchange"))
+                        .groupByKey().count(Materialized.as("repartition-counts")).toStream()
+                        .mapValues(v -> v.toString()).to("out", produced);
                 case "metadata", "metadata-fanout" -> {
                     var merged = source.merge(b.stream("right", strings));
                     if (scenario.equals("metadata-fanout")) merged = merged.flatMapValues(v -> Arrays.asList(v, v));

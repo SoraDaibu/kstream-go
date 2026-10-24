@@ -79,7 +79,7 @@ second member with a different instance ID and state directory.
 
 This remains a tested subset, not full Kafka Streams fault tolerance or a
 throughput qualification. Cooperative assignment, heterogeneous subtopologies,
-cross-topic timestamp scheduling and idle controls, repartition exchanges,
+cross-topic timestamp scheduling and idle controls, heterogeneous exchange stages,
 standby replicas, checkpoint reuse, restore-marker garbage
 collection after failed startup, and broader timeout/network/compaction failure
 coverage remain open. Never mix fixed-assignment and group workers under the

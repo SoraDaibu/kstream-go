@@ -1,0 +1,43 @@
+File: app
+Build ID: 852190645b04d66c196bcf8d979f7f792c19d48c
+Type: inuse_space
+Time: 2026-10-24 13:17:26 UTC
+Showing nodes accounting for 1541.40kB, 100% of 1541.40kB total
+      flat  flat%   sum%        cum   cum%
+         0     0%     0%  1541.40kB   100%  runtime.main
+         0     0%     0%  1028.09kB 66.70%  runtime.doInit (inline)
+         0     0%     0%  1028.09kB 66.70%  runtime.doInit1
+  516.01kB 33.48% 33.48%   516.01kB 33.48%  github.com/cockroachdb/pebble/sstable.generateTagMaps
+         0     0% 33.48%   516.01kB 33.48%  github.com/cockroachdb/pebble/sstable.init.0
+         0     0% 33.48%   513.31kB 33.30%  github.com/SoraDaibu/kstream-go/adapters/kafka.RunGroup
+         0     0% 33.48%   513.31kB 33.30%  github.com/SoraDaibu/kstream-go/adapters/pebble.(*taskStore).Get
+         0     0% 33.48%   513.31kB 33.30%  github.com/SoraDaibu/kstream-go/execution.(*Group).Process
+         0     0% 33.48%   513.31kB 33.30%  github.com/SoraDaibu/kstream-go/execution.(*Task).StoreGet
+         0     0% 33.48%   513.31kB 33.30%  github.com/SoraDaibu/kstream-go/execution.(*Task).stage
+         0     0% 33.48%   513.31kB 33.30%  github.com/SoraDaibu/kstream-go/internal/graph.(*Port[go.shape.string,go.shape.string]).Compile.func1
+         0     0% 33.48%   513.31kB 33.30%  github.com/SoraDaibu/kstream-go/stream.Count[go.shape.string,go.shape.string].func1.1
+         0     0% 33.48%   513.31kB 33.30%  github.com/SoraDaibu/kstream-go/stream.Stream[go.shape.string,go.shape.string].func1.1
+         0     0% 33.48%   513.31kB 33.30%  github.com/cockroachdb/pebble.(*DB).Get (inline)
+         0     0% 33.48%   513.31kB 33.30%  github.com/cockroachdb/pebble.(*DB).getInternal
+  513.31kB 33.30% 66.78%   513.31kB 33.30%  github.com/cockroachdb/pebble.init.func3
+         0     0% 66.78%   513.31kB 33.30%  main.main
+         0     0% 66.78%   513.31kB 33.30%  main.run
+         0     0% 66.78%   513.31kB 33.30%  sync.(*Pool).Get
+         0     0% 66.78%   512.08kB 33.22%  google.golang.org/protobuf/internal/impl.(*MessageInfo).init (inline)
+         0     0% 66.78%   512.08kB 33.22%  google.golang.org/protobuf/internal/impl.(*MessageInfo).initOnce
+         0     0% 66.78%   512.08kB 33.22%  google.golang.org/protobuf/internal/impl.(*MessageInfo).makeKnownFieldsFunc
+         0     0% 66.78%   512.08kB 33.22%  google.golang.org/protobuf/internal/impl.(*MessageInfo).makeReflectFuncs
+         0     0% 66.78%   512.08kB 33.22%  google.golang.org/protobuf/internal/impl.(*messageState).ProtoMethods
+         0     0% 66.78%   512.08kB 33.22%  google.golang.org/protobuf/internal/impl.fieldInfoForList
+         0     0% 66.78%   512.08kB 33.22%  google.golang.org/protobuf/proto.Unmarshal
+         0     0% 66.78%   512.08kB 33.22%  google.golang.org/protobuf/proto.UnmarshalOptions.unmarshal
+         0     0% 66.78%   512.08kB 33.22%  google.golang.org/protobuf/proto.protoMethods (inline)
+         0     0% 66.78%   512.08kB 33.22%  google.golang.org/protobuf/reflect/protodesc.init.0
+         0     0% 66.78%   512.08kB 33.22%  internal/sync.(*HashTrieMap[go.shape.interface {},go.shape.interface {}]).Load
+         0     0% 66.78%   512.08kB 33.22%  internal/sync.(*HashTrieMap[go.shape.interface {},go.shape.interface {}]).init (inline)
+         0     0% 66.78%   512.08kB 33.22%  internal/sync.(*HashTrieMap[go.shape.interface {},go.shape.interface {}]).initSlow
+  512.08kB 33.22%   100%   512.08kB 33.22%  internal/sync.newIndirectNode[go.shape.interface {},go.shape.interface {}] (inline)
+         0     0%   100%   512.08kB 33.22%  reflect.(*rtype).ptrTo
+         0     0%   100%   512.08kB 33.22%  reflect.PointerTo (inline)
+         0     0%   100%   512.08kB 33.22%  reflect.PtrTo (inline)
+         0     0%   100%   512.08kB 33.22%  sync.(*Map).Load (inline)

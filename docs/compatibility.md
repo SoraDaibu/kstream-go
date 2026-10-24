@@ -13,7 +13,7 @@ links the passing Go/race suite and differential scenarios.
 | Grouped count | Null keys/values skipped, emits each count update | Go tests; Java oracle count trace |
 | Grouped reduce/aggregate | Explicit nullable results, aggregate timestamps, delete/reinitialize, nullable initializer | Go tests; reference traces are required for every implementation change |
 | Stream-table inner/left join | Stream-triggered current-value lookup; explicit absent-right and nullable-result flags; left join preserves null stream keys | Go null/empty/recovery tests; Java join, join-null and left-join traces passed |
-| Event time | Operator-local max timestamp for windows; task clock for custom processors | Go boundary/isolation tests; Java oracle |
+| Event time | Operator-local max timestamp for windows; coalesced partition-task clock for custom processors | Go boundary/isolation tests; Java oracle; custom task clock spans broker stages and differs from separate Kafka subtopology clocks |
 | Tumbling count | [start,end), grace boundary, late drop, closed-window eviction; null values count when key is present | Go tests; Java oracle window trace |
 | Hopping count | Overlapping half-open windows, ascending start order, per-window grace, null values count | Membership/recovery/aborted-fanout tests; divisible/uneven advance Java traces passed |
 | Windowed reduce | Tumbling/hopping typed reduce, first-value initialization, nullable result deletion, lifetime timestamps; null keys skip, null values advance clock and reach reducer with a flag | Go recovery/overlap/null/rollback tests; independent Java traces passed |
@@ -22,7 +22,7 @@ links the passing Go/race suite and differential scenarios.
 | Partition tasks | Single partition number, task-local state | Isolation and race tests |
 | Changelog/recovery/EOS | In-memory model, fixed checkpoints and experimental group-offset transactions | Model and broker recovery/fencing/aborted-record gates; broader group fault qualification remains open |
 | Persistent local stores | Optional shared Pebble engine, task-owned key-value namespaces, atomic batches, synchronous write mode and streamed cache loads | Ownership/reopen/failure tests; local checkpoint reuse and specialized stores pending |
-| Repartition | Logical explicit node; Build fails until Kafka exchange exists | Rejection tests |
+| Repartition | Explicit transactional broker sink/source; declared keyed routing and delete-topic policy; equal-count co-located worker | Model routing/recovery/setup tests; Java and real broker gates required |
 | Other joins/windows | Not implemented | Do not infer compatibility |
 | Caching/suppression | Disabled/absent; every update emitted | Deliberate difference, oracle cache disabled |
 | Negative timestamps | Rejected | Deliberate restriction tested |

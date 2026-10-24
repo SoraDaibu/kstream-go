@@ -18,6 +18,7 @@ import (
 type StreamsBuilder struct {
 	nodes          []topology.Node
 	sources        []func(*graph.Context) error
+	sourceTopics   []sourceTopic
 	topics         map[string]bool
 	sinks          map[string]int
 	err            error
@@ -43,7 +44,9 @@ func (b *StreamsBuilder) add(n topology.Node) { b.mutable(); b.nodes = append(b.
 type Topology struct {
 	plan           topology.Plan
 	sources        []func(*graph.Context) error
+	sourceTopics   []sourceTopic
 	recordMetadata bool
+	sinkTopics     []string
 }
 
 func (b *StreamsBuilder) Build() (Topology, error) {
@@ -61,13 +64,30 @@ func (b *StreamsBuilder) Build() (Topology, error) {
 	if err != nil {
 		return Topology{}, err
 	}
-	return Topology{plan: p, sources: append([]func(*graph.Context) error(nil), b.sources...), recordMetadata: b.recordMetadata}, nil
+	sinks := make([]string, 0, len(b.sinks))
+	for topic := range b.sinks {
+		sinks = append(sinks, topic)
+	}
+	return Topology{plan: p, sources: append([]func(*graph.Context) error(nil), b.sources...), sourceTopics: append([]sourceTopic(nil), b.sourceTopics...), sinkTopics: sinks, recordMetadata: b.recordMetadata}, nil
 }
 func (t Topology) Describe() string    { return t.plan.Describe() }
 func (t Topology) Plan() topology.Plan { return t.plan }
 func (t Topology) NewTask(ctx context.Context, s execution.Spec, backend execution.Backend, options ...execution.Option) (*execution.Task, error) {
 	if len(t.sources) == 0 {
 		return nil, errors.New("task requires a built topology with sources")
+	}
+	exchanges, err := t.RepartitionTopics(s.ApplicationID)
+	if err != nil {
+		return nil, err
+	}
+	if len(exchanges) > 0 {
+		validator, ok := backend.(execution.RepartitionValidator)
+		if !ok {
+			return nil, errors.New("backend does not declare repartition transport support")
+		}
+		if err := validator.ValidateRepartitionTopics(exchanges); err != nil {
+			return nil, err
+		}
 	}
 	if t.recordMetadata {
 		options = append([]execution.Option{execution.WithRecordMetadata()}, options...)
@@ -82,7 +102,7 @@ func (t Topology) NewTask(ctx context.Context, s execution.Spec, backend executi
 			_ = task.Close()
 		}
 	}()
-	compiled := graph.New(task)
+	compiled := graph.New(task, s.ApplicationID)
 	for _, source := range t.sources {
 		if err := source(compiled); err != nil {
 			return nil, err
@@ -107,13 +127,18 @@ func Stream[K, V any](b *StreamsBuilder, topic string, key serde.Codec[K], value
 		b.fail(fmt.Errorf("empty or duplicate topic %q", topic))
 	}
 	b.topics[topic] = true
+	return bindSource(b, topology.Node{Name: topic, Kind: "source"}, sourceTopic{name: topic}, key, value)
+}
+func bindSource[K, V any](b *StreamsBuilder, node topology.Node, source sourceTopic, key serde.Codec[K], value serde.Codec[V]) KStream[K, V] {
 	if !key.Valid() || !value.Valid() {
 		b.fail(errors.New("source requires valid codecs"))
 	}
 	p := &graph.Port[K, V]{}
-	s := KStream[K, V]{b, p, topic, key, value, true}
-	b.add(topology.Node{Name: topic, Kind: "source"})
+	s := KStream[K, V]{b, p, node.Name, key, value, true}
+	b.add(node)
+	b.sourceTopics = append(b.sourceTopics, source)
 	b.sources = append(b.sources, func(t *graph.Context) error {
+		topic := source.topic(t.ApplicationID)
 		h := p.Compile(t)
 		return t.Task.Register(topic, func(in record.Bytes) error {
 			r := record.Record[K, V]{Timestamp: in.Timestamp, NullKey: in.Key == nil, NullValue: in.Value == nil}
@@ -195,7 +220,11 @@ func (s KStream[K, V]) To(topic string) {
 	if topic == "" {
 		s.builder.fail(errors.New("sink topic required"))
 	}
+	s.sinkTopic(func(*graph.Context) string { return topic })
+}
+func (s KStream[K, V]) sinkTopic(resolve func(*graph.Context) string) {
 	s.port.Subscribe(func(t *graph.Context) processor.Handler[K, V] {
+		topic := resolve(t)
 		task := t.Task
 		return func(r record.Record[K, V]) error {
 			out := record.Bytes{Topic: topic, Timestamp: r.Timestamp}
@@ -224,13 +253,13 @@ func (s KStream[K, V]) To(topic string) {
 	})
 }
 
-// Repartition records an explicit broker exchange. Build rejects this until an
-// adapter can materialize the sink/source subtopology, avoiding false local routing.
+// Repartition writes a committed broker exchange and consumes it as a new
+// source. It never forwards directly. Wire InputTopics/RepartitionTopics into
+// the adapter and provision stable equal-partition-count exchange topics.
 func (s KStream[K, V]) Repartition(name string) KStream[K, V] {
-	out := s.process(name, false, func(_ processor.Context, next processor.Forward[K, V]) processor.Handler[K, V] {
-		return processor.Handler[K, V](next)
-	})
-	s.builder.nodes[len(s.builder.nodes)-1].Kind = "repartition"
-	out.partitioned = true
-	return out
+	s.builder.mutable()
+	source := sourceTopic{name: name, internal: true}
+	s.builder.add(topology.Node{Name: name, Kind: "repartition", Parents: []string{s.name}})
+	s.sinkTopic(func(ctx *graph.Context) string { return source.topic(ctx.ApplicationID) })
+	return bindSource(s.builder, topology.Node{Name: name + "-source", Kind: "repartition-source", Parents: []string{name}}, source, s.key, s.value)
 }

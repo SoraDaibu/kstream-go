@@ -1,0 +1,22 @@
+File: app
+Build ID: 852190645b04d66c196bcf8d979f7f792c19d48c
+Type: inuse_space
+Time: 2026-10-24 13:17:19 UTC
+Showing nodes accounting for 1025.51kB, 100% of 1025.51kB total
+      flat  flat%   sum%        cum   cum%
+         0     0%     0%  1025.51kB   100%  runtime.doInit (inline)
+         0     0%     0%  1025.51kB   100%  runtime.doInit1
+         0     0%     0%  1025.51kB   100%  runtime.main
+         0     0%     0%   513.50kB 50.07%  github.com/getsentry/sentry-go.init
+         0     0%     0%   513.50kB 50.07%  regexp.Compile (inline)
+         0     0%     0%   513.50kB 50.07%  regexp.MustCompile
+         0     0%     0%   513.50kB 50.07%  regexp.compile
+         0     0%     0%   513.50kB 50.07%  regexp/syntax.(*compiler).cap (inline)
+         0     0%     0%   513.50kB 50.07%  regexp/syntax.(*compiler).compile
+  513.50kB 50.07% 50.07%   513.50kB 50.07%  regexp/syntax.(*compiler).inst (inline)
+         0     0% 50.07%   513.50kB 50.07%  regexp/syntax.Compile
+         0     0% 50.07%   512.01kB 49.93%  github.com/cockroachdb/errors.New (inline)
+         0     0% 50.07%   512.01kB 49.93%  github.com/cockroachdb/errors/errutil.NewWithDepth
+         0     0% 50.07%   512.01kB 49.93%  github.com/cockroachdb/errors/withstack.WithStackDepth (inline)
+  512.01kB 49.93%   100%   512.01kB 49.93%  github.com/cockroachdb/errors/withstack.callers
+         0     0%   100%   512.01kB 49.93%  github.com/cockroachdb/pebble/sstable.init

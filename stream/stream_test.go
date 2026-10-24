@@ -206,8 +206,8 @@ func TestBuildRejectsUnsupportedOrInvalidPlans(t *testing.T) {
 			changed := stream.Map(s, "map", serde.String, serde.String, func(r record.Record[string, string]) record.Record[string, string] { return r })
 			stream.Count(changed, "count")
 		},
-		"exchange unavailable": func(b *stream.StreamsBuilder) {
-			stream.Stream(b, "in", serde.String, serde.String).Repartition("exchange").To("out")
+		"empty exchange name": func(b *stream.StreamsBuilder) {
+			stream.Stream(b, "in", serde.String, serde.String).Repartition("").To("out")
 		},
 		"duplicate stores": func(b *stream.StreamsBuilder) {
 			s := stream.Stream(b, "in", serde.String, serde.String)

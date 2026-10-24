@@ -63,6 +63,11 @@ func normalizeGroup(config GroupConfig) (GroupConfig, error) {
 		}
 		seen[topic] = true
 	}
+	for _, topic := range config.Kafka.RepartitionTopics {
+		if !seen[topic] {
+			return config, errors.New("group worker must subscribe to every configured repartition topic")
+		}
+	}
 	if config.BatchSize == 0 {
 		config.BatchSize = 256
 	}
@@ -168,7 +173,7 @@ func RunGroup(ctx context.Context, config GroupConfig, factory TaskFactory) (err
 	opts = append(opts, kgo.SeedBrokers(config.Kafka.Brokers...), kgo.ConsumerGroup(config.ApplicationID), kgo.ConsumeTopics(config.Topics...), kgo.ConsumeResetOffset(kgo.NewOffset().AtStart()),
 		kgo.TransactionalID(workerTransactionID(config.ApplicationID, config.InstanceID)), kgo.RequiredAcks(kgo.AllISRAcks()), kgo.DisableAutoCommit(), kgo.RequireStableFetchOffsets(), kgo.FetchIsolationLevel(kgo.ReadCommitted()),
 		kgo.Balancers(kgo.RangeBalancer()), kgo.OnPartitionsAssigned(tracker.assigned), kgo.OnPartitionsRevoked(tracker.revoked), kgo.OnPartitionsLost(tracker.revoked),
-		kgo.RecordPartitioner(topicPartitioner{config.Kafka.ChangelogTopic, output}), kgo.FetchMaxBytes(config.FetchBytes), kgo.FetchMaxPartitionBytes(config.FetchBytes), kgo.MaxConcurrentFetches(1))
+		kgo.RecordPartitioner(newTopicPartitioner(config.Kafka, output)), kgo.FetchMaxBytes(config.FetchBytes), kgo.FetchMaxPartitionBytes(config.FetchBytes), kgo.MaxConcurrentFetches(1))
 	session, err := kgo.NewGroupTransactSession(opts...)
 	if err != nil {
 		return err
@@ -180,6 +185,10 @@ func RunGroup(ctx context.Context, config GroupConfig, factory TaskFactory) (err
 	initializeCtx, stopInitialize := context.WithTimeout(ctx, config.RestoreTimeout)
 	count, err := sourcePartitionCount(initializeCtx, session.Client(), config.Topics, config.Kafka.ChangelogTopic)
 	if err != nil {
+		stopInitialize()
+		return err
+	}
+	if err := validateExchangePolicies(initializeCtx, session.Client(), config.Kafka.RepartitionTopics); err != nil {
 		stopInitialize()
 		return err
 	}

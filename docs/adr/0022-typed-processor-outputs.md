@@ -17,7 +17,7 @@ changes. New output codecs are explicit at the DSL boundary.
 
 The package function conservatively invalidates key partitioning, even when the
 output key happens to equal the input key. Downstream key-local operations must
-reject it until a real repartition exchange exists. This matches the intent of
+reject it until an explicit broker repartition boundary is applied (ADR 0026). This matches the intent of
 Kafka Streams process while avoiding a false local routing guarantee. A future
 fixed-key API needs a separate record/forward contract that enforces key identity.
 
