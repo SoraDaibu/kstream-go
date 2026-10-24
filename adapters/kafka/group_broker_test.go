@@ -295,7 +295,7 @@ func TestBrokerGroupCrashHelper(t *testing.T) {
 		t.Skip("subprocess helper only")
 	}
 	config := brokerConfig(t)
-	session, err := kgo.NewGroupTransactSession(kgo.SeedBrokers(config.Brokers...), kgo.ConsumerGroup(application), kgo.ConsumeTopics(testInput), kgo.ConsumeResetOffset(kgo.NewOffset().AtStart()), kgo.SessionTimeout(6*time.Second), kgo.HeartbeatInterval(200*time.Millisecond), kgo.RebalanceTimeout(10*time.Second),
+	session, err := kgo.NewGroupTransactSession(kgo.SeedBrokers(config.Brokers...), kgo.ConsumerGroup(application), kgo.ConsumeTopics(testInput), kgo.Balancers(kgo.RangeBalancer()), kgo.ConsumeResetOffset(kgo.NewOffset().AtStart()), kgo.SessionTimeout(6*time.Second), kgo.HeartbeatInterval(200*time.Millisecond), kgo.RebalanceTimeout(10*time.Second),
 		kgo.DisableAutoCommit(), kgo.RequireStableFetchOffsets(), kgo.FetchIsolationLevel(kgo.ReadCommitted()), kgo.TransactionalID(workerTransactionID(application, "worker-a")), kgo.RecordPartitioner(kgo.ManualPartitioner()))
 	if err != nil {
 		t.Fatal(err)
