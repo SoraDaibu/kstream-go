@@ -3,6 +3,7 @@ package stream
 import (
 	"encoding/binary"
 	"errors"
+	"math"
 
 	"github.com/SoraDaibu/kstream-go/internal/graph"
 	"github.com/SoraDaibu/kstream-go/processor"
@@ -13,8 +14,7 @@ import (
 )
 
 // WindowedCount emits an update per accepted record; closed windows are evicted.
-// This baseline scans windows when stream-time advances. A persistent store
-// needs an expiry index and write batches for large-window workloads.
+// A task-local expiry index is rebuilt from committed windows once per task.
 func WindowedCount[K, V any](s KStream[K, V], store string, w window.Tumbling) KStream[window.Key[K], int64] {
 	s.builder.mutable()
 	if !s.partitioned {
@@ -32,6 +32,8 @@ func WindowedCount[K, V any](s KStream[K, V], store string, w window.Tumbling) K
 	s.port.Subscribe(func(t *graph.Context) processor.Handler[K, V] {
 		task := t.Task
 		next := p.Compile(t)
+		var expiry windowExpiryHeap
+		initialized := false
 		return func(r record.Record[K, V]) error {
 			if r.NullKey {
 				return nil
@@ -39,6 +41,31 @@ func WindowedCount[K, V any](s KStream[K, V], store string, w window.Tumbling) K
 			start, end, err := w.Bounds(r.Timestamp)
 			if err != nil {
 				return err
+			}
+			if !initialized {
+				var invalid error
+				if err := task.StoreScan(store, func(key string, _ []byte) {
+					if key == "" {
+						return // Operator-local clock metadata.
+					}
+					if len(key) < 8 {
+						invalid = errors.New("invalid stored window key")
+						return
+					}
+					start := int64(binary.BigEndian.Uint64([]byte(key[:8])))
+					if start < 0 || start > math.MaxInt64-w.Size {
+						invalid = errors.New("invalid stored window bounds")
+						return
+					}
+					expiry = append(expiry, windowExpiry{end: start + w.Size, key: key})
+				}); err != nil {
+					return err
+				}
+				if invalid != nil {
+					return invalid
+				}
+				expiry.initialize()
+				initialized = true
 			}
 			// The empty store key holds operator-local stream-time. Window keys
 			// always contain at least the eight-byte window-start prefix.
@@ -64,16 +91,8 @@ func WindowedCount[K, V any](s KStream[K, V], store string, w window.Tumbling) K
 					return err
 				}
 				task.StorePut(store, "", encoded)
-				if err := task.StoreScan(store, func(key string, _ []byte) {
-					if len(key) < 8 {
-						return
-					}
-					start := int64(binary.BigEndian.Uint64([]byte(key[:8])))
-					if w.Closed(start+w.Size, clock) {
-						task.StorePut(store, key, nil)
-					}
-				}); err != nil {
-					return err
+				for len(expiry) > 0 && w.Closed(expiry[0].end, clock) {
+					task.StorePut(store, expiry.pop().key, nil)
 				}
 			}
 			if w.Closed(end, clock) {
@@ -90,7 +109,8 @@ func WindowedCount[K, V any](s KStream[K, V], store string, w window.Tumbling) K
 			binary.BigEndian.PutUint64(key, uint64(start))
 			copy(key[8:], encoded)
 			count, timestamp := int64(0), r.Timestamp
-			old, ok, err := task.StoreGet(store, string(key))
+			storageKey := string(key)
+			old, ok, err := task.StoreGet(store, storageKey)
 			if err != nil {
 				return err
 			}
@@ -103,9 +123,11 @@ func WindowedCount[K, V any](s KStream[K, V], store string, w window.Tumbling) K
 				if prior > timestamp {
 					timestamp = prior
 				}
+			} else {
+				expiry.add(windowExpiry{end: end, key: storageKey})
 			}
 			count++
-			task.StorePut(store, string(key), encodeAggregate(count, timestamp))
+			task.StorePut(store, storageKey, encodeAggregate(count, timestamp))
 			return next(record.Record[window.Key[K], int64]{
 				Key:   window.Key[K]{Key: r.Key, Start: start, End: end},
 				Value: count, Timestamp: timestamp,

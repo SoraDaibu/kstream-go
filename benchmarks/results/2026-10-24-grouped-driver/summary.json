@@ -1,0 +1,42 @@
+{
+  "production_qualified": false,
+  "target_ratio": 2.5,
+  "scenarios": {
+    "filter": {
+      "median_paired_throughput_ratio": 12.109873678363595,
+      "exploratory_bootstrap_95pct": [
+        11.257072267524542,
+        12.988379367751921
+      ],
+      "go_median_rss_kib": 8616,
+      "kafka_median_rss_kib": 96212
+    },
+    "count": {
+      "median_paired_throughput_ratio": 9.18428041758169,
+      "exploratory_bootstrap_95pct": [
+        8.643604919616175,
+        9.268809461493477
+      ],
+      "go_median_rss_kib": 8624,
+      "kafka_median_rss_kib": 99152
+    },
+    "reduce": {
+      "median_paired_throughput_ratio": 8.265338207070984,
+      "exploratory_bootstrap_95pct": [
+        7.744389055763466,
+        8.64624168100691
+      ],
+      "go_median_rss_kib": 8636,
+      "kafka_median_rss_kib": 99276
+    },
+    "aggregate": {
+      "median_paired_throughput_ratio": 7.9675978055963315,
+      "exploratory_bootstrap_95pct": [
+        7.873788494871274,
+        8.643582533129033
+      ],
+      "go_median_rss_kib": 8636,
+      "kafka_median_rss_kib": 97476
+    }
+  }
+}

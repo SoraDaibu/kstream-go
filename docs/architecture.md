@@ -28,6 +28,12 @@ physical engine. The execution package depends only on the state.Store contract;
 the composition root supplies an execution.WithStoreFactory option. Store I/O
 errors are explicit, and a failed local apply after a backend commit invalidates
 the task until committed state is restored. See [ADR 0007](adr/0007-persistent-state.md).
+Window processors maintain a task-owned derived expiry heap and rebuild it from
+committed windows on first use. Clock advances remove only closed entries;
+they do not repeatedly scan all retained state. The heap is discarded with a
+poisoned task after any transaction failure; it is never a durability authority.
+See [ADR 0009](adr/0009-window-expiry-index.md) and
+[the before/after evaluation](benchmarks/2026-10-24-window-expiry/README.md).
 
 A caller-bounded record batch stages all mutations. Reads observe preceding
 records in the batch; clocks advance per record. Repeated writes to a store key

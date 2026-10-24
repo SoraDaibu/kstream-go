@@ -1,6 +1,6 @@
 # ADR 0008: Typed grouped aggregation and nullable results
 
-Status: Proposed before implementation; semantics gated by differential tests.
+Status: Accepted for the tested non-windowed, existing-key subset.
 
 Expose KGroupedStream through KStream.GroupByKey. It describes a grouping by
 the existing key and does not perform a broker exchange. The existing Count
