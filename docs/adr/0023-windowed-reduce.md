@@ -8,7 +8,10 @@ streams like the existing count API. Preserve first-value initialization, input
 order within each window, maximum aggregate timestamp, nullable reducer results,
 and per-window grace. A null result deletes the aggregate and emits a tombstone;
 the next accepted value initializes a fresh aggregate lifetime. Skip null input
-keys and values, subject to validation against Kafka Streams 3.9.1's public API.
+keys. A null value advances the clock and, for an absent aggregate, emits a
+tombstone without invoking the reducer. Existing aggregates pass valueNull=true
+to the reducer. The first independent Kafka Streams 3.9.1 trace rejected the
+initial skip-null-value assumption; preserve that finding in a regression fixture.
 
 Share task-owned operator-clock, restore validation and expiry-heap bookkeeping
 between counts and reduce. Keep count's specialized integer state and arithmetic
@@ -32,7 +35,7 @@ documented bookkeeping cost bounded by distinct unexpired window keys.
 Reject invalid window bounds, empty stores, nil reducers, invalid codecs and
 key-changing inputs without a real repartition boundary. Keep ascending hopping
 window order and overflow validation. Empty values remain ordinary data. Existing
-count null-value semantics must not change while reduce adds a different policy.
+count null-value semantics must not change while reduce exposes nullable input to its callback.
 
 Validate late/grace boundaries, overlapping partially closed windows, null/empty
 records, delete/reinitialize timestamps, recovery, failure during hopping fanout

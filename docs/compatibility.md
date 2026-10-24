@@ -16,7 +16,7 @@ links the passing Go/race suite and differential scenarios.
 | Event time | Operator-local max timestamp for windows; task clock for custom processors | Go boundary/isolation tests; Java oracle |
 | Tumbling count | [start,end), grace boundary, late drop, closed-window eviction; null values count when key is present | Go tests; Java oracle window trace |
 | Hopping count | Overlapping half-open windows, ascending start order, per-window grace, null values count | Membership/recovery/aborted-fanout tests; divisible/uneven advance Java traces passed |
-| Windowed reduce | Tumbling/hopping typed reduce, first-value initialization, nullable result deletion, lifetime timestamps; null input keys/values skip | Go recovery/overlap/null/rollback tests; independent Java traces required |
+| Windowed reduce | Tumbling/hopping typed reduce, first-value initialization, nullable result deletion, lifetime timestamps; null keys skip, null values advance clock and reach reducer with a flag | Go recovery/overlap/null/rollback tests; independent Java traces required |
 | Processor API | Same/cross-type factories instantiate per task; conservative key-change validation; DSL source metadata, raw runtime opt-in | Go callback/fanout/state/replay/rollback tests; Java metadata and cross-type traces passed |
 | Partition tasks | Single partition number, task-local state | Isolation and race tests |
 | Changelog/recovery/EOS | In-memory model, fixed checkpoints and experimental group-offset transactions | Model and broker recovery/fencing/aborted-record gates; broader group fault qualification remains open |

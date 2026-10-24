@@ -15,8 +15,11 @@ import (
 func TestWindowedReduceDeletionRecoveryNullsAndTimestampLifetimes(t *testing.T) {
 	b := stream.NewStreamsBuilder()
 	calls := 0
-	stream.WindowedReduce(stream.Stream(b, "in", serde.String, serde.String), "reduced", window.Tumbling{Size: 10, Grace: 5}, func(old, value string) (string, bool) {
+	stream.WindowedReduce(stream.Stream(b, "in", serde.String, serde.String), "reduced", window.Tumbling{Size: 10, Grace: 5}, func(old, value string, valueNull bool) (string, bool) {
 		calls++
+		if valueNull {
+			value = "<null>"
+		}
 		return old + ":" + value, value == "!delete"
 	}).To("out")
 	plan := build(t, b)
@@ -37,7 +40,7 @@ func TestWindowedReduceDeletionRecoveryNullsAndTimestampLifetimes(t *testing.T) 
 		{Topic: "in", Offset: 3, Timestamp: 2, Key: []byte("a"), Value: []byte("!delete")}, // first value bypasses reducer
 		{Topic: "in", Offset: 4, Timestamp: 5, Key: []byte("a"), Value: []byte{}},
 		{Topic: "in", Offset: 5, Timestamp: 1000, Key: nil, Value: []byte("ignored")},
-		{Topic: "in", Offset: 6, Timestamp: 1000, Key: []byte("a"), Value: nil},
+		{Topic: "in", Offset: 6, Timestamp: 6, Key: []byte("a"), Value: nil},
 		{Topic: "in", Offset: 7, Timestamp: 6, Key: []byte("a"), Value: []byte("next")},
 		{Topic: "in", Offset: 8, Timestamp: 15, Key: []byte("clock"), Value: []byte("advance")},
 		{Topic: "in", Offset: 9, Timestamp: 9, Key: []byte("a"), Value: []byte("closed")},
@@ -47,7 +50,7 @@ func TestWindowedReduceDeletionRecoveryNullsAndTimestampLifetimes(t *testing.T) 
 		t.Fatal(err)
 	}
 	out := backend.Outputs(spec())
-	if len(out) != 8 || calls != 4 {
+	if len(out) != 9 || calls != 5 {
 		t.Fatal("nulls/closed/replayed records changed reduce state", len(out), calls)
 	}
 	var values []string
@@ -60,8 +63,8 @@ func TestWindowedReduceDeletionRecoveryNullsAndTimestampLifetimes(t *testing.T) 
 		}
 		timestamps = append(timestamps, r.Timestamp)
 	}
-	if !reflect.DeepEqual(values, []string{"first", "first:second", "<null>", "!delete", "!delete:", "!delete::next", "advance", "new-window"}) ||
-		!reflect.DeepEqual(timestamps, []int64{9, 9, 9, 2, 5, 6, 15, 10}) {
+	if !reflect.DeepEqual(values, []string{"first", "first:second", "<null>", "!delete", "!delete:", "!delete::<null>", "!delete::<null>:next", "advance", "new-window"}) ||
+		!reflect.DeepEqual(timestamps, []int64{9, 9, 9, 2, 5, 6, 6, 15, 10}) {
 		t.Fatal("reduce initialization/deletion lifetime changed", values, timestamps)
 	}
 }
@@ -69,7 +72,7 @@ func TestWindowedReduceDeletionRecoveryNullsAndTimestampLifetimes(t *testing.T) 
 func TestHoppingReduceKeepsOpenOverlapAndAscendingWindowOrder(t *testing.T) {
 	b := stream.NewStreamsBuilder()
 	stream.HoppingWindowedReduce(stream.Stream(b, "in", serde.String, serde.String), "reduced", window.Hopping{Size: 10, Advance: 5, Grace: 5},
-		func(old, v string) (string, bool) { return old + ":" + v, false }).To("out")
+		func(old, v string, _ bool) (string, bool) { return old + ":" + v, false }).To("out")
 	backend := memory.New()
 	a := task(t, build(t, b), spec(), backend)
 	defer a.Close()
@@ -100,7 +103,7 @@ func TestHoppingReduceFailureDiscardsDerivedIndexAndAllFanout(t *testing.T) {
 	fail := true
 	boom := errors.New("second window failed")
 	updates := stream.HoppingWindowedReduce(stream.Stream(b, "in", serde.String, serde.Int64), "reduced", window.Hopping{Size: 10, Advance: 5, Grace: 5},
-		func(old, v int64) (int64, bool) { return old + v, false })
+		func(old, v int64, _ bool) (int64, bool) { return old + v, false })
 	updates.To("out")
 	updates.Foreach("reject", func(r record.Record[window.Key[string], int64]) error {
 		if fail && r.Key.Start == 5 {
@@ -129,6 +132,34 @@ func TestHoppingReduceFailureDiscardsDerivedIndexAndAllFanout(t *testing.T) {
 	}
 }
 
+func TestWindowedReduceNullValueAdvancesClockAndRestoresAbsentRow(t *testing.T) {
+	b := stream.NewStreamsBuilder()
+	stream.WindowedReduce(stream.Stream(b, "in", serde.String, serde.String), "reduced", window.Tumbling{Size: 10, Grace: 5},
+		func(old, v string, valueNull bool) (string, bool) {
+			if valueNull {
+				v = "<null>"
+			}
+			return old + ":" + v, false
+		}).To("out")
+	plan := build(t, b)
+	backend := memory.New()
+	a := task(t, plan, spec(), backend)
+	feed(t, a, "in", 0, 9, []byte("a"), []byte("x"))
+	feed(t, a, "in", 1, 1000, nil, []byte("ignored"))
+	feed(t, a, "in", 2, 9, []byte("a"), []byte("y"))
+	feed(t, a, "in", 3, 1000, []byte("clock"), nil)
+	_ = a.Close()
+	restored := task(t, plan, spec(), backend)
+	defer restored.Close()
+	feed(t, restored, "in", 4, 9, []byte("a"), []byte("late"))
+	feed(t, restored, "in", 5, 1001, []byte("clock"), []byte("new"))
+	feed(t, restored, "in", 6, 1002, []byte("clock"), nil)
+	out := backend.Outputs(spec())
+	if len(out) != 5 || string(out[1].Value) != "x:y" || out[2].Value != nil || out[2].Timestamp != 1000 || string(out[3].Value) != "new" || string(out[4].Value) != "new:<null>" {
+		t.Fatal("null first/present input or restored clock mismatched", out)
+	}
+}
+
 func TestWindowedReduceRejectsInvalidSetup(t *testing.T) {
 	for _, kind := range []string{"reducer", "window", "store", "partition"} {
 		t.Run(kind, func(t *testing.T) {
@@ -136,7 +167,7 @@ func TestWindowedReduceRejectsInvalidSetup(t *testing.T) {
 			source := stream.Stream(b, "in", serde.String, serde.String)
 			store := "reduced"
 			w := window.Hopping{Size: 10, Advance: 5}
-			reduce := func(a, v string) (string, bool) { return a + v, false }
+			reduce := func(a, v string, _ bool) (string, bool) { return a + v, false }
 			switch kind {
 			case "reducer":
 				reduce = nil

@@ -41,8 +41,8 @@ for scenario in ("filter", "filter-not", "branch", "branch-default", "mapvalues"
     if scenario in ("window-reduce", "hopping-reduce", "hopping-uneven-reduce"):
         rows = [("in", 9, "reset", "first"), ("in", 4, "reset", "second"),
                 ("in", 3, "reset", "!delete"), ("in", 2, "reset", "!delete"),
-                ("in", 5, "reset", ""), ("in", 1000, "~", "ignored"),
-                ("in", 1000, "reset", "~"), ("in", 6, "reset", "next"),
+                ("in", 5, "reset", ""), ("in", 6, "reset", "~"),
+                ("in", 6, "reset", "next"),
                 ("in", 9, "boundary", "first"), ("in", 15, "clock", "x"),
                 ("in", 9, "boundary", "overlap"), ("in", 9, "boundary", "!delete"),
                 ("in", 8, "boundary", "new"), ("in", 20, "clock", "x"),
@@ -70,4 +70,7 @@ for scenario in ("filter", "filter-not", "branch", "branch-default", "mapvalues"
         if scenario in ("join-null", "left-join", "table-mapvalues", "table-transform-join") and rng.randrange(5) == 0: value = "!null-output"
         if scenario in ("merge", "metadata", "metadata-fanout", "process-typed", "process-typed-fanout"): topic = rng.choice(["in", "right"])
         rows.append((topic, timestamp, key, value))
+    if scenario in ("window-reduce", "hopping-reduce", "hopping-uneven-reduce"):
+        fixture = Path(__file__).resolve().parent.parent / "integration/fixtures/window-reduce-null-input.json"
+        rows += [tuple("~" if cell is None else cell for cell in row) for row in json.loads(fixture.read_text())]
     (out / (scenario + ".tsv")).write_text("".join("\t".join(map(str,r)) + "\n" for r in rows))

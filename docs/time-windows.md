@@ -39,7 +39,8 @@ hopping window. Both use the source value codec and a nullable reducer:
 ```go
 updates := stream.HoppingWindowedReduce(events, "reduced",
     window.Hopping{Size: 10_000, Advance: 5_000, Grace: 2_000},
-    func(previous, value string) (string, bool) {
+    func(previous, value string, valueNull bool) (string, bool) {
+        if valueNull { value = "<null>" }
         return previous + ":" + value, value == "!delete"
     })
 updates.To("window-reductions")
@@ -50,8 +51,11 @@ calling the reducer. Subsequent records call it in processing order. A true null
 flag deletes that window's aggregate and emits a tombstone. The next value starts
 a fresh lifetime, including its aggregate timestamp; even `!delete` in this example
 is ordinary data when it is the first value. Empty strings and numeric zero are
-non-null values. Input null keys and values skip without advancing this operator's
-clock. Counts retain their separately tested behavior of counting null values.
+non-null values. Null keys skip without advancing this operator's clock. Null
+values advance it. A first null value emits a tombstone without state; a null
+value for an existing aggregate invokes the reducer with valueNull=true. This
+was independently discovered by the Java reference test and differs from the
+unwindowed Reduce null-input policy. Counts still count null values.
 
 Reduce shares counts' membership, ascending hopping order, per-window grace,
 operator-local clock and atomic fanout rules. A window that closes does not block

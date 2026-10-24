@@ -13,19 +13,20 @@ import (
 )
 
 // WindowedReduce emits an update per accepted record in a tumbling window.
-// Null input keys/values skip. The first value initializes a window without
-// calling reducer. A null reducer result deletes state and emits a tombstone.
-func WindowedReduce[K, V any](s KStream[K, V], store string, w window.Tumbling, reducer func(V, V) (V, bool)) KStream[window.Key[K], V] {
+// Null input keys skip. A first null value emits a tombstone. The first value initializes a window without
+// calling reducer. The callback receives valueNull for subsequent inputs. A null
+// reducer result deletes state and emits a tombstone.
+func WindowedReduce[K, V any](s KStream[K, V], store string, w window.Tumbling, reducer func(previous V, value V, valueNull bool) (V, bool)) KStream[window.Key[K], V] {
 	return timeWindowedReduce(s, store, window.Hopping{Size: w.Size, Advance: w.Size, Grace: w.Grace}, reducer)
 }
 
 // HoppingWindowedReduce reduces each open overlapping window, in ascending start
 // order, with the same null, initialization and deletion rules as WindowedReduce.
-func HoppingWindowedReduce[K, V any](s KStream[K, V], store string, w window.Hopping, reducer func(V, V) (V, bool)) KStream[window.Key[K], V] {
+func HoppingWindowedReduce[K, V any](s KStream[K, V], store string, w window.Hopping, reducer func(previous V, value V, valueNull bool) (V, bool)) KStream[window.Key[K], V] {
 	return timeWindowedReduce(s, store, w, reducer)
 }
 
-func timeWindowedReduce[K, V any](s KStream[K, V], store string, w window.Hopping, reducer func(V, V) (V, bool)) KStream[window.Key[K], V] {
+func timeWindowedReduce[K, V any](s KStream[K, V], store string, w window.Hopping, reducer func(previous V, value V, valueNull bool) (V, bool)) KStream[window.Key[K], V] {
 	s.builder.mutable()
 	if !s.partitioned || store == "" || reducer == nil || !s.value.Valid() {
 		s.builder.fail(errors.New("windowed reduce requires partitioned keys, store, reducer and valid codec"))
@@ -41,7 +42,7 @@ func timeWindowedReduce[K, V any](s KStream[K, V], store string, w window.Hoppin
 		next := p.Compile(ctx)
 		windows := timeWindowState{task: task, store: store, w: w, tracked: make(map[string]struct{})}
 		return func(r record.Record[K, V]) error {
-			if r.NullKey || r.NullValue {
+			if r.NullKey {
 				return nil
 			}
 			first, last, clock, err := windows.advance(r.Timestamp)
@@ -69,7 +70,7 @@ func timeWindowedReduce[K, V any](s KStream[K, V], store string, w window.Hoppin
 					if err != nil {
 						return err
 					}
-					result, null, timestamp := r.Value, false, r.Timestamp
+					result, null, timestamp := r.Value, r.NullValue, r.Timestamp
 					if present {
 						old, prior, err := decodeFold(stored, s.value)
 						if err != nil {
@@ -78,7 +79,7 @@ func timeWindowedReduce[K, V any](s KStream[K, V], store string, w window.Hoppin
 						if prior > timestamp {
 							timestamp = prior
 						}
-						result, null = reducer(old, r.Value)
+						result, null = reducer(old, r.Value, r.NullValue)
 					}
 					var encoded []byte
 					if !null {

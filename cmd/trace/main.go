@@ -207,7 +207,12 @@ func run() error {
 				return a + ":" + c, false
 			}).To("out")
 		case "window-reduce", "hopping-reduce", "hopping-uneven-reduce":
-			reducer := func(old, v string) (string, bool) { return old + ":" + v, v == "!delete" }
+			reducer := func(old, v string, valueNull bool) (string, bool) {
+				if valueNull {
+					v = "<null>"
+				}
+				return old + ":" + v, v == "!delete"
+			}
 			var updates stream.KStream[window.Key[string], string]
 			if scenario == "window-reduce" {
 				updates = stream.WindowedReduce(s, "reduced", window.Tumbling{Size: 10, Grace: 5}, reducer)

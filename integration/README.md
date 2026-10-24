@@ -22,7 +22,9 @@ grouped count/reduce/aggregate (including nullable initialization), table upsert
 and tombstones, table filter/filterNot/nullable value maps and chained lookups,
 stream-table inner/left joins with nullable results, and tumbling/hopping windows with size 10ms and
 grace 5ms. Typed windowed reduce covers tombstones, first-value initialization,
-reinitialization timestamps and null-input clock isolation with the same bounds.
+reinitialization timestamps, null-key clock isolation and null-value clock
+advancement with the same bounds. The null-input fixture preserves the first
+windowed-reduce reference mismatch.
 Hopping advances of 5ms and 6ms cover divisible and uneven overlap.
 Streams that change keys are not grouped without a broker exchange.
 
