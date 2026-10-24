@@ -62,8 +62,14 @@ public APIs; no Go component compiler or Kafka internal code is reused.
 These two composed-driver cases test per-task processing clocks and explicit
 exchange records. They do not test Kafka's production task assignment, consumer
 scheduling or transaction transport. The real Go broker suite separately checks
-exchange recovery with late input. A live Java/Go clock comparison remains a
-broader qualification item. The harness limitation is visible in the pinned
+exchange recovery with late input. The repartition CI suite also runs
+[BrokerClockOracle](kafka-streams/src/main/java/dev/kstream/BrokerClockOracle.java)
+against a real Kafka broker. A committed acknowledgment proves unrelated or
+upstream time reached 10000 before a late t=3 record is sent; the downstream
+processor must still report 9. Both cases run EOS v2 on one stream thread with
+read-committed observers and one partition, proving that task isolation survives
+physical co-location. This validates the two covered boundary assumptions; broad
+live Java/Go scheduling and fault equivalence remains open. The harness limitation is visible in the pinned
 [3.9.1 test-driver construction](https://github.com/apache/kafka/blob/3.9.1/streams/test-utils/src/main/java/org/apache/kafka/streams/TopologyTestDriver.java#L519),
 which constructs one StreamTask with all input partitions. Reading that code
 diagnosed the test harness; no implementation is ported from it.

@@ -348,3 +348,8 @@ it coalesces all described subtopologies into one simulated task. The clock
 harness now explicitly asserts two public subtopologies, pins the single-driver
 behavior and evaluates each task with a separate public-API driver. The minimized
 fixture remains committed; live Java/Go scheduling qualification remains open.
+
+The repartition Kafka suite also runs a live Java EOS v2 clock check. Committed
+acknowledgments establish that upstream/unrelated time reached 10000 before
+sending a late t=3 event; its downstream clock must remain 9. One thread and one
+partition co-locate both tasks while preserving their logical clock ownership.

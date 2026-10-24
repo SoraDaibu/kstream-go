@@ -55,4 +55,6 @@ equivalence. See [ADR 0027](adr/0027-processing-clocks.md).
 
 The [Java oracle](../integration/README.md) pins the single-driver clock
 coalescing limitation and uses separate public-API drivers for its two task
-components. It does not establish live Java/Go assignment or scheduling parity.
+components. A live Java EOS v2 CI check independently verifies both task boundaries with
+committed acknowledgments before late input. Broader Java/Go assignment, fault
+and scheduling parity remains open.

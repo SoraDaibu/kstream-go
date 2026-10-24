@@ -53,5 +53,7 @@ coalesces the two described subtopologies into one simulated task. Preserve the
 minimized input and pin that behavior in the Java harness. Use two independent
 public-API drivers to evaluate the task components and transfer exchange records
 explicitly. This validates per-task clock behavior without treating the test
-harness as a production scheduler. Live Java/Go assignment and clock comparisons
-remain open. See [oracle boundaries](../../integration/README.md).
+harness as a production scheduler. Add a live Java EOS v2 gate on one thread/partition: commit a clock-10000
+acknowledgment before sending a late record, then require downstream clock 9
+for both disconnected and repartitioned tasks. Broader live assignment, fault
+and scheduling comparisons remain open. See [oracle boundaries](../../integration/README.md).
