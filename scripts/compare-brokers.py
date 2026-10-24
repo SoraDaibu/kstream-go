@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Paired, verified single-broker experiment. Never production qualification."""
+"""Verified broker comparisons or explicit Go-only diagnostics; no qualification."""
 import argparse
 import json
 import os
@@ -18,21 +18,29 @@ from pathlib import Path
 parser = argparse.ArgumentParser()
 parser.add_argument('--go-app', required=True)
 parser.add_argument('--driver', required=True)
-parser.add_argument('--classpath', required=True)
+parser.add_argument('--classpath', default='')
 parser.add_argument('--output', required=True)
 parser.add_argument('--brokers', default='localhost:9092')
-parser.add_argument('--profile-go', action='store_true', help='Go-only diagnostic profiles; no comparative result')
+mode = parser.add_mutually_exclusive_group()
+mode.add_argument('--profile-go', action='store_true', help='Go-only diagnostic profiles; no comparative result')
+mode.add_argument('--go-only', action='store_true', help='Uninstrumented Go-only diagnostic; no Kafka comparison')
 args = parser.parse_args()
+diagnostic = args.profile_go or args.go_only
+if not diagnostic and not args.classpath:
+    parser.error('--classpath is required for Kafka comparisons')
 out = Path(args.output).resolve(); out.mkdir(parents=True, exist_ok=True)
 if any(out.iterdir()):
     raise SystemExit('Use an empty output directory to preserve separate measurement runs')
 records = int(os.getenv('KSTREAM_BROKER_RECORDS', '200000'))
 warmup = int(os.getenv('KSTREAM_BROKER_WARMUP', '100000'))
-trials = int(os.getenv('KSTREAM_BROKER_TRIALS', '1' if args.profile_go else '5'))
+trials = int(os.getenv('KSTREAM_BROKER_TRIALS', '1' if diagnostic else '5'))
 output_capacity = int(os.getenv('KSTREAM_BROKER_OUTPUT_CAPACITY', '0'))
+fetch_bytes = int(os.getenv('KSTREAM_BROKER_FETCH_BYTES', str(8 << 20)))
+if not 1024 <= fetch_bytes <= (1 << 31) - 1:
+    raise SystemExit('fetch bytes must be between 1024 and 2147483647')
 if not 0 <= output_capacity <= 65536:
     raise SystemExit('output capacity must be between 0 and 65536')
-if records < 1 or warmup < 0 or trials < (1 if args.profile_go else 5):
+if records < 1 or warmup < 0 or trials < (1 if diagnostic else 5):
     raise SystemExit('positive records, nonnegative warmup and >=5 comparative trials (>=1 diagnostic) required')
 allowed = sorted(os.sched_getaffinity(0))
 app_cpu = allowed[0]
@@ -48,6 +56,8 @@ manifest = {
     'heap_targets': 'Go GOMEMLIMIT=512MiB; Java -Xms32m -Xmx512m, active processors 1',
     'hard_rss_cap': False, 'broker_cpu_isolated': False, 'go_batch_observation': True,
     'go_output_capacity': output_capacity,
+    'go_fetch_bytes': fetch_bytes,
+    'go_fetch_limit': 'target, not a hard memory or oversized-record-batch limit',
     'go_output_reservation': 'fresh transaction array, allocated on first output; not an output limit',
     'latency': 'external driver monotonic send ledger to read-committed output receipt',
     'cpu_window': 'observed around driver measurement events, before offset/tail verification; approximate',
@@ -55,12 +65,15 @@ manifest = {
     'host': platform.platform(), 'allowed_cpus': allowed,
     'production_qualified': False,
     'diagnostic_go_profiles': args.profile_go,
+    'uninstrumented_go_only': args.go_only,
+    'comparison_engines': ['go'] if diagnostic else ['go', 'kafka'],
     'limits': 'Shared hosted runner; one broker; small state; no HA/failure/recovery throughput; different commit policies.'
 }
 (out / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
 environment = subprocess.run(['lscpu'], capture_output=True, text=True, check=True).stdout
 environment += subprocess.run(['go', 'version'], capture_output=True, text=True, check=True).stdout
-environment += subprocess.run(['java', '-version'], capture_output=True, text=True, check=True).stderr
+if not args.go_only:
+    environment += subprocess.run(['java', '-version'], capture_output=True, text=True, check=True).stderr
 environment += subprocess.run(['go', 'version', '-m', args.go_app], capture_output=True, text=True, check=True).stdout
 (out / 'environment.txt').write_text(environment)
 env = dict(os.environ, GOMAXPROCS='1', GOMEMLIMIT='512MiB')
@@ -91,7 +104,7 @@ run_id = uuid.uuid4().hex[:10]
 for scenario in manifest['scenarios']:
     for trial in range(trials):
         paired = []
-        order = ['go'] if args.profile_go else (['go', 'kafka'] if trial % 2 == 0 else ['kafka', 'go'])
+        order = ['go'] if diagnostic else (['go', 'kafka'] if trial % 2 == 0 else ['kafka', 'go'])
         for engine in order:
             name = f'{scenario}-{trial}-{engine}'
             application = f'ksbench-{run_id}-{name}'
@@ -114,7 +127,7 @@ for scenario in manifest['scenarios']:
                         command = [args.go_app, '-scenario', scenario, '-brokers', args.brokers,
                                    '-application', application, '-input', source, '-output', sink,
                                    '-changelog', changelog, '-state', directory, '-warmup', str(warmup),
-                                   '-output-capacity', str(output_capacity)]
+                                   '-output-capacity', str(output_capacity), '-fetch-bytes', str(fetch_bytes)]
                         if args.profile_go:
                             command += ['-cpuprofile', str(out / f'{name}.cpu.pprof'),
                                         '-heapprofile', str(out / f'{name}.heap.pprof')]
@@ -210,12 +223,16 @@ for scenario in manifest['scenarios']:
             raise RuntimeError(f'{scenario}/{trial}: engine output checksum mismatch')
 
 summary = {'production_qualified': False, 'target_throughput_ratio': 2.5, 'scenarios': {}}
-if args.profile_go:
-    # Profiling perturbs timing. Never enter the paired-comparison calculation.
+if diagnostic:
+    # Neither diagnostic mode enters the paired Kafka-comparison calculation.
     summary = {'production_qualified': False, 'diagnostic_only': True,
-               'profile_scope': 'whole process; startup, warmup, measurement and shutdown',
-               'heap_scope': 'post-cleanup GC; alloc_space/alloc_objects cumulative, inuse_space not peak RSS',
+               'instrumented': args.profile_go,
                'verified_cases': len(samples)}
+    if args.profile_go:
+        summary.update(profile_scope='whole process; startup, warmup, measurement and shutdown',
+                       heap_scope='post-cleanup GC; alloc_space/alloc_objects cumulative, inuse_space not peak RSS')
+    else:
+        summary['scope'] = 'Uninstrumented Go-only diagnostic; no Kafka throughput ratio'
     (out / 'summary.json').write_text(json.dumps(summary, indent=2) + '\n')
     print(json.dumps(summary, indent=2), flush=True)
     raise SystemExit(0)
