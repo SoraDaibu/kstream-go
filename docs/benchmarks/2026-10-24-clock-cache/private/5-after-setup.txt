@@ -1,0 +1,10 @@
+goos: linux
+goarch: amd64
+pkg: github.com/SoraDaibu/kstream-go/stream
+cpu: AMD EPYC 9V74 80-Core Processor                
+BenchmarkProcessingClockSetup/scopes=1         	   62676	      3677 ns/op	   17800 B/op	      21 allocs/op
+BenchmarkProcessingClockSetup/scopes=2         	   54859	      4472 ns/op	   18520 B/op	      35 allocs/op
+BenchmarkProcessingClockSetup/scopes=32        	    6860	     31124 ns/op	   46120 B/op	     305 allocs/op
+BenchmarkProcessingClockSetup/scopes=256       	     960	    243428 ns/op	  252360 B/op	    2118 allocs/op
+PASS
+ok  	github.com/SoraDaibu/kstream-go/stream	1.049s

@@ -1,0 +1,60 @@
+// Package record defines typed records and Kafka boundary records.
+package record
+
+// Metadata identifies the original consumed record. Its availability is scoped
+// to a task's synchronous record callback; copies are ordinary immutable values.
+type Metadata struct {
+	Topic     string
+	Partition int32
+	Offset    int64
+}
+
+// Record represents an immutable event. Timestamp is Unix milliseconds.
+// Null flags distinguish Kafka nulls from ordinary Go zero values.
+type Record[K, V any] struct {
+	Key       K
+	Value     V
+	Timestamp int64
+	NullKey   bool
+	NullValue bool
+}
+
+// Bytes is an infrastructure record. Nil Key/Value mean Kafka nulls.
+// Offset is the consumed offset; output offsets are assigned by the broker.
+type Bytes struct {
+	Topic     string
+	Partition int32
+	Offset    int64
+	Timestamp int64
+	Key       []byte
+	Value     []byte
+}
+
+func CloneBytes(b []byte) []byte {
+	if b == nil {
+		return nil
+	}
+	v := make([]byte, len(b))
+	copy(v, b)
+	return v
+}
+
+// Clone owns both payloads. Very small nonempty pairs share one bounded
+// allocation, with disjoint capacity-limited slices. Larger payloads stay
+// separate so retaining a short key cannot retain a large value allocation.
+func (r Bytes) Clone() Bytes {
+	r.Key, r.Value = clonePayloads(r.Key, r.Value)
+	return r
+}
+
+func clonePayloads(key, value []byte) ([]byte, []byte) {
+	const smallPayloadLimit = 16
+	keySize, valueSize := len(key), len(value)
+	if keySize > 0 && valueSize > 0 && keySize <= smallPayloadLimit-valueSize {
+		payload := make([]byte, keySize+valueSize)
+		copy(payload, key)
+		copy(payload[keySize:], value)
+		return payload[:keySize:keySize], payload[keySize:len(payload):len(payload)]
+	}
+	return CloneBytes(key), CloneBytes(value)
+}

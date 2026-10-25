@@ -1,0 +1,319 @@
+{
+  "criteria_passed": false,
+  "cases": [
+    {
+      "case": "BenchmarkProcessingClockDispatch/batch=1/scoped=false",
+      "median_time_ratio": 1.0546268656716418,
+      "min_time_ratio": 0.9080110497237569,
+      "max_time_ratio": 1.347579199043634,
+      "median_before_ns": 335.0,
+      "median_after_ns": 353.3,
+      "median_before_bytes": 256.0,
+      "median_after_bytes": 256.0,
+      "median_before_allocations": 2.0,
+      "median_after_allocations": 2.0
+    },
+    {
+      "case": "BenchmarkProcessingClockDispatch/batch=1/scoped=true",
+      "median_time_ratio": 1.0211024195015461,
+      "min_time_ratio": 1.0063245392121432,
+      "max_time_ratio": 1.0267369610242891,
+      "median_before_ns": 549.7,
+      "median_after_ns": 556.9,
+      "median_before_bytes": 512.0,
+      "median_after_bytes": 512.0,
+      "median_before_allocations": 4.0,
+      "median_after_allocations": 4.0
+    },
+    {
+      "case": "BenchmarkProcessingClockDispatch/batch=256/scoped=false",
+      "median_time_ratio": 1.0243917891535732,
+      "min_time_ratio": 0.9096479565292791,
+      "max_time_ratio": 1.0658193372673628,
+      "median_before_ns": 15911.0,
+      "median_after_ns": 16169.0,
+      "median_before_bytes": 256.0,
+      "median_after_bytes": 256.0,
+      "median_before_allocations": 2.0,
+      "median_after_allocations": 2.0
+    },
+    {
+      "case": "BenchmarkProcessingClockDispatch/batch=256/scoped=true",
+      "median_time_ratio": 0.7253607033188911,
+      "min_time_ratio": 0.6314397424103035,
+      "max_time_ratio": 0.7363258662783227,
+      "median_before_ns": 23773.0,
+      "median_after_ns": 17191.0,
+      "median_before_bytes": 512.0,
+      "median_after_bytes": 512.0,
+      "median_before_allocations": 4.0,
+      "median_after_allocations": 4.0
+    },
+    {
+      "case": "BenchmarkProcessingClockSetup/scopes=1",
+      "median_time_ratio": 1.0131763386599384,
+      "min_time_ratio": 0.9370752579914422,
+      "max_time_ratio": 1.1444148936170213,
+      "median_before_ns": 3730.0,
+      "median_after_ns": 3763.0,
+      "median_before_bytes": 17800.0,
+      "median_after_bytes": 17832.0,
+      "median_before_allocations": 21.0,
+      "median_after_allocations": 21.0
+    },
+    {
+      "case": "BenchmarkProcessingClockSetup/scopes=2",
+      "median_time_ratio": 1.035304906006419,
+      "min_time_ratio": 0.998868778280543,
+      "max_time_ratio": 1.139929328621908,
+      "median_before_ns": 4401.0,
+      "median_after_ns": 4516.0,
+      "median_before_bytes": 18416.0,
+      "median_after_bytes": 18528.0,
+      "median_before_allocations": 34.0,
+      "median_after_allocations": 34.0
+    },
+    {
+      "case": "BenchmarkProcessingClockSetup/scopes=256",
+      "median_time_ratio": 1.0199714578601435,
+      "min_time_ratio": 0.9364151455909527,
+      "max_time_ratio": 1.0930725932009102,
+      "median_before_ns": 248755.0,
+      "median_after_ns": 254729.0,
+      "median_before_bytes": 242096.0,
+      "median_after_bytes": 252368.0,
+      "median_before_allocations": 2117.0,
+      "median_after_allocations": 2117.0
+    },
+    {
+      "case": "BenchmarkProcessingClockSetup/scopes=32",
+      "median_time_ratio": 0.9921524311768214,
+      "min_time_ratio": 0.8311675478037452,
+      "max_time_ratio": 1.1048180334964872,
+      "median_before_ns": 31857.0,
+      "median_after_ns": 31607.0,
+      "median_before_bytes": 44816.0,
+      "median_after_bytes": 46128.0,
+      "median_before_allocations": 304.0,
+      "median_after_allocations": 304.0
+    },
+    {
+      "case": "BenchmarkTransactionBatch/stateful=false/batch=1",
+      "median_time_ratio": 1.023168748930344,
+      "min_time_ratio": 0.9086579332595182,
+      "max_time_ratio": 1.149968139209612,
+      "median_before_ns": 447060.0,
+      "median_after_ns": 439162.0,
+      "median_before_bytes": 384384.0,
+      "median_after_bytes": 384385.0,
+      "median_before_allocations": 9056.0,
+      "median_after_allocations": 9056.0
+    },
+    {
+      "case": "BenchmarkTransactionBatch/stateful=false/batch=1024",
+      "median_time_ratio": 1.1018887420640047,
+      "min_time_ratio": 0.9006379868847278,
+      "max_time_ratio": 1.1950607278334966,
+      "median_before_ns": 188556.0,
+      "median_after_ns": 209138.0,
+      "median_before_bytes": 327152.0,
+      "median_after_bytes": 327152.0,
+      "median_before_allocations": 5998.0,
+      "median_after_allocations": 5998.0
+    },
+    {
+      "case": "BenchmarkTransactionBatch/stateful=false/batch=16",
+      "median_time_ratio": 0.9903396668695201,
+      "min_time_ratio": 0.9408902741927628,
+      "max_time_ratio": 1.0425610160361332,
+      "median_before_ns": 205330.0,
+      "median_after_ns": 201281.0,
+      "median_before_bytes": 227712.0,
+      "median_after_bytes": 227712.0,
+      "median_before_allocations": 6432.0,
+      "median_after_allocations": 6432.0
+    },
+    {
+      "case": "BenchmarkTransactionBatch/stateful=false/batch=256",
+      "median_time_ratio": 1.064903624599844,
+      "min_time_ratio": 0.9783782520277693,
+      "max_time_ratio": 1.078686927129328,
+      "median_before_ns": 164195.0,
+      "median_after_ns": 173312.0,
+      "median_before_bytes": 220992.0,
+      "median_after_bytes": 220992.0,
+      "median_before_allocations": 6028.0,
+      "median_after_allocations": 6028.0
+    },
+    {
+      "case": "BenchmarkTransactionBatch/stateful=true/batch=1",
+      "median_time_ratio": 0.999086812078873,
+      "min_time_ratio": 0.8622038898843781,
+      "max_time_ratio": 1.1161736665769901,
+      "median_before_ns": 726028.0,
+      "median_after_ns": 725365.0,
+      "median_before_bytes": 514848.0,
+      "median_after_bytes": 514848.0,
+      "median_before_allocations": 15903.0,
+      "median_after_allocations": 15903.0
+    },
+    {
+      "case": "BenchmarkTransactionBatch/stateful=true/batch=1024",
+      "median_time_ratio": 1.0183715857708284,
+      "min_time_ratio": 0.9354776031561429,
+      "max_time_ratio": 1.1184306682355856,
+      "median_before_ns": 332118.0,
+      "median_after_ns": 343506.0,
+      "median_before_bytes": 394342.0,
+      "median_after_bytes": 394343.0,
+      "median_before_allocations": 10876.0,
+      "median_after_allocations": 10876.0
+    },
+    {
+      "case": "BenchmarkTransactionBatch/stateful=true/batch=16",
+      "median_time_ratio": 0.9656781888895427,
+      "min_time_ratio": 0.9051238044811227,
+      "max_time_ratio": 1.0971239337681886,
+      "median_before_ns": 541000.0,
+      "median_after_ns": 536958.0,
+      "median_before_bytes": 508186.0,
+      "median_after_bytes": 508184.0,
+      "median_before_allocations": 12831.0,
+      "median_after_allocations": 12831.0
+    },
+    {
+      "case": "BenchmarkTransactionBatch/stateful=true/batch=256",
+      "median_time_ratio": 1.0940726800346412,
+      "min_time_ratio": 0.9236166493258195,
+      "max_time_ratio": 1.198235622758484,
+      "median_before_ns": 347158.0,
+      "median_after_ns": 374798.0,
+      "median_before_bytes": 344175.0,
+      "median_after_bytes": 344176.0,
+      "median_before_allocations": 11143.0,
+      "median_after_allocations": 11143.0
+    },
+    {
+      "case": "BenchmarkTypedProcessorDispatch/batch=1/cross-type=false",
+      "median_time_ratio": 0.9649816436035017,
+      "min_time_ratio": 0.9254794520547945,
+      "max_time_ratio": 1.0477363720357253,
+      "median_before_ns": 346.0,
+      "median_after_ns": 337.8,
+      "median_before_bytes": 256.0,
+      "median_after_bytes": 256.0,
+      "median_before_allocations": 2.0,
+      "median_after_allocations": 2.0
+    },
+    {
+      "case": "BenchmarkTypedProcessorDispatch/batch=1/cross-type=true",
+      "median_time_ratio": 0.9708480565371024,
+      "min_time_ratio": 0.8794250731966995,
+      "max_time_ratio": 1.0473920358945596,
+      "median_before_ns": 352.1,
+      "median_after_ns": 331.2,
+      "median_before_bytes": 256.0,
+      "median_after_bytes": 256.0,
+      "median_before_allocations": 2.0,
+      "median_after_allocations": 2.0
+    },
+    {
+      "case": "BenchmarkTypedProcessorDispatch/batch=256/cross-type=false",
+      "median_time_ratio": 1.0144289987682562,
+      "min_time_ratio": 0.8598957039980134,
+      "max_time_ratio": 1.0371762257169288,
+      "median_before_ns": 17813.0,
+      "median_after_ns": 17314.0,
+      "median_before_bytes": 256.0,
+      "median_after_bytes": 256.0,
+      "median_before_allocations": 2.0,
+      "median_after_allocations": 2.0
+    },
+    {
+      "case": "BenchmarkTypedProcessorDispatch/batch=256/cross-type=true",
+      "median_time_ratio": 1.0016447368421053,
+      "min_time_ratio": 0.9006930743157788,
+      "max_time_ratio": 1.0667667783296755,
+      "median_before_ns": 18240.0,
+      "median_after_ns": 18270.0,
+      "median_before_bytes": 256.0,
+      "median_after_bytes": 256.0,
+      "median_before_allocations": 2.0,
+      "median_after_allocations": 2.0
+    },
+    {
+      "case": "BenchmarkWindowExpiry/keys=4096/size=1024",
+      "median_time_ratio": 0.9148936170212766,
+      "min_time_ratio": 0.8637669265490358,
+      "max_time_ratio": 0.9990530303030303,
+      "median_before_ns": 2263.0,
+      "median_after_ns": 2105.0,
+      "median_before_bytes": 1190.0,
+      "median_after_bytes": 1190.0,
+      "median_before_allocations": 20.0,
+      "median_after_allocations": 20.0
+    },
+    {
+      "case": "BenchmarkWindowExpiry/keys=4096/size=1152921504606846976",
+      "median_time_ratio": 0.9771665801764401,
+      "min_time_ratio": 0.9423890063424947,
+      "max_time_ratio": 1.02170188463735,
+      "median_before_ns": 1751.0,
+      "median_after_ns": 1783.0,
+      "median_before_bytes": 843.0,
+      "median_after_bytes": 843.0,
+      "median_before_allocations": 20.0,
+      "median_after_allocations": 20.0
+    },
+    {
+      "case": "BenchmarkWindowExpiry/keys=64/size=1024",
+      "median_time_ratio": 0.9913473423980222,
+      "min_time_ratio": 0.9184018007878447,
+      "max_time_ratio": 1.0807955251709136,
+      "median_before_ns": 1629.0,
+      "median_after_ns": 1673.0,
+      "median_before_bytes": 816.0,
+      "median_after_bytes": 816.0,
+      "median_before_allocations": 20.0,
+      "median_after_allocations": 20.0
+    },
+    {
+      "case": "BenchmarkWindowExpiry/keys=64/size=1152921504606846976",
+      "median_time_ratio": 0.9690018598884067,
+      "min_time_ratio": 0.9453781512605042,
+      "max_time_ratio": 0.9988073941562313,
+      "median_before_ns": 1666.0,
+      "median_after_ns": 1575.0,
+      "median_before_bytes": 800.0,
+      "median_after_bytes": 800.0,
+      "median_before_allocations": 20.0,
+      "median_after_allocations": 20.0
+    }
+  ],
+  "failures": [
+    {
+      "case": "BenchmarkProcessingClockDispatch/batch=1/scoped=false",
+      "metric": "time",
+      "ratio": 1.0546268656716418,
+      "limit": 1.05
+    },
+    {
+      "case": "BenchmarkTransactionBatch/stateful=false/batch=1024",
+      "metric": "time",
+      "ratio": 1.1018887420640047,
+      "limit": 1.05
+    },
+    {
+      "case": "BenchmarkTransactionBatch/stateful=false/batch=256",
+      "metric": "time",
+      "ratio": 1.064903624599844,
+      "limit": 1.05
+    },
+    {
+      "case": "BenchmarkTransactionBatch/stateful=true/batch=256",
+      "metric": "time",
+      "ratio": 1.0940726800346412,
+      "limit": 1.05
+    }
+  ]
+}
