@@ -1,0 +1,285 @@
+{
+  "decision": "rejected; one fewer allocation did not produce an acceptable timing result",
+  "cases": [
+    {
+      "case": "BenchmarkBytesClone/key=-1/value=8",
+      "median_time_ratio": 1.4848891873740764,
+      "min_ratio": 1.1141330743079165,
+      "max_ratio": 1.6443433029908971,
+      "before_bytes": 8.0,
+      "after_bytes": 8.0,
+      "before_allocs": 1.0,
+      "after_allocs": 1.0
+    },
+    {
+      "case": "BenchmarkBytesClone/key=0/value=0",
+      "median_time_ratio": 1.727979274611399,
+      "min_ratio": 1.5753768844221105,
+      "max_ratio": 1.8037974683544302,
+      "before_bytes": 0.0,
+      "after_bytes": 0.0,
+      "before_allocs": 0.0,
+      "after_allocs": 0.0
+    },
+    {
+      "case": "BenchmarkBytesClone/key=1/value=1",
+      "median_time_ratio": 1.3735891647855532,
+      "min_ratio": 0.8822647169103862,
+      "max_ratio": 1.5815602836879432,
+      "before_bytes": 2.0,
+      "after_bytes": 2.0,
+      "before_allocs": 2.0,
+      "after_allocs": 1.0
+    },
+    {
+      "case": "BenchmarkBytesClone/key=1/value=7",
+      "median_time_ratio": 1.251953125,
+      "min_ratio": 0.9697656840513983,
+      "max_ratio": 1.4207477619799895,
+      "before_bytes": 8.0,
+      "after_bytes": 8.0,
+      "before_allocs": 2.0,
+      "after_allocs": 1.0
+    },
+    {
+      "case": "BenchmarkBytesClone/key=16/value=16",
+      "median_time_ratio": 1.1155115511551155,
+      "min_ratio": 0.6274509803921569,
+      "max_ratio": 1.1892663431344561,
+      "before_bytes": 32.0,
+      "after_bytes": 32.0,
+      "before_allocs": 2.0,
+      "after_allocs": 2.0
+    },
+    {
+      "case": "BenchmarkBytesClone/key=3/value=7",
+      "median_time_ratio": 1.1570827489481066,
+      "min_ratio": 0.640991880623217,
+      "max_ratio": 1.5255913978494624,
+      "before_bytes": 16.0,
+      "after_bytes": 16.0,
+      "before_allocs": 2.0,
+      "after_allocs": 1.0
+    },
+    {
+      "case": "BenchmarkBytesClone/key=32/value=1",
+      "median_time_ratio": 1.1689145793192035,
+      "min_ratio": 0.6126685592618879,
+      "max_ratio": 1.2070665571076418,
+      "before_bytes": 33.0,
+      "after_bytes": 33.0,
+      "before_allocs": 2.0,
+      "after_allocs": 2.0
+    },
+    {
+      "case": "BenchmarkBytesClone/key=64/value=64",
+      "median_time_ratio": 1.0937618866489158,
+      "min_ratio": 0.6041421510943752,
+      "max_ratio": 1.1900688504068433,
+      "before_bytes": 128.0,
+      "after_bytes": 128.0,
+      "before_allocs": 2.0,
+      "after_allocs": 2.0
+    },
+    {
+      "case": "BenchmarkBytesClone/key=8/value=4096",
+      "median_time_ratio": 0.990420899854862,
+      "min_ratio": 0.5892793752218672,
+      "max_ratio": 1.018791946308725,
+      "before_bytes": 4104.0,
+      "after_bytes": 4104.0,
+      "before_allocs": 2.0,
+      "after_allocs": 2.0
+    },
+    {
+      "case": "BenchmarkBytesClone/key=8/value=65536",
+      "median_time_ratio": 1.0240196078431372,
+      "min_ratio": 0.5937168007284869,
+      "max_ratio": 1.305852417302799,
+      "before_bytes": 65544.0,
+      "after_bytes": 65544.0,
+      "before_allocs": 2.0,
+      "after_allocs": 2.0
+    },
+    {
+      "case": "BenchmarkBytesClone/key=8/value=8",
+      "median_time_ratio": 1.3723284589426321,
+      "min_ratio": 0.7742594484167519,
+      "max_ratio": 1.619813717188823,
+      "before_bytes": 16.0,
+      "after_bytes": 16.0,
+      "before_allocs": 2.0,
+      "after_allocs": 1.0
+    },
+    {
+      "case": "BenchmarkBytesClone/key=8/value=9",
+      "median_time_ratio": 1.0741856008759925,
+      "min_ratio": 0.5431871442919317,
+      "max_ratio": 1.2673447148565202,
+      "before_bytes": 24.0,
+      "after_bytes": 24.0,
+      "before_allocs": 2.0,
+      "after_allocs": 2.0
+    },
+    {
+      "case": "BenchmarkTransactionBatch/stateful=false/batch=1",
+      "median_time_ratio": 0.9507413972842558,
+      "min_ratio": 0.8460325371521622,
+      "max_ratio": 1.0075690311464314,
+      "before_bytes": 384385.0,
+      "after_bytes": 385024.0,
+      "before_allocs": 9056.0,
+      "after_allocs": 8032.0
+    },
+    {
+      "case": "BenchmarkTransactionBatch/stateful=false/batch=1024",
+      "median_time_ratio": 1.022519808393336,
+      "min_ratio": 0.9903705351829909,
+      "max_ratio": 1.2662755268789998,
+      "before_bytes": 327152.0,
+      "after_bytes": 327792.0,
+      "before_allocs": 5998.0,
+      "after_allocs": 4974.0
+    },
+    {
+      "case": "BenchmarkTransactionBatch/stateful=false/batch=16",
+      "median_time_ratio": 1.0677747388335939,
+      "min_ratio": 0.9883433224241946,
+      "max_ratio": 1.1074724037496635,
+      "before_bytes": 227712.0,
+      "after_bytes": 228352.0,
+      "before_allocs": 6432.0,
+      "after_allocs": 5408.0
+    },
+    {
+      "case": "BenchmarkTransactionBatch/stateful=false/batch=256",
+      "median_time_ratio": 1.0686054749654477,
+      "min_ratio": 0.9942583198617537,
+      "max_ratio": 1.1691131717446566,
+      "before_bytes": 220992.0,
+      "after_bytes": 221632.0,
+      "before_allocs": 6028.0,
+      "after_allocs": 5004.0
+    },
+    {
+      "case": "BenchmarkTransactionBatch/stateful=true/batch=1",
+      "median_time_ratio": 1.029495907686004,
+      "min_ratio": 0.9784662219635583,
+      "max_ratio": 1.3242457615899637,
+      "before_bytes": 514845.0,
+      "after_bytes": 514845.0,
+      "before_allocs": 15903.0,
+      "after_allocs": 14879.0
+    },
+    {
+      "case": "BenchmarkTransactionBatch/stateful=true/batch=1024",
+      "median_time_ratio": 0.9985164434915991,
+      "min_ratio": 0.9531875230054976,
+      "max_ratio": 1.077334436309021,
+      "before_bytes": 394341.0,
+      "after_bytes": 394341.0,
+      "before_allocs": 10876.0,
+      "after_allocs": 9852.0
+    },
+    {
+      "case": "BenchmarkTransactionBatch/stateful=true/batch=16",
+      "median_time_ratio": 0.9892384621870612,
+      "min_ratio": 0.9411186147894723,
+      "max_ratio": 1.105097814468947,
+      "before_bytes": 508184.0,
+      "after_bytes": 508182.0,
+      "before_allocs": 12831.0,
+      "after_allocs": 11807.0
+    },
+    {
+      "case": "BenchmarkTransactionBatch/stateful=true/batch=256",
+      "median_time_ratio": 1.0203724784098247,
+      "min_ratio": 0.9603002041265277,
+      "max_ratio": 1.2095926510215662,
+      "before_bytes": 344177.0,
+      "after_bytes": 344175.0,
+      "before_allocs": 11143.0,
+      "after_allocs": 10119.0
+    },
+    {
+      "case": "BenchmarkTypedProcessorDispatch/batch=1/cross-type=false",
+      "median_time_ratio": 1.0079195857447456,
+      "min_ratio": 0.8359271959905037,
+      "max_ratio": 1.0379891459582975,
+      "before_bytes": 256.0,
+      "after_bytes": 256.0,
+      "before_allocs": 2.0,
+      "after_allocs": 2.0
+    },
+    {
+      "case": "BenchmarkTypedProcessorDispatch/batch=1/cross-type=true",
+      "median_time_ratio": 1.015915915915916,
+      "min_ratio": 0.9805707346690954,
+      "max_ratio": 1.1525472238122496,
+      "before_bytes": 256.0,
+      "after_bytes": 256.0,
+      "before_allocs": 2.0,
+      "after_allocs": 2.0
+    },
+    {
+      "case": "BenchmarkTypedProcessorDispatch/batch=256/cross-type=false",
+      "median_time_ratio": 1.0161002755416284,
+      "min_ratio": 0.8113225499524263,
+      "max_ratio": 1.0881545849531213,
+      "before_bytes": 256.0,
+      "after_bytes": 256.0,
+      "before_allocs": 2.0,
+      "after_allocs": 2.0
+    },
+    {
+      "case": "BenchmarkTypedProcessorDispatch/batch=256/cross-type=true",
+      "median_time_ratio": 1.033956420749917,
+      "min_ratio": 0.7548824749395091,
+      "max_ratio": 1.14579336804604,
+      "before_bytes": 256.0,
+      "after_bytes": 256.0,
+      "before_allocs": 2.0,
+      "after_allocs": 2.0
+    },
+    {
+      "case": "BenchmarkWindowExpiry/keys=4096/size=1024",
+      "median_time_ratio": 1.0059198542805101,
+      "min_ratio": 0.8886971527178602,
+      "max_ratio": 1.131031220435194,
+      "before_bytes": 1193.0,
+      "after_bytes": 1197.0,
+      "before_allocs": 20.0,
+      "after_allocs": 20.0
+    },
+    {
+      "case": "BenchmarkWindowExpiry/keys=4096/size=1152921504606846976",
+      "median_time_ratio": 1.081901489117984,
+      "min_ratio": 0.8746031746031746,
+      "max_ratio": 1.1002265005662515,
+      "before_bytes": 843.0,
+      "after_bytes": 843.0,
+      "before_allocs": 20.0,
+      "after_allocs": 20.0
+    },
+    {
+      "case": "BenchmarkWindowExpiry/keys=64/size=1024",
+      "median_time_ratio": 1.0086805555555556,
+      "min_ratio": 0.881994459833795,
+      "max_ratio": 1.0301799187463727,
+      "before_bytes": 815.0,
+      "after_bytes": 815.0,
+      "before_allocs": 20.0,
+      "after_allocs": 20.0
+    },
+    {
+      "case": "BenchmarkWindowExpiry/keys=64/size=1152921504606846976",
+      "median_time_ratio": 1.0005913660555885,
+      "min_ratio": 0.9296690307328606,
+      "max_ratio": 1.1043956043956045,
+      "before_bytes": 800.0,
+      "after_bytes": 800.0,
+      "before_allocs": 20.0,
+      "after_allocs": 20.0
+    }
+  ]
+}

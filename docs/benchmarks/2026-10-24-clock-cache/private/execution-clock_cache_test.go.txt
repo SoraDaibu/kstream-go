@@ -1,0 +1,104 @@
+package execution
+
+import (
+	"context"
+	"errors"
+	"testing"
+
+	"github.com/SoraDaibu/kstream-go/record"
+)
+
+type cachedClockBackend struct{ transactions []Transaction }
+
+func (*cachedClockBackend) Open(context.Context, Spec) (uint64, Snapshot, error) {
+	return 1, Snapshot{StreamTime: -1}, nil
+}
+func (b *cachedClockBackend) Commit(_ context.Context, _ Spec, _ uint64, tx Transaction) error {
+	b.transactions = append(b.transactions, tx)
+	return nil
+}
+
+func TestScopedClockViewsSharePrefixAndKeepCommittedMapsOwned(t *testing.T) {
+	b := &cachedClockBackend{}
+	a, err := New(context.Background(), Spec{ApplicationID: "clock-cache", ID: "0"}, b)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer a.Close()
+	first, second, other := a.ScopedContext("shared"), a.ScopedContext("shared"), a.ScopedContext("other")
+	copied := *first
+	if first.StreamTime() != -1 || second.StreamTime() != -1 {
+		t.Fatal("new scope already has time")
+	}
+	if err := a.Register("in", func(r record.Bytes) error {
+		if r.Offset%2 == 0 {
+			copied.Observe(r.Timestamp)
+		} else {
+			first.Observe(r.Timestamp)
+		}
+		if copied.StreamTime() != r.Timestamp {
+			t.Fatal("copied context missed accepted prefix")
+		}
+		if second.StreamTime() != r.Timestamp {
+			t.Fatal("same-scope view missed staged prefix")
+		}
+		other.Observe(r.Timestamp - 1)
+		if second.StreamTime() != r.Timestamp || other.StreamTime() != r.Timestamp-1 {
+			t.Fatal("scopes interfered")
+		}
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+	for batch := 0; batch < 3; batch++ {
+		rows := []record.Bytes{{Topic: "in", Offset: int64(batch * 2), Timestamp: int64(batch*2 + 1)}, {Topic: "in", Offset: int64(batch*2 + 1), Timestamp: int64(batch*2 + 2)}}
+		if err := a.ProcessBatch(context.Background(), rows); err != nil {
+			t.Fatal(err)
+		}
+		if a.clockCache.dirty != nil {
+			t.Fatal("completed transaction retained dirty scope links")
+		}
+	}
+	for i, tx := range b.transactions {
+		if tx.ScopeTimes["shared"] != int64(i*2+2) || tx.ScopeTimes["other"] != int64(i*2+1) {
+			t.Fatal("later batch rewrote a committed clock snapshot", i, tx.ScopeTimes)
+		}
+	}
+}
+
+func TestClockEpochWrapAndCallbackFailureDiscardCachedPrefix(t *testing.T) {
+	b := &cachedClockBackend{}
+	a, err := New(context.Background(), Spec{ApplicationID: "clock-wrap", ID: "0"}, b)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer a.Close()
+	c := a.ScopedContext("stage")
+	a.clockCache.epoch = ^uint64(0)
+	c.clock.cachedEpoch = 0
+	c.clock.cachedTime = 999 // A stale cache must not match the wrapped epoch.
+	if err := a.Register("in", func(r record.Bytes) error {
+		c.Observe(r.Timestamp)
+		if c.StreamTime() != r.Timestamp {
+			t.Fatal("epoch wrap exposed stale progress", c.StreamTime())
+		}
+		if r.Offset == 1 {
+			return errors.New("callback failed")
+		}
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := a.Process(context.Background(), record.Bytes{Topic: "in", Timestamp: 9}); err != nil {
+		t.Fatal(err)
+	}
+	if err := a.Process(context.Background(), record.Bytes{Topic: "in", Offset: 1, Timestamp: 100}); err == nil {
+		t.Fatal("failed callback committed")
+	}
+	if c.StreamTime() != 9 || a.clockCache.dirty != nil || c.clock.dirty || c.clock.nextDirty != nil {
+		t.Fatal("failed transaction left cached progress or dirty links")
+	}
+	if len(b.transactions) != 1 || b.transactions[0].ScopeTimes["stage"] != 9 {
+		t.Fatal("failed transaction changed committed checkpoint")
+	}
+}

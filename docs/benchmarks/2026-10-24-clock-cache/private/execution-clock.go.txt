@@ -1,0 +1,126 @@
+package execution
+
+// ScopedContext shares task state and input metadata while exposing the clock
+// of one connected processing stage. Create during setup under task ownership.
+// Like Task, it must only be used synchronously by the current task owner.
+// Copies of this handle share the same task-owned clock view.
+type ScopedContext struct {
+	*Task
+	clock *scopeClock
+}
+
+// Cache state is separate from the public handle, so copied handles cannot
+// diverge. The embedded handle and its state use one setup allocation per scope.
+type scopeClock struct {
+	context     ScopedContext
+	scope       string
+	cachedEpoch uint64
+	cachedTime  int64
+	dirty       bool
+	nextDirty   *scopeClock
+}
+
+type clockCache struct {
+	byScope map[string]*scopeClock
+	epoch   uint64
+	dirty   *scopeClock
+}
+
+// ScopedContext returns the task-owned view for a scope. Multiple callers and
+// copied handles share its accepted prefix. Creation is setup-only.
+func (t *Task) ScopedContext(scope string) *ScopedContext {
+	if scope == "" {
+		panic("empty processing clock scope")
+	}
+	if t.clockCache == nil {
+		t.clockCache = &clockCache{byScope: make(map[string]*scopeClock)}
+	}
+	cache := t.clockCache
+	clock := cache.byScope[scope]
+	if clock == nil {
+		clock = &scopeClock{scope: scope, cachedEpoch: ^cache.epoch}
+		clock.context = ScopedContext{Task: t, clock: clock}
+		cache.byScope[scope] = clock
+	}
+	return &clock.context
+}
+
+func (c *ScopedContext) StreamTime() int64 {
+	if c.Task.pending == nil {
+		return c.committedTime()
+	}
+	clock := c.clock
+	if clock.cachedEpoch != c.Task.clockCache.epoch {
+		clock.cachedTime = c.committedTime()
+		clock.cachedEpoch = c.Task.clockCache.epoch
+	}
+	return clock.cachedTime
+}
+
+func (c *ScopedContext) committedTime() int64 {
+	if stamp, ok := c.Task.scopeTimes[c.clock.scope]; ok {
+		return stamp
+	}
+	return -1
+}
+
+// Observe advances this stage before decoding or filtering an accepted source
+// record. A scalar view tracks each accepted prefix. Only advancing scopes are
+// materialized into a copied checkpoint at the end of staging. Replay never
+// reaches this callback. The dirty list has at most one entry per task scope.
+func (c *ScopedContext) Observe(stamp int64) {
+	t := c.Task
+	t.requirePending()
+	if stamp < 0 || stamp > t.pending.StreamTime {
+		panic("processing clock is outside the accepted input prefix")
+	}
+	if stamp <= c.StreamTime() {
+		return
+	}
+	clock := c.clock
+	clock.cachedTime = stamp
+	if !clock.dirty {
+		clock.dirty = true
+		clock.nextDirty = t.clockCache.dirty
+		t.clockCache.dirty = clock
+	}
+}
+
+func (c *clockCache) begin() {
+	c.epoch++
+	if c.epoch == 0 {
+		for _, clock := range c.byScope {
+			clock.cachedEpoch = ^uint64(0)
+		}
+	}
+}
+
+func (c *clockCache) clear() {
+	for c.dirty != nil {
+		clock := c.dirty
+		c.dirty = clock.nextDirty
+		clock.nextDirty = nil
+		clock.dirty = false
+	}
+}
+
+func (c *clockCache) stage(committed map[string]int64) map[string]int64 {
+	if c.dirty == nil {
+		return committed
+	}
+	clocks := copyScopeTimes(committed)
+	if clocks == nil {
+		clocks = make(map[string]int64)
+	}
+	for clock := c.dirty; clock != nil; clock = clock.nextDirty {
+		clocks[clock.scope] = clock.cachedTime
+	}
+	return clocks
+}
+
+func copyScopeTimes(clocks map[string]int64) map[string]int64 {
+	if clocks == nil {
+		return nil
+	}
+	return cloneOffsets(clocks)
+}

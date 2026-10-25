@@ -1,0 +1,14 @@
+goos: linux
+goarch: amd64
+pkg: github.com/SoraDaibu/kstream-go/execution
+cpu: AMD EPYC 9V74 80-Core Processor                
+BenchmarkTransactionBatch/stateful=false/batch=1         	     532	    448936 ns/op	      1024 records/op	  384385 B/op	    9056 allocs/op
+BenchmarkTransactionBatch/stateful=false/batch=16        	    1214	    195752 ns/op	      1024 records/op	  227712 B/op	    6432 allocs/op
+BenchmarkTransactionBatch/stateful=false/batch=256       	    1369	    162924 ns/op	      1024 records/op	  220992 B/op	    6028 allocs/op
+BenchmarkTransactionBatch/stateful=false/batch=1024      	    1377	    182996 ns/op	      1024 records/op	  327152 B/op	    5998 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=1          	     342	    704040 ns/op	      1024 records/op	  514846 B/op	   15903 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=16         	     474	    504869 ns/op	      1024 records/op	  508183 B/op	   12831 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=256        	     631	    339342 ns/op	      1024 records/op	  344176 B/op	   11143 allocs/op
+BenchmarkTransactionBatch/stateful=true/batch=1024       	     730	    328879 ns/op	      1024 records/op	  394342 B/op	   10876 allocs/op
+PASS
+ok  	github.com/SoraDaibu/kstream-go/execution	2.191s

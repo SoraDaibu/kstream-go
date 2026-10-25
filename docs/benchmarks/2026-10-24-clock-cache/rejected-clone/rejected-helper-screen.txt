@@ -1,0 +1,18 @@
+goos: linux
+goarch: amd64
+pkg: github.com/SoraDaibu/kstream-go/record
+cpu: AMD EPYC 9V74 80-Core Processor                
+BenchmarkBytesClone/key=1/value=1         	11662285	        19.68 ns/op	 101.62 MB/s	       2 B/op	       1 allocs/op
+BenchmarkBytesClone/key=1/value=7         	 9457555	        22.07 ns/op	 362.52 MB/s	       8 B/op	       1 allocs/op
+BenchmarkBytesClone/key=3/value=7         	 9257935	        28.78 ns/op	 347.47 MB/s	      16 B/op	       1 allocs/op
+BenchmarkBytesClone/key=8/value=8         	 9197127	        25.91 ns/op	 617.46 MB/s	      16 B/op	       1 allocs/op
+BenchmarkBytesClone/key=8/value=9         	 7632522	        31.44 ns/op	 540.75 MB/s	      24 B/op	       2 allocs/op
+BenchmarkBytesClone/key=16/value=16       	 7254643	        37.88 ns/op	 844.85 MB/s	      32 B/op	       2 allocs/op
+BenchmarkBytesClone/key=32/value=1        	 5876827	        38.16 ns/op	 864.77 MB/s	      33 B/op	       2 allocs/op
+BenchmarkBytesClone/key=64/value=64       	 4844556	        54.69 ns/op	2340.62 MB/s	     128 B/op	       2 allocs/op
+BenchmarkBytesClone/key=8/value=4096      	  579586	       440.3 ns/op	9320.04 MB/s	    4104 B/op	       2 allocs/op
+BenchmarkBytesClone/key=8/value=65536     	   41250	      4849 ns/op	13516.36 MB/s	   65544 B/op	       2 allocs/op
+BenchmarkBytesClone/key=-1/value=8        	10628586	        21.09 ns/op	 379.40 MB/s	       8 B/op	       1 allocs/op
+BenchmarkBytesClone/key=0/value=0         	20238249	        13.75 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	github.com/SoraDaibu/kstream-go/record	3.660s

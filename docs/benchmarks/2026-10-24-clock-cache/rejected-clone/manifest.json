@@ -1,0 +1,17 @@
+{
+  "toolchain": "Go 1.27.3",
+  "baseline_local": "8e298b054c84875a53cb59b8506d215146ca58e1",
+  "baseline_remote": "4053228d7354b8526b123e1684fa07d01a334088",
+  "cpu": "0",
+  "gomaxprocs": 1,
+  "pairs": 5,
+  "benchtime": "200ms",
+  "criteria": {
+    "tiny_clone_allocations": "2 -> 1 for both nonempty payloads totaling <=16 bytes",
+    "payload_bytes": "no B/op increase in clone matrix",
+    "pipeline_median_time_ratio_max": 1.05,
+    "public_api": "unchanged",
+    "ownership": "fresh, independent writable payloads; cap-limited shared slices; no shared allocation >16 bytes"
+  },
+  "scope": "local cloning and transaction runtime; no broker/durability performance claim"
+}

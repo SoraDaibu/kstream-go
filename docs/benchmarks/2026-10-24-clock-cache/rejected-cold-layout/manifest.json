@@ -1,0 +1,26 @@
+{
+  "baseline_local": "8e298b054c84875a53cb59b8506d215146ca58e1",
+  "baseline_remote": "4053228d7354b8526b123e1684fa07d01a334088",
+  "toolchain": "Go 1.27.3",
+  "GOMAXPROCS": 1,
+  "cpu": "0",
+  "pairs": 5,
+  "order": "alternating whole before/after phases",
+  "criteria": {
+    "scoped_batch_256_median_after_before_max": 0.85,
+    "transaction_bytes_and_allocations": "unchanged",
+    "ordinary_dispatch_window_and_pipeline_median_after_before_max": 1.05,
+    "scope_setup_bytes_and_time_median_after_before_max": 1.15,
+    "correctness": "race/vet/layers; all differential and real broker gates; ownership/recovery/rollback unchanged",
+    "public_api": "unchanged"
+  },
+  "scope": "local runtime paths; no durable I/O or Kafka throughput qualification",
+  "timing_note": "Cold cache registry/epoch moved after ordinary task fields; all dispatch controls use 1s samples, after local validation has completed. Earlier failing isolated series retained.",
+  "sources": {
+    "execution/clock.go": "e96b6d981201d67afa09bb91407f6132a278440f211b2809be4e15920a54e340",
+    "execution/task.go": "371437981d680d339acba06d2b7a43829d051da998ae79f79b0b8899328d5bf1",
+    "internal/graph/graph.go": "574452a5a6f1cb74e8e2703cd08335fe0770e19ba674d900779c03f183aa6894",
+    "stream/clocks_bench_test.go": "c605b4f587e7a8b9092b873341d69bf647e2c16869264ba822ca5abe2d738b70",
+    "stream/clocks_setup_bench_test.go": "7e64fa8c52b586a969e9ae8bc247535cf262051c4b95588f65d7c51bf5453025"
+  }
+}
