@@ -52,3 +52,35 @@ independent reference or property/failure test; run race and differential checks
 measure equivalent workloads; retain raw evidence; update the inventory. Merge
 only passing changes. Never mark a requirement complete from a roadmap entry,
 a workflow definition, a relative-to-old-Go speedup, or an unexecuted test.
+
+## Regression CI
+
+`Performance regression / Benchmark regression` compares the PR merge result
+with its base commit (main pushes compare with the previous main commit). Both
+revisions run on the same runner, pinned to the same CPU, using Go 1.27.3,
+GOMAXPROCS=1 and GOMEMLIMIT=512MiB. Five fresh-process paired trials alternate
+base/head order; both binaries use **the base revision's test files** so removing
+or weakening a candidate benchmark cannot hide a regression.
+
+The current controls cover record cloning, transaction batching, source metadata,
+typed and scoped processor dispatch, clock setup, branch routing and window
+expiry/reduce. Each case must satisfy all of these limits independently:
+
+- Median paired time ratio (head/base) <=1.05, the existing clock-cache control budget.
+- Median B/op <=1.01 times base; the margin accounts for calibration and rounding.
+- Median allocs/op <=base, with no extra allocations allowed. Zero B/op stays zero.
+
+Missing cases, incomplete trials, invalid values, build errors and failed
+benchmark assertions fail the job. Raw outputs, source and binary hashes,
+environment, trial order and the numerical decision are uploaded even on failure.
+Recompute a retained decision with `python3 scripts/benchmark_regression.py RESULTS`.
+Run locally with `python3 scripts/run-benchmark-regression.py --base BASE_SHA`.
+The output directory must be empty so a later run cannot overwrite evidence.
+
+These controls screen the covered Go paths for regressions within explicit noise
+budgets. They do not establish Kafka Streams parity, broker throughput, tail
+latency, recovery or production qualification; issue #3 remains open until its
+full acceptance criteria pass. Existing race, differential, storage and real
+Kafka transaction checks remain necessary. Configure the benchmark job and the
+existing correctness jobs as required checks in main's protection rules to
+prevent merges on a failed or missing check.

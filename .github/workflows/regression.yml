@@ -1,0 +1,41 @@
+name: Performance regression
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      base:
+        description: Baseline commit to compare (defaults to the first parent)
+        required: false
+permissions:
+  contents: read
+jobs:
+  benchmarks:
+    name: Benchmark regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.3'
+          cache: false
+      - name: Test regression evaluator
+        run: python3 -m unittest discover -s scripts/tests -v
+      - name: Compare the same workloads on base and head
+        env:
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PUSH_BASE: ${{ github.event.before }}
+          MANUAL_BASE: ${{ inputs.base }}
+        run: |
+          base=${PR_BASE:-${PUSH_BASE:-${MANUAL_BASE:-HEAD^}}}
+          python3 scripts/run-benchmark-regression.py --base "$base" --output results/regression
+      - name: Retain raw measurements and decision
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: benchmark-regression
+          path: results/regression

@@ -13,6 +13,7 @@ if [[ -n "$unformatted" ]]; then
   exit 1
 fi
 python3 scripts/check-layers.py
+python3 -m unittest discover -s scripts/tests -v
 go vet ./...
 go test -race -coverprofile=coverage.out ./...
 go run ./examples/wordcount
